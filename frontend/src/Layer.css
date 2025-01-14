@@ -1,6 +1,8 @@
 .layer-container {
   display: flex;
   flex-direction: column;
+  overflow: scroll;
+  margin: 0px 10px;
 }
 
 .layer-header {
