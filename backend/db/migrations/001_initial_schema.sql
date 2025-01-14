@@ -49,10 +49,10 @@ CREATE TABLE IF NOT EXISTS transformations (
 -- Relationships table for blocks to each other
 CREATE TABLE IF NOT EXISTS relationships (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    parent_block_id TEXT NOT NULL,
-    child_block_id TEXT NOT NULL,
-    transformation_id TEXT NOT NULL,
-    FOREIGN KEY (parent_block_id) REFERENCES blocks(block_id),
-    FOREIGN KEY (child_block_id) REFERENCES blocks(block_id),
-    FOREIGN KEY (transformation_id) REFERENCES transformations(transformation_id),
+    parent_block_id INTEGER NOT NULL,
+    child_block_id INTEGER NOT NULL,
+    transformation_id INTEGER NOT NULL,
+    FOREIGN KEY (parent_block_id) REFERENCES blocks(id),
+    FOREIGN KEY (child_block_id) REFERENCES blocks(id),
+    FOREIGN KEY (transformation_id) REFERENCES transformations(id)
 );
