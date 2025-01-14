@@ -1,27 +1,24 @@
 import { useState } from 'react';
 import './App.css'
-import { BlockObject, Block } from './Block';
+import { LayerObject, Layer } from './Layer';
 
-function generateRandomBlocks(numBlocks: number) {
-  const blocks = [];
-  for (let i = 0; i < numBlocks; i++) {
-    blocks.push({
-      id: i,
-      text: "Hello, world!",
-    });
+function generateRandomLayers(numLayers: number) {
+  const layers: LayerObject[] = [];
+  for (let i = 0; i < numLayers; i++) {
+    layers.push({ id: i });
   }
-  return blocks;
+  return layers;
 }
 
-const testBlocks = generateRandomBlocks(10);
+const testLayers = generateRandomLayers(10);
 
 function App() {
-  const [blocks, setBlocks] = useState<BlockObject[]>(testBlocks);
+  const [layers, setLayers] = useState<LayerObject[]>(testLayers);
 
   return (
     <div>
-      {blocks.map((block) => (
-        <Block block={block} />
+      {layers.map((layer) => (
+        <Layer layer={layer} />
       ))}
     </div>
   );

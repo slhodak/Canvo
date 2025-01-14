@@ -1,0 +1,14 @@
+.layer-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.layer-header {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.layer-blocks {
+  display: flex;
+  flex-direction: row;
+}
