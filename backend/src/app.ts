@@ -109,7 +109,6 @@ async function requestContainsValidSessionToken(req: Request): Promise<{ isValid
   }
 }
 
-
 // Create session cookie and store it in the database
 async function createSessionToken(res: Response, email: string) {
   const salt = uuidv4();
@@ -193,8 +192,8 @@ app.use('/api', async (req: Request, res: Response, next) => {
   next();
 });
 
-async function updateText(res: Response, textId: string, text: string) {
-  const result = await db.updateText(textId, text);
+async function updateBlock(res: Response, blockId: string, text: string) {
+  const result = await db.updateBlock(blockId, text);
 
   if (result.rowCount === 0) {
     return res.status(404).json({ error: "Text ID not found" });
@@ -202,45 +201,45 @@ async function updateText(res: Response, textId: string, text: string) {
 
   res.json({
     status: "success",
-    message: "Text updated successfully",
-    textId: textId
+    message: "Block updated successfully",
+    blockId: blockId
   });
 }
 
 // Create new text
-async function createText(req: Request, res: Response, text: string) {
+async function createBlock(req: Request, res: Response, text: string) {
   const userEmail = await getUserEmailFromSessionToken(req);
   if (!userEmail) {
     // This should never happen because the middleware should have already checked the session token
     return res.status(401).json({ error: "Could not find user email from session token" });
   }
 
-  const textId = await db.createText(userEmail, text);
-  if (!textId) {
-    return res.status(500).json({ error: "Could not create text" });
+  const blockId = await db.createBlock(userEmail, text);
+  if (!blockId) {
+    return res.status(500).json({ error: "Could not create block" });
   }
 
   res.json({
     status: "success",
-    message: "Text created successfully",
-    textId: textId
+    message: "Block created successfully",
+    blockId: blockId
   });
 }
 
 router.post('/api/sync', async (req: Request, res: Response) => {
   const data = req.body;
 
-  if (!data.text) {
-    return res.status(400).json({ error: "No text provided" });
+  if (!data.blockId || !data.text) {
+    return res.status(400).json({ error: "No blockId or text provided" });
   }
 
-  let textId = data.textId; // Will be undefined for new texts
+  let blockId = data.blockId; // Will be undefined for new texts
 
   try {
-    if (textId) {
-      await updateText(res, textId, data.text);
+    if (blockId) {
+      await updateBlock(res, blockId, data.text);
     } else {
-      await createText(req, res, data.text);
+      await createBlock(req, res, data.text);
     }
   } catch (error) {
     if (error instanceof Error) {
@@ -250,18 +249,18 @@ router.post('/api/sync', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/api/get_latest', async (req: Request, res: Response) => {
+router.get('/api/get_latest_root_block', async (req: Request, res: Response) => {
   try {
     const userEmail = await getUserEmailFromSessionToken(req);
     if (!userEmail) {
       return res.status(401).json({ error: "Could not find user email from session token" });
     }
 
-    const row = await db.getLatestText(userEmail);
+    const row = await db.getLatestBlock(userEmail);
 
     res.json({
-      textId: row ? row.text_id : null,
-      text: row ? row.content : ""
+      blockId: row ? row.block_id : null,
+      content: row ? row.content : ""
     });
   } catch (error) {
     if (error instanceof Error) {
@@ -271,18 +270,18 @@ router.get('/api/get_latest', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/api/get_all_texts', async (req: Request, res: Response) => {
+router.get('/api/get_root_blocks', async (req: Request, res: Response) => {
   try {
     const userEmail = await getUserEmailFromSessionToken(req);
     if (!userEmail) {
       return res.status(401).json({ error: "Could not find user email from session token" });
     }
 
-    const results = await db.getAllTexts(userEmail);
+    const results = await db.getAllRootBlocks(userEmail);
 
     res.json(results.map((row: any) => ({
-      id: row.text_id,
-      text: row.content
+      blockId: row.block_id,
+      content: row.content
     })));
   } catch (error) {
     if (error instanceof Error) {
@@ -293,8 +292,8 @@ router.get('/api/get_all_texts', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/api/get_text/:text_id', async (req: Request, res: Response) => {
-  const textId = req.params.text_id;
+router.get('/api/get_block/:block_id', async (req: Request, res: Response) => {
+  const blockId = req.params.block_id;
 
   try {
     const userEmail = await getUserEmailFromSessionToken(req);
@@ -302,14 +301,14 @@ router.get('/api/get_text/:text_id', async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Could not find user email from session token" });
     }
 
-    const row = await db.getText(textId, userEmail);
+    const row = await db.getBlock(blockId, userEmail);
     if (row) {
       return res.json({
-        textId: row.text_id,
-        text: row.content
+        blockId: row.block_id,
+        content: row.content
       });
     }
-    res.status(404).json({ error: "Text not found" });
+    res.status(404).json({ error: "Block not found" });
   } catch (error) {
     if (error instanceof Error) {
       return res.status(500).json({ error: error.message });
@@ -318,21 +317,21 @@ router.get('/api/get_text/:text_id', async (req: Request, res: Response) => {
   }
 });
 
-router.delete('/api/delete_text/:text_id', async (req: Request, res: Response) => {
+router.delete('/api/delete_block/:block_id', async (req: Request, res: Response) => {
   const userEmail = await getUserEmailFromSessionToken(req);
   if (!userEmail) {
     return res.status(401).json({ error: "Could not find user email from session token" });
   }
 
-  const textId = req.params.text_id;
+  const blockId = req.params.block_id;
 
   try {
-    const result = await db.deleteText(textId, userEmail);
+    const result = await db.deleteBlock(blockId, userEmail);
     if (result.rowCount === 0) {
-      return res.status(404).json({ error: "Text not found" });
+      return res.status(404).json({ error: "Block not found" });
     }
 
-    return res.json({ status: "success", message: "Text deleted successfully" });
+    return res.json({ status: "success", message: "Block deleted successfully" });
   } catch (error) {
     if (error instanceof Error) {
       return res.status(500).json({ error: error.message });
