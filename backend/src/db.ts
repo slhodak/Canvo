@@ -45,12 +45,33 @@ export namespace Database {
 
   // Blocks
   export async function getBlock(blockId: string, userEmail: string) {
-    const block = await db.oneOrNone('SELECT block_id, content FROM blocks WHERE block_id = $1 AND author_id = (SELECT user_id FROM users WHERE email = $2)', [blockId, userEmail]);
+    const block = await db.oneOrNone('SELECT id, content FROM blocks WHERE id = $1 AND author_id = (SELECT user_id FROM users WHERE email = $2)', [blockId, userEmail]);
     return block;
   }
 
+  // Returns all blocks that are not children of any other block
+  export async function getAllRootBlocks(userEmail: string) {
+    const blocks = await db.any(`
+      SELECT b.id, b.content
+      FROM blocks b
+      LEFT JOIN relationships r ON b.id = r.parent_block_id
+      WHERE r.parent_block_id IS NULL AND b.author_id = (SELECT user_id FROM users WHERE email = $1)
+    `, [userEmail]);
+    return blocks;
+  }
+
+  export async function getDescendentBlocks(blockId: string, userEmail: string) {
+    const blocks = await db.any(`
+      SELECT b.id, b.content
+      FROM blocks b
+      LEFT JOIN relationships r ON b.id = r.parent_block_id
+      WHERE r.parent_block_id = $1 AND b.author_id = (SELECT user_id FROM users WHERE email = $2)
+    `, [blockId, userEmail]);
+    return blocks;
+  }
+
   export async function getLatestBlock(userEmail: string) {
-    const row = await db.oneOrNone('SELECT block_id, content FROM blocks WHERE author_id = (SELECT user_id FROM users WHERE email = $1) ORDER BY timestamp DESC LIMIT 1', [userEmail]);
+    const row = await db.oneOrNone('SELECT id, content FROM blocks WHERE author_id = (SELECT user_id FROM users WHERE email = $1) ORDER BY timestamp DESC LIMIT 1', [userEmail]);
     return row;
   }
 
@@ -61,28 +82,17 @@ export namespace Database {
     }
 
     const blockId = uuidv4();
-    await db.none('INSERT INTO blocks (block_id, author_id, content) VALUES ($1, $2, $3)', [blockId, user.user_id, text]);
+    await db.none('INSERT INTO blocks (id, author_id, content) VALUES ($1, $2, $3)', [blockId, user.user_id, text]);
     return blockId;
   }
 
   export async function updateBlock(blockId: string, text: string) {
-    const result = await db.result(`UPDATE blocks SET content = $1, timestamp = CURRENT_TIMESTAMP WHERE block_id = $2`, [text, blockId]);
+    const result = await db.result(`UPDATE blocks SET content = $1, timestamp = CURRENT_TIMESTAMP WHERE id = $2`, [text, blockId]);
     return result;
   }
 
-  // Returns all blocks that are not children of any other block
-  export async function getAllRootBlocks(userEmail: string) {
-    const blocks = await db.any(`
-      SELECT b.block_id, b.content
-      FROM blocks b
-      LEFT JOIN relationships r ON b.block_id = r.parent_block_id
-      WHERE r.parent_block_id IS NULL AND b.author_id = (SELECT user_id FROM users WHERE email = $1)
-    `, [userEmail]);
-    return blocks;
-  }
-
   export async function deleteBlock(blockId: string, userEmail: string) {
-    const result = await db.result('DELETE FROM blocks WHERE block_id = $1 AND author_id = (SELECT user_id FROM users WHERE email = $2)', [blockId, userEmail]);
+    const result = await db.result('DELETE FROM blocks WHERE id = $1 AND author_id = (SELECT user_id FROM users WHERE email = $2)', [blockId, userEmail]);
     return result;
   }
 }

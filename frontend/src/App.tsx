@@ -1,25 +1,80 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css'
-import { LayerObject, Layer } from './Layer';
+import { Layer } from './Layer';
+import { BlockObject, BlockPreview } from './Block';
+import { SERVER_URL } from './constants';
 
-function generateRandomLayers(numLayers: number) {
-  const layers: LayerObject[] = [];
-  for (let i = 0; i < numLayers; i++) {
-    layers.push({ id: i });
-  }
-  return layers;
-}
+const App = () => {
+  const [block, setBlock] = useState<BlockObject | null>(null);
+  const [layers, setLayers] = useState<[]>([]);
+  const [rootBlocks, setRootBlocks] = useState<BlockObject[]>([]);
 
-const testLayers = generateRandomLayers(10);
+  // Fetch all the root blocks
+  useEffect(() => {
+    async function fetchRootBlocks() {
+      const response = await fetch(`${SERVER_URL}/api/get_root_blocks`, {
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        setRootBlocks(data.blocks);
+      } else {
+        console.error('Error fetching root blocks:', data.error);
+      }
+    }
 
-function App() {
-  const [layers, setLayers] = useState<LayerObject[]>(testLayers);
+    fetchRootBlocks();
+  }, []);
+
+  // Fetch the latest root block
+  useEffect(() => {
+    async function fetchBlock() {
+      const response = await fetch(`${SERVER_URL}/api/get_latest_root_block`, {
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        setBlock(data.block);
+      } else {
+        console.error('Error fetching block:', data.error);
+      }
+    }
+
+    fetchBlock();
+  }, [block]);
+
+  // Fetch all the transformations of the block
+  useEffect(() => {
+    async function fetchTransformations(blockId: string) {
+      const response = await fetch(`${SERVER_URL}/api/get_descendent_blocks/${blockId}`, {
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        setLayers(data.blocks);
+      } else {
+        console.error('Error fetching transformations:', data.error);
+      }
+    }
+
+    if (block) {
+      fetchTransformations(block.id.toString());
+    }
+  }, [block]);
 
   return (
     <div>
-      {layers.map((layer) => (
-        <Layer layer={layer} />
-      ))}
+      <div className="top-section">
+        {layers.map((layer) => (
+          <Layer parentBlock={layer} />
+        ))}
+      </div>
+
+      <div className="bottom-section">
+        {rootBlocks.map((block) => (
+          <BlockPreview block={block} />
+        ))}
+      </div>
     </div>
   );
 }

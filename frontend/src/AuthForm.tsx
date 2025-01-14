@@ -2,7 +2,7 @@ import { useState } from 'react';
 import './AuthForm.css';
 import { SERVER_URL } from './constants';
 
-function AuthForm({ setIsAuthenticated }: { setIsAuthenticated: (isAuthenticated: boolean) => void }) {
+const AuthForm = ({ setIsAuthenticated }: { setIsAuthenticated: (isAuthenticated: boolean) => void }) => {
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [userEnteredInvalidCode, setUserEnteredInvalidCode] = useState(false);

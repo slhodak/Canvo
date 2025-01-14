@@ -174,7 +174,7 @@ router.get('/auth/check', async (req: Request, res: Response) => {
 });
 
 ////////////////////////////////////////////////////////////
-// Text Editor Functions at /api/*
+// Database Functions at /api/*
 ////////////////////////////////////////////////////////////
 
 // Middleware to guard the /api/* routes
@@ -259,6 +259,7 @@ router.get('/api/get_latest_root_block', async (req: Request, res: Response) => 
     const row = await db.getLatestBlock(userEmail);
 
     res.json({
+      status: "success",
       blockId: row ? row.block_id : null,
       content: row ? row.content : ""
     });
@@ -279,10 +280,39 @@ router.get('/api/get_root_blocks', async (req: Request, res: Response) => {
 
     const results = await db.getAllRootBlocks(userEmail);
 
-    res.json(results.map((row: any) => ({
-      blockId: row.block_id,
-      content: row.content
-    })));
+    res.json({
+      status: "success",
+      blocks: results.map((row: any) => ({
+        blockId: row.block_id,
+        content: row.content
+      }))
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "An unknown error occurred" });
+    }
+  }
+});
+
+router.get('/api/get_descendent_blocks/:block_id', async (req: Request, res: Response) => {
+  const blockId = req.params.block_id;
+
+  try {
+    const userEmail = await getUserEmailFromSessionToken(req);  
+    if (!userEmail) {
+      return res.status(401).json({ error: "Could not find user email from session token" });
+    }
+
+    const results = await db.getDescendentBlocks(blockId, userEmail);
+    res.json({
+      status: "success",
+      blocks: results.map((row: any) => ({
+        blockId: row.block_id,
+        content: row.content
+      }))
+    });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });

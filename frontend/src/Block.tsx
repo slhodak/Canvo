@@ -28,3 +28,7 @@ export const Block: React.FC<BlockProps> = ({ block }) => {
     </div>
   );
 };
+
+export const BlockPreview = ({ block }: BlockProps) => {
+  return <div className="block-preview">{block.text.slice(0, 100)}</div>;
+};
