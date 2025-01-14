@@ -1,0 +1,16 @@
+.layer-container {
+  display: flex;
+  flex-direction: column;
+  overflow: scroll;
+  margin: 0px 10px;
+}
+
+.layer-header {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.layer-blocks {
+  display: flex;
+  flex-direction: row;
+}

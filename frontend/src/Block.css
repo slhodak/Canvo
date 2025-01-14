@@ -1,0 +1,12 @@
+/* .block-container {
+  display: flex;
+  flex-direction: column;
+} */
+
+.block-textarea {
+  width: 250px;
+  height: 140px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  resize: none;
+}
