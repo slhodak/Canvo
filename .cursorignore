@@ -1,0 +1,10 @@
+# General
+.gitignore
+.env
+README.md
+
+# Node & Typescript
+package.json
+yarn.lock
+vite.config.ts
+tsconfig.*
