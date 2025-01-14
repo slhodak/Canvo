@@ -64,6 +64,8 @@ elif [ "$ENVIRONMENT" == "dev" ]; then
 
   if [ "$DB_EXIST" == "1" ]; then
     echo "Database '$DB_NAME' already exists."
+    # You create a new user for an existing database, in this case still grant privileges
+    psql $DB_NAME -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO $DB_USER;"
   else
     echo "Database '$DB_NAME' does not exist. Creating database..."
     psql postgres -c "CREATE DATABASE $DB_NAME;"
