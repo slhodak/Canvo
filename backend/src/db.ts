@@ -81,8 +81,8 @@ export namespace Database {
     return blocks;
   }
 
-  export async function deleteText(textId: string, userEmail: string) {
-    const result = await db.result('DELETE FROM texts WHERE text_id = $1 AND author_id = (SELECT user_id FROM users WHERE email = $2)', [textId, userEmail]);
+  export async function deleteBlock(blockId: string, userEmail: string) {
+    const result = await db.result('DELETE FROM blocks WHERE block_id = $1 AND author_id = (SELECT user_id FROM users WHERE email = $2)', [blockId, userEmail]);
     return result;
   }
 }
