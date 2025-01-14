@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import './Block.css';
 
-export interface BlockObject {
+export interface BlockModel {
   id: number;
   text: string;
 }
 
 interface BlockProps {
-  block: BlockObject;
+  block: BlockModel;
 }
 
 export const Block: React.FC<BlockProps> = ({ block }) => {

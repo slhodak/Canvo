@@ -1,23 +1,30 @@
 import { useState, useEffect } from 'react';
-import { BlockObject, Block } from './Block';
+import { BlockModel, Block } from './Block';
 import './Layer.css';
 import { SERVER_URL } from './constants';
 
 interface LayerProps {
-  parentBlock: BlockObject;
+  parentBlock: BlockModel;
+  transformation: TransformationModel;
+}
+
+interface TransformationModel {
+  id: string;
+  title: string;
+  prompt: string;
 }
 
 // A Layer is a group of blocks that are descended and transformed from a single block
 // Layers have a 1:1 relationship with Transformations
-export const Layer = ({ parentBlock }: LayerProps) => {
-  const [descendentBlocks, setDescendentBlocks] = useState<BlockObject[]>([]);
+export const Layer = ({ parentBlock, transformation }: LayerProps) => {
+  const [blocks, setBlocks] = useState<BlockModel[]>([]);
 
   useEffect(() => {
     async function fetchDescendentBlocks() {
       const response = await fetch(`${SERVER_URL}/api/get_descendent_blocks/${parentBlock.id}`);
       const data = await response.json();
       if (data.status === 'success') {
-        setDescendentBlocks(data.blocks);
+        setBlocks(data.blocks);
       } else {
         console.error('Error fetching descendent blocks:', data.error);
       }
@@ -28,9 +35,9 @@ export const Layer = ({ parentBlock }: LayerProps) => {
 
   return (
     <div className="layer-container">
-      <div className="layer-header">Layer {parentBlock.id}</div>
+      <div className="layer-header">Transformation ID: {transformation.id}</div>
       <div className="layer-blocks">
-        {descendentBlocks.map((block) => (
+        {blocks.map((block) => (
           <Block block={block} />
         ))}
       </div>

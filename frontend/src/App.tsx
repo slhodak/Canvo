@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import './App.css'
 import { Layer } from './Layer';
-import { BlockObject, BlockPreview } from './Block';
+import { BlockModel, BlockPreview } from './Block';
 import { SERVER_URL } from './constants';
 
 const App = () => {
-  const [block, setBlock] = useState<BlockObject | null>(null);
-  const [layers, setLayers] = useState<[]>([]);
-  const [rootBlocks, setRootBlocks] = useState<BlockObject[]>([]);
+  const [block, setBlock] = useState<BlockModel | null>(null);
+  const [transformations, setTransformations] = useState<TransformationModel[]>([]);
+  const [rootBlocks, setRootBlocks] = useState<BlockModel[]>([]);
 
   // Fetch all the root blocks
   useEffect(() => {
@@ -51,7 +51,7 @@ const App = () => {
       });
       const data = await response.json();
       if (data.status === 'success') {
-        setLayers(data.blocks);
+        setTransformations(data.transformations);
       } else {
         console.error('Error fetching transformations:', data.error);
       }
@@ -65,9 +65,9 @@ const App = () => {
   return (
     <div>
       <div className="top-section">
-        {layers.map((layer) => (
-          <Layer parentBlock={layer} />
-        ))}
+        {block ? transformations.map((transformation) => (
+          <Layer parentBlock={block} transformation={transformation} />
+        )) : <div>No root block found</div>}
       </div>
 
       <div className="bottom-section">
