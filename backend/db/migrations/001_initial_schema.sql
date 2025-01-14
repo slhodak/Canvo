@@ -41,9 +41,7 @@ CREATE TABLE IF NOT EXISTS transformations (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     title TEXT NOT NULL,
     author_id TEXT NOT NULL,
-    transformation_id TEXT UNIQUE NOT NULL,
-    transformation_type TEXT NOT NULL,
-    transformation_prompt TEXT NOT NULL,
+    prompt TEXT NOT NULL,
     FOREIGN KEY (author_id) REFERENCES users(user_id),
     UNIQUE (author_id, title)
 );
@@ -54,7 +52,6 @@ CREATE TABLE IF NOT EXISTS relationships (
     parent_block_id TEXT NOT NULL,
     child_block_id TEXT NOT NULL,
     transformation_id TEXT NOT NULL,
-    FOREIGN KEY (author_id) REFERENCES users(user_id),
     FOREIGN KEY (parent_block_id) REFERENCES blocks(block_id),
     FOREIGN KEY (child_block_id) REFERENCES blocks(block_id),
     FOREIGN KEY (transformation_id) REFERENCES transformations(transformation_id),
