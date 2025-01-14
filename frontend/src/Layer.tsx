@@ -8,7 +8,7 @@ interface LayerProps {
   transformation: TransformationModel;
 }
 
-interface TransformationModel {
+export interface TransformationModel {
   id: string;
   title: string;
   prompt: string;

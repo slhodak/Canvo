@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import './App.css'
-import { Layer } from './Layer';
+import { Layer, TransformationModel } from './Layer';
 import { BlockModel, BlockPreview } from './Block';
 import { SERVER_URL } from './constants';
 
