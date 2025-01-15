@@ -13,3 +13,5 @@ frontend/dist/
 frontend/package.json
 frontend/yarn.lock
 frontend/.env
+
+shared/types/dist/

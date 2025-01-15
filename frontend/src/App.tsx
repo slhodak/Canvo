@@ -3,8 +3,10 @@ import './App.css'
 import { Layer, TransformationModel } from './Layer';
 import { BlockModel, BlockPreview } from './Block';
 import { SERVER_URL } from './constants';
+import { User } from '@wb/shared-types';
 
 const App = () => {
+  const [user, setUser] = useState<User | null>(null);
   const [rootBlock, setRootBlock] = useState<BlockModel | null>(null);
   const [transformations, setTransformations] = useState<TransformationModel[]>([]);
   const [rootBlocks, setRootBlocks] = useState<BlockModel[]>([]);

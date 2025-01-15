@@ -1,6 +1,7 @@
 import pgPromise from 'pg-promise';
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
+import { User, Group, Block, Transformation } from '@wb/shared-types';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -165,43 +166,4 @@ export namespace Database {
     const result = await db.result('DELETE FROM blocks WHERE _id = $1 AND author_id = $2', [blockId, user._id]);
     return result;
   }
-}
-
-interface User {
-  id: number;
-  _id: string;
-  email: string;
-  created_at: Date;
-  updated_at: Date;
-}
-
-interface Group {
-  id: number;
-  _id: string;
-  author_id: string;
-  created_at: Date;
-  updated_at: Date;
-}
-
-interface Block {
-  id: number;
-  _id: string;
-  group_id: string;
-  author_id: string;
-  label: string;
-  content: string;
-  created_at: Date;
-  updated_at: Date;
-}
-
-interface Transformation {
-  id: number;
-  _id: string;
-  group_id: string;
-  author_id: string;
-  input_block_id: string;
-  label: string;
-  prompt: string;
-  created_at: Date;
-  updated_at: Date;
 }

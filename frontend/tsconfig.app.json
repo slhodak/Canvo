@@ -10,6 +10,9 @@
       "DOM.Iterable"
     ],
     "module": "ESNext",
+    "paths": {
+      "@wb/shared-types": ["../shared/types/dist/types.d.ts"]
+    },
     "skipLibCheck": true,
     /* Bundler mode */
     "moduleResolution": "bundler",
