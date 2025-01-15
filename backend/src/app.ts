@@ -210,7 +210,6 @@ app.use('/api', async (req: Request, res: Response, next) => {
 async function createGroup(req: Request, res: Response) {
   const user = await getUserFromSessionToken(req);
   if (!user) {
-    // This should never happen because the middleware should have already checked the session token
     return res.status(401).json({ error: "Could not find user email from session token" });
   }
 
@@ -247,17 +246,16 @@ router.get('/api/get_latest_group', async (req: Request, res: Response) => {
   }
 });
 
-
-// router.post('/api/new_block', async (req: Request, res: Response) => {
-//   try {
-//     await createBlock(req, res, "");
-//   } catch (error) {
-//     if (error instanceof Error) {
-//       return res.status(500).json({ error: error.message });
-//     }
-//     return res.status(500).json({ error: "An unknown error occurred" });
-//   }
-// });
+router.post('/api/new_group', async (req: Request, res: Response) => {
+  try {
+    await createGroup(req, res);
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ error: error.message });
+    }
+    return res.status(500).json({ error: "An unknown error occurred" });
+  }
+});
 
 
 // router.post('/api/update_block', async (req: Request, res: Response) => {

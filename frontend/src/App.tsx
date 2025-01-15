@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import './App.css'
 import { SERVER_URL } from './constants';
-import { UserModel, GroupModel } from '@wb/shared-types';
+import { GroupModel } from '@wb/shared-types';
 import { Group, GroupPreview } from './Group';
 
 const App = () => {
-  const [user, setUser] = useState<UserModel | null>(null);
   const [group, setGroup] = useState<GroupModel | null>(null);
   const [groups, setGroups] = useState<GroupModel[]>([]);
 
@@ -14,19 +13,10 @@ const App = () => {
   //////////////////////////////
 
   const createGroup = async () => {
-    if (!user) {
-      console.error('No user found. Cannot create group.');
-      return;
-    }
-
     try {
       await fetch(`${SERVER_URL}/api/new_group`, {
         method: 'POST',
         credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ userId: user._id })
       });
     } catch (error) {
       console.error('Error creating group:', error);
@@ -62,27 +52,6 @@ const App = () => {
     }
 
     fetchLatestGroup();
-  }, []);
-
-  // Fetch the user data
-  useEffect(() => {
-    async function fetchUser() {
-      try {
-        const response = await fetch(`${SERVER_URL}/api/get_user`, {
-          credentials: 'include',
-      });
-      const data = await response.json();
-      if (data.status === 'success') {
-        setUser(data.user);
-      } else {
-        console.error('Error fetching user:', data.error);
-      }
-    } catch (error) {
-        console.error('Error fetching user:', error);
-      }
-    }
-
-    fetchUser();
   }, []);
 
   return (
