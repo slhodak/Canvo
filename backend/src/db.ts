@@ -27,6 +27,17 @@ export namespace Database {
     return result ? result.user_email : null;
   }
 
+  /**
+   *  @throws Error if user not found
+   */
+  export async function getUserByEmail(email: string): Promise<User> {
+    const user = await db.oneOrNone('SELECT id, _id, email FROM users WHERE email = $1', [email]);
+    if (!user) {
+      throw new Error(`User with email ${email} not found`);
+    }
+    return user;
+  }
+
   // Sessions
   export async function getSession(sessionToken: string) {
     const session = await db.oneOrNone('SELECT id, session_token, user_email, session_start, session_expiration FROM sessions WHERE session_token = $1', [sessionToken]);
@@ -44,54 +55,91 @@ export namespace Database {
   }
 
   // Groups
-  export async function getGroup(groupId: string) {
-    const group = await db.oneOrNone('SELECT id, _id, author_id FROM groups WHERE _id = $1', [groupId]);
+  export async function getGroup(groupId: string, userEmail: string): Promise<Group | null> {
+    const user = await getUserByEmail(userEmail);
+    if (!user) {
+      return null;
+    }
+    const group = await db.oneOrNone('SELECT id, _id, author_id FROM groups WHERE _id = $1 and author_id = $2', [groupId, user._id]);
     return group;
   }
 
-  export async function getLatestGroup(userEmail: string) {
-    const group = await db.oneOrNone('SELECT id, _id, author_id FROM groups WHERE author_id = (SELECT _id FROM users WHERE email = $1) ORDER BY updated_at DESC LIMIT 1', [userEmail]);
+  export async function getLatestGroup(userEmail: string): Promise<Group | null> {
+    const user = await getUserByEmail(userEmail);
+    if (!user) {
+      return null;
+    }
+    const group = await db.oneOrNone('SELECT id, _id, author_id FROM groups WHERE author_id = $1 ORDER BY updated_at DESC LIMIT 1', [user._id]);
     return group;
+  }
+
+  export async function createGroup(userEmail: string) {
+    const user = await getUserByEmail(userEmail);
+    if (!user) {
+      return null;
+    }
+    const group = await db.one('INSERT INTO groups (author_id) VALUES ($1) RETURNING _id', [user._id]);
+    return group._id;
   }
 
   // Transformations
-  export async function getTransformation(transformationId: string) {
-    const transformation = await db.oneOrNone('SELECT id, _id, input_block_id, label FROM transformations WHERE _id = $1', [transformationId]);
+  export async function getTransformation(transformationId: string, userEmail: string): Promise<Transformation | null> {
+    const user = await getUserByEmail(userEmail);
+    if (!user) {
+      return null;
+    }
+    const transformation = await db.oneOrNone('SELECT id, _id, input_block_id, label FROM transformations WHERE _id = $1 and author_id = $2', [transformationId, user._id]);
     return transformation;
   }
 
   // Blocks
-  export async function getBlock(blockId: string, userEmail: string) {
-    const block = await db.oneOrNone('SELECT id, content FROM blocks WHERE id = $1 AND author_id = (SELECT _id FROM users WHERE email = $2)', [blockId, userEmail]);
+  export async function getBlock(blockId: string, userEmail: string): Promise<Block | null> {
+    const user = await getUserByEmail(userEmail);
+    if (!user) {
+      return null;
+    }
+    const block = await db.oneOrNone('SELECT id, content FROM blocks WHERE id = $1 AND author_id = $2', [blockId, user._id]);
     return block;
   }
 
-  export async function getAllBlocksInGroup(groupId: string, userEmail: string) {
+  export async function getAllBlocksInGroup(groupId: string, userEmail: string): Promise<Block[]> {
+    const user = await getUserByEmail(userEmail);
+    if (!user) {
+      return [];
+    }
     const blocks = await db.any(`
       SELECT b._id, b.content
       FROM blocks b
-      WHERE b.group_id = $1 AND b.author_id = (SELECT _id FROM users WHERE email = $2)
-    `, [groupId, userEmail]);
+      WHERE b.group_id = $1 AND b.author_id = $2
+    `, [groupId, user._id]);
     return blocks;
   }
 
-  export async function getOutputBlocks(transformationId: string, userEmail: string) {
+  export async function getOutputBlocks(transformationId: string, userEmail: string): Promise<Block[]> {
+    const user = await getUserByEmail(userEmail);
+    if (!user) {
+      return [];
+    }
     const blocks = await db.any(`
       SELECT b._id, b.content
       FROM blocks b
       LEFT JOIN transformation_outputs r ON b._id = r.output_block_id
-      WHERE r.transformation_id = $1 AND b.author_id = (SELECT _id FROM users WHERE email = $2)
-    `, [transformationId, userEmail]);
+      WHERE r.transformation_id = $1 AND b.author_id = $2
+    `, [transformationId, user._id]);
     return blocks;
   }
 
-  export async function getLatestBlock(userEmail: string) {
-    const row = await db.oneOrNone('SELECT id, content FROM blocks WHERE author_id = (SELECT _id FROM users WHERE email = $1) ORDER BY timestamp DESC LIMIT 1', [userEmail]);
+  export async function getLatestBlock(userEmail: string): Promise<Block | null> {
+    const user = await getUserByEmail(userEmail);
+    if (!user) {
+      return null;
+    }
+    const row = await db.oneOrNone('SELECT id, content FROM blocks WHERE author_id = $1 ORDER BY timestamp DESC LIMIT 1', [user._id]);
     return row;
   }
 
   export async function createBlock(userEmail: string): Promise<string | null> {
-    const user = await db.oneOrNone('SELECT _id FROM users WHERE email = $1', [userEmail]);
+    const user = await getUserByEmail(userEmail);
     if (!user) {
       return null;
     }
@@ -100,13 +148,60 @@ export namespace Database {
     return result._id;
   }
 
-  export async function updateBlock(blockId: string, text: string) {
-    const result = await db.result(`UPDATE blocks SET content = $1, timestamp = CURRENT_TIMESTAMP WHERE _id = $2`, [text, blockId]);
+  export async function updateBlock(blockId: string, text: string, userEmail: string) {
+    const user = await getUserByEmail(userEmail);
+    if (!user) {
+      return null;
+    }
+    const result = await db.result(`UPDATE blocks SET content = $1, timestamp = CURRENT_TIMESTAMP WHERE _id = $2 AND author_id = $3`, [text, blockId, user._id]);
     return result;
   }
 
   export async function deleteBlock(blockId: string, userEmail: string) {
-    const result = await db.result('DELETE FROM blocks WHERE _id = $1 AND author_id = (SELECT _id FROM users WHERE email = $2)', [blockId, userEmail]);
+    const user = await getUserByEmail(userEmail);
+    if (!user) {
+      return null;
+    }
+    const result = await db.result('DELETE FROM blocks WHERE _id = $1 AND author_id = $2', [blockId, user._id]);
     return result;
   }
+}
+
+interface User {
+  id: number;
+  _id: string;
+  email: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface Group {
+  id: number;
+  _id: string;
+  author_id: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface Block {
+  id: number;
+  _id: string;
+  group_id: string;
+  author_id: string;
+  label: string;
+  content: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface Transformation {
+  id: number;
+  _id: string;
+  group_id: string;
+  author_id: string;
+  input_block_id: string;
+  label: string;
+  prompt: string;
+  created_at: Date;
+  updated_at: Date;
 }
