@@ -268,8 +268,8 @@ router.get('/api/get_latest_root_block', async (req: Request, res: Response) => 
     const row = await db.getLatestBlock(userEmail);
 
     res.json({
-      status: "success",
-      blockId: row ? row.block_id : null,
+      status: row ? "success" : "failed",
+      blockId: row ? row.id : null,
       content: row ? row.content : ""
     });
   } catch (error) {

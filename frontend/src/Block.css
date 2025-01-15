@@ -10,3 +10,12 @@
   padding: 10px;
   resize: none;
 }
+
+.block-preview {
+  width: 130px;
+  height: 130px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  resize: none;
+  background-color: #f0f0f0;
+}

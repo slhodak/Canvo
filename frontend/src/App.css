@@ -11,3 +11,10 @@
   border-radius: 5px;
   background-color: lightblue;
 }
+
+.block-previews-container {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  margin: 10px;
+}

@@ -5,7 +5,7 @@ import { BlockModel, BlockPreview } from './Block';
 import { SERVER_URL } from './constants';
 
 const App = () => {
-  const [block, setBlock] = useState<BlockModel | null>(null);
+  const [rootBlock, setRootBlock] = useState<BlockModel | null>(null);
   const [transformations, setTransformations] = useState<TransformationModel[]>([]);
   const [rootBlocks, setRootBlocks] = useState<BlockModel[]>([]);
 
@@ -50,26 +50,27 @@ const App = () => {
     fetchRootBlocks();
   }, []);
 
-  // Fetch the latest root block
+  // Fetch the latest group
   useEffect(() => {
-    async function fetchBlock() {
-      const response = await fetch(`${SERVER_URL}/api/get_latest_root_block`, {
+    async function fetchLatestGroup() {
+      const response = await fetch(`${SERVER_URL}/api/get_latest_group`, {
         credentials: 'include',
       });
       const data = await response.json();
       if (data.status === 'success') {
-        setBlock(data.block);
+        setRootBlock(data.block);
       } else {
         console.error('Error fetching block:', data.error);
       }
     }
 
-    fetchBlock();
-  }, [block]);
+    fetchLatestGroup();
+  }, []);
 
   // Fetch all the transformations of the block
   useEffect(() => {
-    async function fetchTransformations(blockId: string) {
+    async function fetchTransformations(blockId: number) {
+      // Is this blockId number interpolation safe?
       const response = await fetch(`${SERVER_URL}/api/get_descendent_blocks/${blockId}`, {
         credentials: 'include',
       });
@@ -81,24 +82,28 @@ const App = () => {
       }
     }
 
-    if (block) {
-      fetchTransformations(block.id.toString());
+    if (rootBlock) {
+      fetchTransformations(rootBlock.id)
     }
-  }, [block]);
+  }, [rootBlock]);
 
   return (
     <div>
       <div className="top-section">
-        {block ? transformations.map((transformation) => (
-          <Layer parentBlock={block} transformation={transformation} />
+        {rootBlock ? transformations.map((transformation) => (
+          <Layer key={transformation.id} rootBlock={rootBlock} transformation={transformation} />
         )) : <div>No root block found</div>}
       </div>
 
       <div className="bottom-section">
         <button className="add-block-button" onClick={createBlock}>New</button>
-        {rootBlocks.map((block) => (
-          <BlockPreview block={block} />
-        ))}
+        <div className="block-previews-container">
+          {rootBlocks.map((block) => (
+            <button key={block.id} onClick={() => setRootBlock(block)}>
+              <BlockPreview block={block} />
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

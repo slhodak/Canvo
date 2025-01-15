@@ -15,11 +15,11 @@ const db = pgp(process.env.DATABASE_URL);
 export namespace Database {
   // Users
   export async function insertUser(email: string) {
-    const user = await db.oneOrNone('SELECT id, user_id, email FROM users WHERE email = $1', [email]);
+    const user = await db.oneOrNone('SELECT id, _id, email FROM users WHERE email = $1', [email]);
     if (user) {
       return;
     }
-    await db.none('INSERT INTO users (user_id, email) VALUES ($1, $2)', [uuidv4(), email]);
+    await db.none('INSERT INTO users (_id, email) VALUES ($1, $2)', [uuidv4(), email]);
   }
 
   export async function getUser(sessionToken: string) {
@@ -43,55 +43,70 @@ export namespace Database {
     return invite;
   }
 
+  // Groups
+  export async function getGroup(groupId: string) {
+    const group = await db.oneOrNone('SELECT id, _id, author_id FROM groups WHERE _id = $1', [groupId]);
+    return group;
+  }
+
+  export async function getLatestGroup(userEmail: string) {
+    const group = await db.oneOrNone('SELECT id, _id, author_id FROM groups WHERE author_id = (SELECT _id FROM users WHERE email = $1) ORDER BY updated_at DESC LIMIT 1', [userEmail]);
+    return group;
+  }
+
+  // Transformations
+  export async function getTransformation(transformationId: string) {
+    const transformation = await db.oneOrNone('SELECT id, _id, input_block_id, label FROM transformations WHERE _id = $1', [transformationId]);
+    return transformation;
+  }
+
   // Blocks
   export async function getBlock(blockId: string, userEmail: string) {
-    const block = await db.oneOrNone('SELECT id, content FROM blocks WHERE id = $1 AND author_id = (SELECT user_id FROM users WHERE email = $2)', [blockId, userEmail]);
+    const block = await db.oneOrNone('SELECT id, content FROM blocks WHERE id = $1 AND author_id = (SELECT _id FROM users WHERE email = $2)', [blockId, userEmail]);
     return block;
   }
 
-  // Returns all blocks that are not children of any other block
-  export async function getAllRootBlocks(userEmail: string) {
+  export async function getAllBlocksInGroup(groupId: string, userEmail: string) {
     const blocks = await db.any(`
-      SELECT b.id, b.content
+      SELECT b._id, b.content
       FROM blocks b
-      LEFT JOIN relationships r ON b.id = r.parent_block_id
-      WHERE r.parent_block_id IS NULL AND b.author_id = (SELECT user_id FROM users WHERE email = $1)
-    `, [userEmail]);
+      WHERE b.group_id = $1 AND b.author_id = (SELECT _id FROM users WHERE email = $2)
+    `, [groupId, userEmail]);
     return blocks;
   }
 
-  export async function getDescendentBlocks(blockId: string, userEmail: string) {
+  export async function getOutputBlocks(transformationId: string, userEmail: string) {
     const blocks = await db.any(`
-      SELECT b.id, b.content
+      SELECT b._id, b.content
       FROM blocks b
-      LEFT JOIN relationships r ON b.id = r.parent_block_id
-      WHERE r.parent_block_id = $1 AND b.author_id = (SELECT user_id FROM users WHERE email = $2)
-    `, [blockId, userEmail]);
+      LEFT JOIN transformation_outputs r ON b._id = r.output_block_id
+      WHERE r.transformation_id = $1 AND b.author_id = (SELECT _id FROM users WHERE email = $2)
+    `, [transformationId, userEmail]);
     return blocks;
   }
 
   export async function getLatestBlock(userEmail: string) {
-    const row = await db.oneOrNone('SELECT id, content FROM blocks WHERE author_id = (SELECT user_id FROM users WHERE email = $1) ORDER BY timestamp DESC LIMIT 1', [userEmail]);
+    const row = await db.oneOrNone('SELECT id, content FROM blocks WHERE author_id = (SELECT _id FROM users WHERE email = $1) ORDER BY timestamp DESC LIMIT 1', [userEmail]);
     return row;
   }
 
   export async function createBlock(userEmail: string): Promise<string | null> {
-    const user = await db.oneOrNone('SELECT user_id FROM users WHERE email = $1', [userEmail]);
+    const user = await db.oneOrNone('SELECT _id FROM users WHERE email = $1', [userEmail]);
     if (!user) {
       return null;
     }
 
-    const result = await db.one('INSERT INTO blocks (author_id) VALUES ($1) RETURNING id', [user.user_id]);
-    return result.id;
+    const result = await db.one('INSERT INTO blocks (author_id) VALUES ($1) RETURNING _id', [user._id]);
+    return result._id;
   }
 
   export async function updateBlock(blockId: string, text: string) {
-    const result = await db.result(`UPDATE blocks SET content = $1, timestamp = CURRENT_TIMESTAMP WHERE id = $2`, [text, blockId]);
+    const result = await db.result(`UPDATE blocks SET content = $1, timestamp = CURRENT_TIMESTAMP WHERE _id = $2`, [text, blockId]);
     return result;
   }
 
   export async function deleteBlock(blockId: string, userEmail: string) {
-    const result = await db.result('DELETE FROM blocks WHERE id = $1 AND author_id = (SELECT user_id FROM users WHERE email = $2)', [blockId, userEmail]);
+    const result = await db.result('DELETE FROM blocks WHERE _id = $1 AND author_id = (SELECT _id FROM users WHERE email = $2)', [blockId, userEmail]);
     return result;
   }
 }

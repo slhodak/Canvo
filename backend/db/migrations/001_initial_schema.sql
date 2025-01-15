@@ -3,9 +3,10 @@
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id TEXT UNIQUE NOT NULL,
+    _id TEXT UNIQUE NOT NULL,
     email TEXT UNIQUE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Invites table
@@ -25,34 +26,54 @@ CREATE TABLE IF NOT EXISTS sessions (
     FOREIGN KEY (user_email) REFERENCES users(email)
 );
 
+-- Groups table
+CREATE TABLE IF NOT EXISTS groups (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    _id TEXT UNIQUE NOT NULL,
+    author_id TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (author_id) REFERENCES users(_id),
+    UNIQUE (author_id)
+);
+
 -- Blocks table
 CREATE TABLE IF NOT EXISTS blocks (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    _id TEXT UNIQUE NOT NULL,
+    group_id TEXT NOT NULL,
     author_id TEXT NOT NULL,
-    title TEXT NOT NULL DEFAULT '',
+    label TEXT NOT NULL DEFAULT '',
     content TEXT NOT NULL DEFAULT '',
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (author_id) REFERENCES users(user_id),
-    UNIQUE (author_id, title)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (author_id) REFERENCES users(_id),
+    FOREIGN KEY (group_id) REFERENCES groups(_id),
+    UNIQUE (author_id, label)
 );
 
 -- Transformations table
 CREATE TABLE IF NOT EXISTS transformations (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    title TEXT NOT NULL,
+    _id TEXT UNIQUE NOT NULL,
+    group_id TEXT NOT NULL,
     author_id TEXT NOT NULL,
-    prompt TEXT NOT NULL,
-    FOREIGN KEY (author_id) REFERENCES users(user_id),
-    UNIQUE (author_id, title)
+    input_block_id TEXT NOT NULL,
+    label TEXT NOT NULL DEFAULT '',
+    prompt TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (author_id) REFERENCES users(_id),
+    FOREIGN KEY (group_id) REFERENCES groups(_id),
+    FOREIGN KEY (input_block_id) REFERENCES blocks(_id),
+    UNIQUE (author_id, label)
 );
 
--- Relationships table for blocks to each other
-CREATE TABLE IF NOT EXISTS relationships (
+-- Transformations output Blocks table
+CREATE TABLE IF NOT EXISTS transformation_outputs (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    parent_block_id INTEGER NOT NULL,
-    child_block_id INTEGER NOT NULL,
-    transformation_id INTEGER NOT NULL,
-    FOREIGN KEY (parent_block_id) REFERENCES blocks(id),
-    FOREIGN KEY (child_block_id) REFERENCES blocks(id),
-    FOREIGN KEY (transformation_id) REFERENCES transformations(id)
+    transformation_id TEXT NOT NULL,
+    output_block_id TEXT NOT NULL,
+    FOREIGN KEY (transformation_id) REFERENCES transformations(_id),
+    FOREIGN KEY (output_block_id) REFERENCES blocks(_id)
 );

@@ -4,7 +4,7 @@ import './Layer.css';
 import { SERVER_URL } from './constants';
 
 interface LayerProps {
-  parentBlock: BlockModel;
+  rootBlock: BlockModel;
   transformation: TransformationModel;
 }
 
@@ -16,12 +16,12 @@ export interface TransformationModel {
 
 // A Layer is a group of blocks that are descended and transformed from a single block
 // Layers have a 1:1 relationship with Transformations
-export const Layer = ({ parentBlock, transformation }: LayerProps) => {
+export const Layer = ({ rootBlock, transformation }: LayerProps) => {
   const [blocks, setBlocks] = useState<BlockModel[]>([]);
 
   useEffect(() => {
     async function fetchDescendentBlocks() {
-      const response = await fetch(`${SERVER_URL}/api/get_descendent_blocks/${parentBlock.id}`);
+      const response = await fetch(`${SERVER_URL}/api/get_descendent_blocks/${rootBlock.id}`);
       const data = await response.json();
       if (data.status === 'success') {
         setBlocks(data.blocks);
@@ -31,7 +31,7 @@ export const Layer = ({ parentBlock, transformation }: LayerProps) => {
     }
 
     fetchDescendentBlocks();
-  }, [parentBlock]);
+  }, [rootBlock]);
 
   return (
     <div className="layer-container">
