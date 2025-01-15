@@ -31,10 +31,11 @@ CREATE TABLE IF NOT EXISTS groups (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     _id TEXT UNIQUE NOT NULL,
     author_id TEXT NOT NULL,
+    label TEXT NOT NULL DEFAULT '',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (author_id) REFERENCES users(_id),
-    UNIQUE (author_id)
+    UNIQUE (author_id, label)
 );
 
 -- Blocks table
@@ -77,3 +78,6 @@ CREATE TABLE IF NOT EXISTS transformation_outputs (
     FOREIGN KEY (transformation_id) REFERENCES transformations(_id),
     FOREIGN KEY (output_block_id) REFERENCES blocks(_id)
 );
+
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO canvo_app;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO canvo_app;

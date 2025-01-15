@@ -1,45 +1,35 @@
 import { useState, useEffect } from 'react';
 import './App.css'
-import { Layer, TransformationModel } from './Layer';
-import { BlockModel, BlockPreview } from './Block';
 import { SERVER_URL } from './constants';
-import { User } from '@wb/shared-types';
+import { UserModel, GroupModel } from '@wb/shared-types';
+import { Group, GroupPreview } from './Group';
 
 const App = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [rootBlock, setRootBlock] = useState<BlockModel | null>(null);
-  const [transformations, setTransformations] = useState<TransformationModel[]>([]);
-  const [rootBlocks, setRootBlocks] = useState<BlockModel[]>([]);
+  const [user, setUser] = useState<UserModel | null>(null);
+  const [group, setGroup] = useState<GroupModel | null>(null);
+  const [groups, setGroups] = useState<GroupModel[]>([]);
 
   //////////////////////////////
   // Functions
   //////////////////////////////
 
-  const createBlock = async () => {
-    try {
-      const response = await fetch(`${SERVER_URL}/api/new_block`, {
-        method: 'POST',
-        credentials: 'include'
-      });
-
-      const data = await response.json();
-      if (data.status === 'success') {
-        fetchRootBlocks();
-      }
-    } catch (error) {
-      console.error('Error adding root block:', error);
+  const createGroup = async () => {
+    if (!user) {
+      console.error('No user found. Cannot create group.');
+      return;
     }
-  }
 
-  const fetchRootBlocks = async () => {
-    const response = await fetch(`${SERVER_URL}/api/get_root_blocks`, {
-      credentials: 'include',
-    });
-    const data = await response.json();
-    if (data.status === 'success') {
-      setRootBlocks(data.blocks);
-    } else {
-      console.error('Error fetching root blocks:', data.error);
+    try {
+      await fetch(`${SERVER_URL}/api/new_group`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ userId: user._id })
+      });
+    } catch (error) {
+      console.error('Error creating group:', error);
     }
   }
 
@@ -47,9 +37,16 @@ const App = () => {
   // useEffect Hooks
   //////////////////////////////
 
-  // Fetch all the root blocks
   useEffect(() => {
-    fetchRootBlocks();
+    async function fetchAllGroups() {
+      const response = await fetch(`${SERVER_URL}/api/get_all_groups`, {
+        credentials: 'include',
+      });
+      const data = await response.json();
+      setGroups(data.groups);
+    }
+
+    fetchAllGroups();
   }, []);
 
   // Fetch the latest group
@@ -59,50 +56,47 @@ const App = () => {
         credentials: 'include',
       });
       const data = await response.json();
-      if (data.status === 'success') {
-        setRootBlock(data.block);
-      } else {
-        console.error('Error fetching block:', data.error);
+      if (data.status != 'success') {
+        console.error('Error fetching latest group:', data.error);
       }
     }
 
     fetchLatestGroup();
   }, []);
 
-  // Fetch all the transformations of the block
+  // Fetch the user data
   useEffect(() => {
-    async function fetchTransformations(blockId: number) {
-      // Is this blockId number interpolation safe?
-      const response = await fetch(`${SERVER_URL}/api/get_descendent_blocks/${blockId}`, {
-        credentials: 'include',
+    async function fetchUser() {
+      try {
+        const response = await fetch(`${SERVER_URL}/api/get_user`, {
+          credentials: 'include',
       });
       const data = await response.json();
       if (data.status === 'success') {
-        setTransformations(data.transformations);
+        setUser(data.user);
       } else {
-        console.error('Error fetching transformations:', data.error);
+        console.error('Error fetching user:', data.error);
+      }
+    } catch (error) {
+        console.error('Error fetching user:', error);
       }
     }
 
-    if (rootBlock) {
-      fetchTransformations(rootBlock.id)
-    }
-  }, [rootBlock]);
+    fetchUser();
+  }, []);
 
   return (
     <div>
       <div className="top-section">
-        {rootBlock ? transformations.map((transformation) => (
-          <Layer key={transformation.id} rootBlock={rootBlock} transformation={transformation} />
-        )) : <div>No root block found</div>}
+        {group ? <Group group={group} /> : <div>No group selected</div>}
       </div>
 
       <div className="bottom-section">
-        <button className="add-block-button" onClick={createBlock}>New</button>
-        <div className="block-previews-container">
-          {rootBlocks.map((block) => (
-            <button key={block.id} onClick={() => setRootBlock(block)}>
-              <BlockPreview block={block} />
+        <button className="add-group-button" onClick={createGroup}>New</button>
+        <div className="group-previews-container">
+          {groups.map((group) => (
+            <button key={group._id} onClick={() => setGroup(group)}>
+              <GroupPreview group={group} />
             </button>
           ))}
         </div>

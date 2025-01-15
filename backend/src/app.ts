@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import OpenAI from "openai";
 import path from 'path';
 import { Database as db } from './db';
+import { UserModel } from '@wb/shared-types';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -155,7 +156,7 @@ router.post('/auth/invite', async (req: Request, res: Response) => {
   }
 });
 
-async function getUserEmailFromSessionToken(req: Request): Promise<string | null> {
+async function getUserFromSessionToken(req: Request): Promise<UserModel | null> {
   const sessionToken = req.cookies?.session_token;
   if (!sessionToken) {
     return null;
@@ -192,85 +193,51 @@ app.use('/api', async (req: Request, res: Response, next) => {
   next();
 });
 
-async function updateBlock(res: Response, blockId: string, text: string) {
-  const result = await db.updateBlock(blockId, text);
+// async function updateBlock(res: Response, blockId: string, text: string) {
+//   const result = await db.updateBlock(blockId, text);
 
-  if (result.rowCount === 0) {
-    return res.status(404).json({ error: "Text ID not found" });
-  }
+//   if (result.rowCount === 0) {
+//     return res.status(404).json({ error: "Text ID not found" });
+//   }
 
-  res.json({
-    status: "success",
-    message: "Block updated successfully",
-    blockId: blockId
-  });
-}
+//   res.json({
+//     status: "success",
+//     message: "Block updated successfully",
+//     blockId: blockId
+//   });
+// }
 
-// Create new text
-async function createBlock(req: Request, res: Response, text: string) {
-  const userEmail = await getUserEmailFromSessionToken(req);
-  if (!userEmail) {
+async function createGroup(req: Request, res: Response) {
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
     // This should never happen because the middleware should have already checked the session token
     return res.status(401).json({ error: "Could not find user email from session token" });
   }
 
-  const blockId = await db.createBlock(userEmail);
-  if (!blockId) {
-    return res.status(500).json({ error: "Could not create block" });
+  const groupId = await db.createGroup(user._id);
+  if (!groupId) {
+    return res.status(500).json({ error: "Could not create group" });
   }
 
   res.json({
     status: "success",
-    message: "Block created successfully",
-    blockId: blockId
+    message: "Group created successfully",
+    groupId: groupId
   });
 }
 
-router.post('/api/new_block', async (req: Request, res: Response) => {
+router.get('/api/get_latest_group', async (req: Request, res: Response) => {
   try {
-    await createBlock(req, res, "");
-  } catch (error) {
-    if (error instanceof Error) {
-      return res.status(500).json({ error: error.message });
-    }
-    return res.status(500).json({ error: "An unknown error occurred" });
-  }
-});
-
-
-router.post('/api/update_block', async (req: Request, res: Response) => {
-  const data = req.body;
-  if (!data.blockId) {
-    return res.status(400).json({ error: "No blockId provided" });
-  }
-
-  try {
-    if (typeof data.content !== 'string') {
-      return res.status(400).json({ error: "Content is not a string" });
-    }
-
-    await updateBlock(res, data.blockId, data.content);
-  } catch (error) {
-    if (error instanceof Error) {
-      return res.status(500).json({ error: error.message });
-    }
-    return res.status(500).json({ error: "An unknown error occurred" });
-  }
-});
-
-router.get('/api/get_latest_root_block', async (req: Request, res: Response) => {
-  try {
-    const userEmail = await getUserEmailFromSessionToken(req);
-    if (!userEmail) {
+    const user = await getUserFromSessionToken(req);
+    if (!user) {
       return res.status(401).json({ error: "Could not find user email from session token" });
     }
 
-    const row = await db.getLatestBlock(userEmail);
+    const row = await db.getLatestGroup(user._id);
 
     res.json({
       status: row ? "success" : "failed",
-      blockId: row ? row.id : null,
-      content: row ? row.content : ""
+      group: row ? row : null
     });
   } catch (error) {
     if (error instanceof Error) {
@@ -280,21 +247,51 @@ router.get('/api/get_latest_root_block', async (req: Request, res: Response) => 
   }
 });
 
-router.get('/api/get_root_blocks', async (req: Request, res: Response) => {
+
+// router.post('/api/new_block', async (req: Request, res: Response) => {
+//   try {
+//     await createBlock(req, res, "");
+//   } catch (error) {
+//     if (error instanceof Error) {
+//       return res.status(500).json({ error: error.message });
+//     }
+//     return res.status(500).json({ error: "An unknown error occurred" });
+//   }
+// });
+
+
+// router.post('/api/update_block', async (req: Request, res: Response) => {
+//   const data = req.body;
+//   if (!data.blockId) {
+//     return res.status(400).json({ error: "No blockId provided" });
+//   }
+
+//   try {
+//     if (typeof data.content !== 'string') {
+//       return res.status(400).json({ error: "Content is not a string" });
+//     }
+
+//     await updateBlock(res, data.blockId, data.content);
+//   } catch (error) {
+//     if (error instanceof Error) {
+//       return res.status(500).json({ error: error.message });
+//     }
+//     return res.status(500).json({ error: "An unknown error occurred" });
+//   }
+// });
+
+router.get('/api/get_all_groups', async (req: Request, res: Response) => {
   try {
-    const userEmail = await getUserEmailFromSessionToken(req);
-    if (!userEmail) {
+    const user = await getUserFromSessionToken(req);
+    if (!user) {
       return res.status(401).json({ error: "Could not find user email from session token" });
     }
 
-    const results = await db.getAllRootBlocks(userEmail);
+    const results = await db.getAllGroups(user._id);
 
     res.json({
       status: "success",
-      blocks: results.map((row: any) => ({
-        blockId: row.block_id,
-        content: row.content
-      }))
+      groups: results,
     });
   } catch (error) {
     if (error instanceof Error) {
@@ -305,79 +302,79 @@ router.get('/api/get_root_blocks', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/api/get_descendent_blocks/:block_id', async (req: Request, res: Response) => {
-  const blockId = req.params.block_id;
+// router.get('/api/get_descendent_blocks/:block_id', async (req: Request, res: Response) => {
+//   const blockId = req.params.block_id;
 
-  try {
-    const userEmail = await getUserEmailFromSessionToken(req);  
-    if (!userEmail) {
-      return res.status(401).json({ error: "Could not find user email from session token" });
-    }
+//   try {
+//     const user = await getUserFromSessionToken(req);
+//     if (!user) {
+//       return res.status(401).json({ error: "Could not find user email from session token" });
+//     }
 
-    const results = await db.getDescendentBlocks(blockId, userEmail);
-    res.json({
-      status: "success",
-      blocks: results.map((row: any) => ({
-        blockId: row.block_id,
-        content: row.content
-      }))
-    });
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: "An unknown error occurred" });
-    }
-  }
-});
+//     const results = await db.getDescendentBlocks(blockId, user._id);
+//     res.json({
+//       status: "success",
+//       blocks: results.map((row: any) => ({
+//         blockId: row.block_id,
+//         content: row.content
+//       }))
+//     });
+//   } catch (error) {
+//     if (error instanceof Error) {
+//       res.status(500).json({ error: error.message });
+//     } else {
+//       res.status(500).json({ error: "An unknown error occurred" });
+//     }
+//   }
+// });
 
-router.get('/api/get_block/:block_id', async (req: Request, res: Response) => {
-  const blockId = req.params.block_id;
+// router.get('/api/get_block/:block_id', async (req: Request, res: Response) => {
+//   const blockId = req.params.block_id;
 
-  try {
-    const userEmail = await getUserEmailFromSessionToken(req);
-    if (!userEmail) {
-      return res.status(401).json({ error: "Could not find user email from session token" });
-    }
+//   try {
+//     const userEmail = await getUserEmailFromSessionToken(req);
+//     if (!userEmail) {
+//       return res.status(401).json({ error: "Could not find user email from session token" });
+//     }
 
-    const row = await db.getBlock(blockId, userEmail);
-    if (row) {
-      return res.json({
-        blockId: row.block_id,
-        content: row.content
-      });
-    }
-    res.status(404).json({ error: "Block not found" });
-  } catch (error) {
-    if (error instanceof Error) {
-      return res.status(500).json({ error: error.message });
-    }
-    return res.status(500).json({ error: "An unknown error occurred" });
-  }
-});
+//     const row = await db.getBlock(blockId, userEmail);
+//     if (row) {
+//       return res.json({
+//         blockId: row.block_id,
+//         content: row.content
+//       });
+//     }
+//     res.status(404).json({ error: "Block not found" });
+//   } catch (error) {
+//     if (error instanceof Error) {
+//       return res.status(500).json({ error: error.message });
+//     }
+//     return res.status(500).json({ error: "An unknown error occurred" });
+//   }
+// });
 
-router.delete('/api/delete_block/:block_id', async (req: Request, res: Response) => {
-  const userEmail = await getUserEmailFromSessionToken(req);
-  if (!userEmail) {
-    return res.status(401).json({ error: "Could not find user email from session token" });
-  }
+// router.delete('/api/delete_block/:block_id', async (req: Request, res: Response) => {
+//   const userEmail = await getUserEmailFromSessionToken(req);
+//   if (!userEmail) {
+//     return res.status(401).json({ error: "Could not find user email from session token" });
+//   }
 
-  const blockId = req.params.block_id;
+//   const blockId = req.params.block_id;
 
-  try {
-    const result = await db.deleteBlock(blockId, userEmail);
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: "Block not found" });
-    }
+//   try {
+//     const result = await db.deleteBlock(blockId, userEmail);
+//     if (result.rowCount === 0) {
+//       return res.status(404).json({ error: "Block not found" });
+//     }
 
-    return res.json({ status: "success", message: "Block deleted successfully" });
-  } catch (error) {
-    if (error instanceof Error) {
-      return res.status(500).json({ error: error.message });
-    }
-    return res.status(500).json({ error: "An unknown error occurred" });
-  }
-});
+//     return res.json({ status: "success", message: "Block deleted successfully" });
+//   } catch (error) {
+//     if (error instanceof Error) {
+//       return res.status(500).json({ error: error.message });
+//     }
+//     return res.status(500).json({ error: "An unknown error occurred" });
+//   }
+// });
 
 ////////////////////////////////////////////////////////////
 // AI Functions

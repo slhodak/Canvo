@@ -23,6 +23,10 @@ const Home = () => {
     checkSession();
   }, []);
 
+  if (isAuthenticated === null) {
+    return <div></div>;
+  }
+
   return isAuthenticated === false ? (
     <AuthForm setIsAuthenticated={setIsAuthenticated} />
   ) : (
