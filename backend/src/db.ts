@@ -16,11 +16,13 @@ const db = pgp(process.env.DATABASE_URL);
 export namespace Database {
   // Users
   export async function insertUser(email: string) {
-    const user = await db.oneOrNone('SELECT id, _id, email FROM users WHERE email = $1', [email]);
+    const userId = uuidv4();
+    // The database itself can protect against duplicate emails, but we'll check here anyway
+    const user = await db.oneOrNone('SELECT id, _id, email FROM users WHERE _id = $1', [userId]);
     if (user) {
       return;
     }
-    await db.none('INSERT INTO users (_id, email) VALUES ($1, $2)', [uuidv4(), email]);
+    await db.none('INSERT INTO users (_id, email) VALUES ($1, $2)', [userId, email]);
   }
 
   export async function getUser(sessionToken: string) {
@@ -66,8 +68,9 @@ export namespace Database {
   }
 
   export async function createGroup(userId: string) {
-    const group = await db.one('INSERT INTO groups (author_id) VALUES ($1) RETURNING _id', [userId]);
-    return group._id;
+    const groupId = uuidv4();
+    await db.none('INSERT INTO groups (_id, author_id) VALUES ($1, $2)', [groupId, userId]);
+    return groupId;
   }
 
   // Transformations
@@ -101,14 +104,10 @@ export namespace Database {
     return blocks;
   }
 
-  export async function getLatestBlock(userId: string): Promise<BlockModel | null> {
-    const row = await db.oneOrNone('SELECT id, content FROM blocks WHERE author_id = $1 ORDER BY timestamp DESC LIMIT 1', [userId]);
-    return row;
-  }
-
   export async function createBlock(userId: string): Promise<string | null> {
-    const result = await db.one('INSERT INTO blocks (author_id) VALUES ($1) RETURNING _id', [userId]);
-    return result._id;
+    const blockId = uuidv4();
+    await db.none('INSERT INTO blocks (_id, author_id) VALUES ($1, $2)', [blockId, userId]);
+    return blockId;
   }
 
   export async function updateBlock(blockId: string, text: string, userId: string) {

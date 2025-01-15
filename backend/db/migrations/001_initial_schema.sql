@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS sessions (
     user_email TEXT NOT NULL,
     session_start TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     session_expiration TIMESTAMP NOT NULL,
-    FOREIGN KEY (user_email) REFERENCES users(email)
+    FOREIGN KEY (user_email) REFERENCES users(email) ON DELETE CASCADE
 );
 
 -- Groups table
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS groups (
     label TEXT NOT NULL DEFAULT '',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (author_id) REFERENCES users(_id),
+    FOREIGN KEY (author_id) REFERENCES users(_id) ON DELETE CASCADE,
     UNIQUE (author_id, label)
 );
 
@@ -48,8 +48,8 @@ CREATE TABLE IF NOT EXISTS blocks (
     content TEXT NOT NULL DEFAULT '',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (author_id) REFERENCES users(_id),
-    FOREIGN KEY (group_id) REFERENCES groups(_id),
+    FOREIGN KEY (author_id) REFERENCES users(_id) ON DELETE CASCADE,
+    FOREIGN KEY (group_id) REFERENCES groups(_id) ON DELETE CASCADE,
     UNIQUE (author_id, label)
 );
 
@@ -64,9 +64,9 @@ CREATE TABLE IF NOT EXISTS transformations (
     prompt TEXT NOT NULL DEFAULT '',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (author_id) REFERENCES users(_id),
-    FOREIGN KEY (group_id) REFERENCES groups(_id),
-    FOREIGN KEY (input_block_id) REFERENCES blocks(_id),
+    FOREIGN KEY (author_id) REFERENCES users(_id) ON DELETE CASCADE,
+    FOREIGN KEY (group_id) REFERENCES groups(_id) ON DELETE CASCADE,
+    FOREIGN KEY (input_block_id) REFERENCES blocks(_id) ON DELETE CASCADE,
     UNIQUE (author_id, label)
 );
 
@@ -75,8 +75,8 @@ CREATE TABLE IF NOT EXISTS transformation_outputs (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     transformation_id TEXT NOT NULL,
     output_block_id TEXT NOT NULL,
-    FOREIGN KEY (transformation_id) REFERENCES transformations(_id),
-    FOREIGN KEY (output_block_id) REFERENCES blocks(_id)
+    FOREIGN KEY (transformation_id) REFERENCES transformations(_id) ON DELETE CASCADE,
+    FOREIGN KEY (output_block_id) REFERENCES blocks(_id) ON DELETE CASCADE
 );
 
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO canvo_app;
