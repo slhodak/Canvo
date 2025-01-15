@@ -232,17 +232,17 @@ router.get('/api/get_latest_group', async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Could not find user email from session token" });
     }
 
-    const row = await db.getLatestGroup(user._id);
+    const group = await db.getLatestGroup(user._id);
 
     res.json({
-      status: row ? "success" : "failed",
-      group: row ? row : null
+      status: "success",
+      group: group
     });
   } catch (error) {
     if (error instanceof Error) {
-      return res.status(500).json({ error: error.message });
+      return res.status(500).json({ status: "failed", error: error.message });
     }
-    return res.status(500).json({ error: "An unknown error occurred" });
+    return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
   }
 });
 
