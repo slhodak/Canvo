@@ -9,7 +9,9 @@
     "stop": "yarn run pm2 stop ecosystem.config.js",
     "dev": "NODE_ENV=development nodemon src/app.ts",
     "build": "tsc --build",
-    "db:migrate": "bash db/run_migrations.sh"
+    "db:init": "bash db/init_db.sh",
+    "db:migrate": "bash db/run_migrations.sh",
+    "db:reset": "bash db/reset_db.sh"
   },
   "dependencies": {
     "@types/node": "^22.10.5",

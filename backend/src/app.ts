@@ -214,7 +214,7 @@ async function createBlock(req: Request, res: Response, text: string) {
     return res.status(401).json({ error: "Could not find user email from session token" });
   }
 
-  const blockId = await db.createBlock(userEmail, text);
+  const blockId = await db.createBlock(userEmail);
   if (!blockId) {
     return res.status(500).json({ error: "Could not create block" });
   }
@@ -226,21 +226,30 @@ async function createBlock(req: Request, res: Response, text: string) {
   });
 }
 
-router.post('/api/sync', async (req: Request, res: Response) => {
-  const data = req.body;
+router.post('/api/new_block', async (req: Request, res: Response) => {
+  try {
+    await createBlock(req, res, "");
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ error: error.message });
+    }
+    return res.status(500).json({ error: "An unknown error occurred" });
+  }
+});
 
-  if (!data.blockId || !data.text) {
-    return res.status(400).json({ error: "No blockId or text provided" });
+
+router.post('/api/update_block', async (req: Request, res: Response) => {
+  const data = req.body;
+  if (!data.blockId) {
+    return res.status(400).json({ error: "No blockId provided" });
   }
 
-  let blockId = data.blockId; // Will be undefined for new texts
-
   try {
-    if (blockId) {
-      await updateBlock(res, blockId, data.text);
-    } else {
-      await createBlock(req, res, data.text);
+    if (typeof data.content !== 'string') {
+      return res.status(400).json({ error: "Content is not a string" });
     }
+
+    await updateBlock(res, data.blockId, data.content);
   } catch (error) {
     if (error instanceof Error) {
       return res.status(500).json({ error: error.message });

@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Check if the environment parameter is provided
-if [ -z "$1" ]; then
-  echo "Error: No environment provided."
+if [[ "$1" != "dev" && "$1" != "prod" ]]; then
+  echo "Error: Invalid environment. Please provide 'dev' or 'prod'."
   exit 1
 fi
 

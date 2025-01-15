@@ -29,8 +29,8 @@ CREATE TABLE IF NOT EXISTS sessions (
 CREATE TABLE IF NOT EXISTS blocks (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     author_id TEXT NOT NULL,
-    title TEXT NOT NULL,
-    content TEXT NOT NULL,
+    title TEXT NOT NULL DEFAULT '',
+    content TEXT NOT NULL DEFAULT '',
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (author_id) REFERENCES users(user_id),
     UNIQUE (author_id, title)

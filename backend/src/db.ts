@@ -75,15 +75,14 @@ export namespace Database {
     return row;
   }
 
-  export async function createBlock(userEmail: string, text: string): Promise<string | null> {
+  export async function createBlock(userEmail: string): Promise<string | null> {
     const user = await db.oneOrNone('SELECT user_id FROM users WHERE email = $1', [userEmail]);
     if (!user) {
       return null;
     }
 
-    const blockId = uuidv4();
-    await db.none('INSERT INTO blocks (id, author_id, content) VALUES ($1, $2, $3)', [blockId, user.user_id, text]);
-    return blockId;
+    const result = await db.one('INSERT INTO blocks (author_id) VALUES ($1) RETURNING id', [user.user_id]);
+    return result.id;
   }
 
   export async function updateBlock(blockId: string, text: string) {

@@ -9,20 +9,44 @@ const App = () => {
   const [transformations, setTransformations] = useState<TransformationModel[]>([]);
   const [rootBlocks, setRootBlocks] = useState<BlockModel[]>([]);
 
-  // Fetch all the root blocks
-  useEffect(() => {
-    async function fetchRootBlocks() {
-      const response = await fetch(`${SERVER_URL}/api/get_root_blocks`, {
-        credentials: 'include',
+  //////////////////////////////
+  // Functions
+  //////////////////////////////
+
+  const createBlock = async () => {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/new_block`, {
+        method: 'POST',
+        credentials: 'include'
       });
+
       const data = await response.json();
       if (data.status === 'success') {
-        setRootBlocks(data.blocks);
-      } else {
-        console.error('Error fetching root blocks:', data.error);
+        fetchRootBlocks();
       }
+    } catch (error) {
+      console.error('Error adding root block:', error);
     }
+  }
 
+  const fetchRootBlocks = async () => {
+    const response = await fetch(`${SERVER_URL}/api/get_root_blocks`, {
+      credentials: 'include',
+    });
+    const data = await response.json();
+    if (data.status === 'success') {
+      setRootBlocks(data.blocks);
+    } else {
+      console.error('Error fetching root blocks:', data.error);
+    }
+  }
+
+  //////////////////////////////
+  // useEffect Hooks
+  //////////////////////////////
+
+  // Fetch all the root blocks
+  useEffect(() => {
     fetchRootBlocks();
   }, []);
 
@@ -71,6 +95,7 @@ const App = () => {
       </div>
 
       <div className="bottom-section">
+        <button className="add-block-button" onClick={createBlock}>New</button>
         {rootBlocks.map((block) => (
           <BlockPreview block={block} />
         ))}
