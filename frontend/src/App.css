@@ -34,7 +34,7 @@
 .add-group-button {
   padding: 10px 20px;
   border: none;
-  background-color: lightblue;
+  background-color: var(--button-background-color);
 }
 
 /* Bottom section */

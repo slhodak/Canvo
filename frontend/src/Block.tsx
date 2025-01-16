@@ -58,13 +58,13 @@ export const Block = ({ block, fetchBlocks }: BlockProps) => {
     <div className="block-container">
       <div className="block-header">
         <button className="block-delete-button" onClick={deleteBlock}>
-          <XSymbol height={16} width={16} />
+          <XSymbol />
         </button>
       </div>
       <textarea
         value={content}
         onChange={handleChange}
-        className="block-content"
+        className="block-content-textarea"
         placeholder="What's poppin?"
       />
     </div>

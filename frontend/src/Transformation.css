@@ -1,0 +1,34 @@
+.transformation-container {
+  height: 110px;
+  width: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.transformation-prompt-textarea {
+  width: 100%;
+  height: 100%;
+  border: none;
+  resize: none;
+  scrollbar-width: thin;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  };
+
+  background-color: var(--textarea-nonediting-background-color);
+}
+
+.transformation-prompt-textarea:focus {
+  background-color: var(--textarea-editing-background-color);
+}
+
+.transformation-run-button {
+  background-color: var(--button-background-color);
+  color: var(--button-text-color);
+  border: none;
+  padding: 6px;
+  width: 50%;
+  align-self: flex-end;
+}
