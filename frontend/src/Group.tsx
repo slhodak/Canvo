@@ -20,6 +20,12 @@ export const Group = ({ group, updateGroupLabel }: GroupProps) => {
     });
     const data = await response.json();
     setBlocks(data.blocks);
+    // When we fetch all the blocks, we transform that collection into a set of arrays based on their depth in relation to each other
+    // Transformations have input_block_id, and we can get the output_block_id from the transformation_outputs table
+    // We can then use this to traverse a tree of blocks and transformations
+    // Then we store, in memory here, blocks as a 2darray where the first index is the depth of the block in relation to the root block
+    // We can then use this to render the blocks in layers in the correct order
+    // So first we need to fetch all the transformations as well
   }, [group._id]);
 
   const addBlock = async () => {
