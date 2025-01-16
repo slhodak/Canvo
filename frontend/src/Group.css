@@ -34,6 +34,12 @@
   background-color: var(--button-background-color);
 }
 
+.group-block-depth-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .group-blocks-container {
   display: flex;
   flex-direction: row;

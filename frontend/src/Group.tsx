@@ -145,7 +145,6 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
       const depth = findBlockDepth(block, 0)
       if (_blocksByDepth[depth] == null) {
         _blocksByDepth[depth] = [block];
-        return depth;
       } else {
         _blocksByDepth[depth].push(block);
       }
@@ -187,17 +186,23 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
       />
       <button className="add-block-button" onClick={addBlock}>Add Block</button>
     </div>
-    <div className="group-blocks-container">
-      {blocks.map((block) => {
-        const transformation = transformationsByBlockId[block._id];
+    <div className="group-block-depth-container">
+      {Object.entries(blocksByDepth).map(([depth, blocks]) => {
         return (
-          <div className="group-block-container" key={block._id}>
-            <Block block={block} fetchBlocks={fetchBlocks} />
-            {transformation ?
-              <Transformation transformation={transformation} fetchTransformations={fetchTransformations} />
-              :
-              <button className="add-transformation-button" onClick={() => addTransformation(block._id)}>New Transformation</button>
-            }
+          <div className="group-blocks-container" key={`block-depth-${depth}`}>
+              {blocks.map((block) => {
+                const transformation = transformationsByBlockId[block._id];
+                return (
+                  <div className="group-block-container" key={block._id}>
+                    <Block block={block} fetchBlocks={fetchBlocks} />
+                    {transformation ?
+                      <Transformation transformation={transformation} fetchTransformations={fetchTransformations} />
+                      :
+                      <button className="add-transformation-button" onClick={() => addTransformation(block._id)}>New Transformation</button>
+                    }
+                  </div>
+                )
+              })}
           </div>
         )
       })}
