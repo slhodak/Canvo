@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import './App.css'
 import { SERVER_URL } from './constants';
 import { GroupModel } from '@wb/shared-types';
-import { Group } from './Group';
+import Group from './Group';
 
 const App = () => {
   const [group, setGroup] = useState<GroupModel | null>(null);

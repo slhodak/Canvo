@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import './Group.css';
 import { Block } from './Block';
+import Transformation from './Transformation';
 import { BlockModel, GroupModel, TransformationModel } from '@wb/shared-types';
 import { SERVER_URL } from './constants';
 
@@ -10,10 +11,10 @@ interface GroupProps {
   updateGroupLabel: (label: string) => void;
 }
 
-export const Group = ({ group, updateGroupLabel }: GroupProps) => {
+const Group = ({ group, updateGroupLabel }: GroupProps) => {
   const [label, setLabel] = useState(group.label);
   const [blocks, setBlocks] = useState<BlockModel[]>([]);
-  const [transformations, setTransformations] = useState<TransformationModel[]>([]);
+  const [transformationsByBlockId, setTransformationsByBlockId] = useState<Record<string, TransformationModel>>({});
 
   const fetchBlocks = useCallback(async () => {
     const response = await fetch(`${SERVER_URL}/api/get_blocks_for_group/${group._id}`, {
@@ -34,8 +35,16 @@ export const Group = ({ group, updateGroupLabel }: GroupProps) => {
       credentials: 'include',
     });
     const data = await response.json();
-    console.log(data);
-    setTransformations(data.transformations);
+
+    // Convert the returned array into a map of block_id to transformations
+    const transformations: TransformationModel[] = data.transformations;
+    const _transformationsByBlockId: Record<string, TransformationModel> = transformations.reduce((acc, transformation) => {
+      const inputBlockId: string = transformation.input_block_id;
+      acc[inputBlockId] = transformation;
+      return acc;
+    }, {} as Record<string, TransformationModel>);
+
+    setTransformationsByBlockId(_transformationsByBlockId);
   }, [group._id]);
 
   const addBlock = async () => {
@@ -75,9 +84,17 @@ export const Group = ({ group, updateGroupLabel }: GroupProps) => {
       <button className="add-block-button" onClick={addBlock}>Add Block</button>
     </div>
     <div className="group-blocks-container">
-      {blocks.map((block) => (
-        <Block key={block._id} block={block} fetchBlocks={fetchBlocks} />
-      ))}
+      {blocks.map((block) => {
+        const transformation = transformationsByBlockId[block._id];
+        return (
+          <div key={block._id}>
+            <Block key={block._id} block={block} fetchBlocks={fetchBlocks} />
+            {transformation && <Transformation key={transformation._id} transformation={transformation} />}
+          </div>
+        )
+      })}
     </div>
   </div>;
 }
+
+export default Group;

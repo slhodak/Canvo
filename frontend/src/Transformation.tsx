@@ -1,8 +1,16 @@
+import { TransformationModel } from '@wb/shared-types';
 
-const Transformation = () => {
+interface TransformationProps {
+  transformation: TransformationModel;
+}
+
+const Transformation = ({ transformation }: TransformationProps) => {
   return (
     <div>
       <h1>Transformation</h1>
+      <p>{transformation.label}</p>
+      <p>{transformation.prompt}</p>
+      <button>Run</button>
     </div>
   );
 }

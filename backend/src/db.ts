@@ -74,7 +74,7 @@ export namespace Database {
   }
 
   export async function updateGroupLabel(groupId: string, label: string) {
-    const result = await db.result('UPDATE groups SET label = $1 WHERE _id = $2', [label, groupId]);
+    const result = await db.result('UPDATE groups SET label = $1, updated_at = CURRENT_TIMESTAMP WHERE _id = $2', [label, groupId]);
     return result;
   }
 
