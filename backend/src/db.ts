@@ -25,12 +25,7 @@ export namespace Database {
     await db.none('INSERT INTO users (_id, email) VALUES ($1, $2)', [userId, email]);
   }
 
-  export async function getUser(sessionToken: string) {
-    const result = await db.oneOrNone('SELECT user_email FROM sessions WHERE session_token = $1', [sessionToken]);
-    return result ? result.user_email : null;
-  }
-
-  export async function getUserByEmail(email: string): Promise<UserModel | null> {
+  export async function getUser(email: string): Promise<UserModel | null> {
     const user = await db.oneOrNone('SELECT id, _id, email FROM users WHERE email = $1', [email]);
     return user;
   }

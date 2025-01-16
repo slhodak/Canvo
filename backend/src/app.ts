@@ -162,7 +162,12 @@ async function getUserFromSessionToken(req: Request): Promise<UserModel | null> 
     return null;
   }
 
-  return await db.getUser(sessionToken);
+  const session = await db.getSession(sessionToken);
+  if (!session) {
+    return null;
+  }
+
+  return await db.getUser(session.user_email);
 }
 
 // Check if the session token is valid
@@ -207,18 +212,13 @@ app.use('/api', async (req: Request, res: Response, next) => {
 //   });
 // }
 
-async function createGroup(req: Request, res: Response) {
-  const user = await getUserFromSessionToken(req);
-  if (!user) {
-    return res.status(401).json({ error: "Could not find user email from session token" });
-  }
-
+async function createGroup(user: UserModel, res: Response) {
   const groupId = await db.createGroup(user._id);
   if (!groupId) {
-    return res.status(500).json({ error: "Could not create group" });
+    return res.status(500).json({ status: "failed", error: "Could not create group" });
   }
 
-  res.json({
+  return res.json({
     status: "success",
     message: "Group created successfully",
     groupId: groupId
@@ -248,12 +248,18 @@ router.get('/api/get_latest_group', async (req: Request, res: Response) => {
 
 router.post('/api/new_group', async (req: Request, res: Response) => {
   try {
-    await createGroup(req, res);
+    const user = await getUserFromSessionToken(req);
+    if (!user) {
+      return res.status(401).json({ error: "Could not find user email from session token" });
+    }
+    console.log("Creating group for user:", user);
+
+    return await createGroup(user, res);
   } catch (error) {
     if (error instanceof Error) {
-      return res.status(500).json({ error: error.message });
+      return res.status(500).json({ status: "failed", error: error.message });
     }
-    return res.status(500).json({ error: "An unknown error occurred" });
+    return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
   }
 });
 
