@@ -107,7 +107,7 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
             {transformation ?
               <Transformation key={transformation._id} transformation={transformation} />
             :
-              <button className="add-transformation-button" onClick={() => addTransformation(block._id)}>Add Transformation</button>
+              <button className="add-transformation-button" onClick={() => addTransformation(block._id)}>New Transformation</button>
             }
           </div>
         )
