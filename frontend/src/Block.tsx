@@ -16,11 +16,15 @@ export const Block = ({ block }: BlockProps) => {
 
   useEffect(() => {
     const updateBlock = async () => {
+      console.log('Updating block', block._id, content);
       const response = await fetch(`${SERVER_URL}/api/update_block`, {
         method: 'POST',
         credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          id: block._id,
+          blockId: block._id,
           content: content,
         }),
       });

@@ -111,7 +111,7 @@ export namespace Database {
   }
 
   export async function updateBlock(blockId: string, text: string, userId: string) {
-    const result = await db.result(`UPDATE blocks SET content = $1, timestamp = CURRENT_TIMESTAMP WHERE _id = $2 AND author_id = $3`, [text, blockId, userId]);
+    const result = await db.result(`UPDATE blocks SET content = $1, updated_at = CURRENT_TIMESTAMP WHERE _id = $2 AND author_id = $3`, [text, blockId, userId]);
     return result;
   }
 

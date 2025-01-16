@@ -198,19 +198,18 @@ app.use('/api', async (req: Request, res: Response, next) => {
   next();
 });
 
-// async function updateBlock(res: Response, blockId: string, text: string) {
-//   const result = await db.updateBlock(blockId, text);
+async function updateBlock(res: Response, blockId: string, text: string, userId: string) {
+  const result = await db.updateBlock(blockId, text, userId);
 
-//   if (result.rowCount === 0) {
-//     return res.status(404).json({ error: "Text ID not found" });
-//   }
+  if (result.rowCount === 0) {
+    return res.status(404).json({ error: "Text ID not found" });
+  }
 
-//   res.json({
-//     status: "success",
-//     message: "Block updated successfully",
-//     blockId: blockId
-//   });
-// }
+  return res.json({
+    status: "success",
+    blockId: blockId
+  });
+}
 
 async function createGroup(user: UserModel, res: Response) {
   const groupId = await db.createGroup(user._id);
@@ -315,26 +314,30 @@ router.post('/api/new_block/:group_id', async (req: Request, res: Response) => {
   }
 });
 
+router.post('/api/update_block', async (req: Request, res: Response) => {
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ error: "Could not find user email from session token" });
+  }
 
-// router.post('/api/update_block', async (req: Request, res: Response) => {
-//   const data = req.body;
-//   if (!data.blockId) {
-//     return res.status(400).json({ error: "No blockId provided" });
-//   }
+  const data = req.body;
+  if (!data.blockId) {
+    return res.status(400).json({ error: "No blockId provided" });
+  }
 
-//   try {
-//     if (typeof data.content !== 'string') {
-//       return res.status(400).json({ error: "Content is not a string" });
-//     }
+  try {
+    if (typeof data.content !== 'string') {
+      return res.status(400).json({ error: "Content is not a string" });
+    }
 
-//     await updateBlock(res, data.blockId, data.content);
-//   } catch (error) {
-//     if (error instanceof Error) {
-//       return res.status(500).json({ error: error.message });
-//     }
-//     return res.status(500).json({ error: "An unknown error occurred" });
-//   }
-// });
+    await updateBlock(res, data.blockId, data.content, user._id);
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ error: error.message });
+    }
+    return res.status(500).json({ error: "An unknown error occurred" });
+  }
+});
 
 router.get('/api/get_all_groups', async (req: Request, res: Response) => {
   try {
