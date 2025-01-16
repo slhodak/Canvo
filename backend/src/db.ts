@@ -147,7 +147,7 @@ export namespace Database {
     // Get every block
     // get every entry in transformation_outputs with that block id
     // probably doable in SQL
-    const results = await db.any('SELECT id, transformation_id, output_block_id FROM transformation_outputs WHERE output_block_id IN $1', [blockIds])
+    const results = await db.any('SELECT id, transformation_id, output_block_id FROM transformation_outputs WHERE output_block_id IN ($/blockIds:csv/)', { blockIds })
     return results;
   }
 }
