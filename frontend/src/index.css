@@ -12,7 +12,8 @@
 
   /* Variables */
   --background-color: #e4e4e4;
-
+  --textarea-nonediting-background-color: rgba(0, 0, 0, 0.08);
+  --textarea-editing-background-color: white;
 }
 
 a {

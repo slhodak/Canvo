@@ -1,0 +1,9 @@
+.x-symbol {
+  fill: rgb(139, 139, 139);
+  stroke: rgb(139, 139, 139);
+}
+
+.x-symbol:hover {
+  fill: rgb(227, 1, 1);
+  stroke: rgb(227, 1, 1);
+}

@@ -19,10 +19,14 @@
   border: none;
   outline: none;
   resize: none;
-  background-color: rgba(0, 0, 0, 0.1);
   width: 150px;
   font-size: 1rem;
   padding: 10px;
+  background-color: var(--textarea-nonediting-background-color);
+}
+
+.group-label-input:focus {
+  background-color: var(--textarea-editing-background-color);
 }
 
 .add-block-button {
@@ -33,6 +37,6 @@
 .group-blocks-container {
   display: flex;
   flex-direction: row;
-  gap: 10px;
+  gap: 27px 10px;
   flex-wrap: wrap;
 }

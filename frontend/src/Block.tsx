@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './Block.css';
 import { SERVER_URL } from './constants';
 import { BlockModel } from '@wb/shared-types';
+import { XSymbol } from './assets/XSymbol';
 
 interface BlockProps {
   block: BlockModel;
@@ -12,6 +13,21 @@ export const Block = ({ block }: BlockProps) => {
 
   const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(event.target.value);
+  };
+
+  const deleteBlock = async () => {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/delete_block`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.status !== 'success') {
+        console.error('Error deleting block:', data.error);
+      }
+    } catch (error) {
+      console.error('Error deleting block:', error);
+    }
   };
 
   useEffect(() => {
@@ -38,6 +54,11 @@ export const Block = ({ block }: BlockProps) => {
 
   return (
     <div className="block-container">
+      <div className="block-header">
+        <button className="block-delete-button" onClick={deleteBlock}>
+          <XSymbol height={16} width={16} />
+        </button>
+      </div>
       <textarea
         value={content}
         onChange={handleChange}
