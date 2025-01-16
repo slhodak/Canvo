@@ -48,17 +48,17 @@ export namespace Database {
 
   // Groups
   export async function getGroup(groupId: string, userId: string): Promise<GroupModel | null> {
-    const group = await db.oneOrNone('SELECT id, _id, author_id FROM groups WHERE _id = $1 and author_id = $2', [groupId, userId]);
+    const group = await db.oneOrNone('SELECT id, _id, author_id, label, updated_at, created_at FROM groups WHERE _id = $1 and author_id = $2', [groupId, userId]);
     return group;
   }
 
   export async function getLatestGroup(userId: string): Promise<GroupModel | null> {
-    const group = await db.oneOrNone('SELECT id, _id, author_id FROM groups WHERE author_id = $1 ORDER BY updated_at DESC LIMIT 1', [userId]);
+    const group = await db.oneOrNone('SELECT id, _id, author_id, label, updated_at, created_at FROM groups WHERE author_id = $1 ORDER BY updated_at DESC LIMIT 1', [userId]);
     return group;
   }
 
   export async function getAllGroups(userId: string): Promise<GroupModel[]> {
-    const groups = await db.any('SELECT id, _id, author_id FROM groups WHERE author_id = $1', [userId]);
+    const groups = await db.any('SELECT id, _id, author_id, label, updated_at, created_at FROM groups WHERE author_id = $1', [userId]);
     return groups;
   }
 
@@ -66,6 +66,11 @@ export namespace Database {
     const groupId = uuidv4();
     await db.none('INSERT INTO groups (_id, author_id) VALUES ($1, $2)', [groupId, userId]);
     return groupId;
+  }
+
+  export async function updateGroupLabel(groupId: string, label: string) {
+    const result = await db.result('UPDATE groups SET label = $1 WHERE _id = $2', [label, groupId]);
+    return result;
   }
 
   export async function deleteGroup(groupId: string, userId: string) {

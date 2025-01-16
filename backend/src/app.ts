@@ -219,7 +219,6 @@ async function createGroup(user: UserModel, res: Response) {
 
   return res.json({
     status: "success",
-    message: "Group created successfully",
     groupId: groupId
   });
 }
@@ -254,6 +253,26 @@ router.post('/api/new_group', async (req: Request, res: Response) => {
     console.log("Creating group for user:", user);
 
     return await createGroup(user, res);
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ status: "failed", error: error.message });
+    }
+    return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
+  }
+});
+
+router.post('/api/update_group_label', async (req: Request, res: Response) => {
+  const { groupId, label } = req.body;
+  try {
+    const result = await db.updateGroupLabel(groupId, label);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+  return res.json({
+      status: "success",
+      groupId: groupId
+    });
   } catch (error) {
     if (error instanceof Error) {
       return res.status(500).json({ status: "failed", error: error.message });
