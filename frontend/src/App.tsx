@@ -46,7 +46,9 @@ const App = () => {
         credentials: 'include',
       });
       const data = await response.json();
-      if (data.status != 'success') {
+      if (data.status == 'success') {
+        setGroup(data.group);
+      } else {
         console.error('Error fetching latest group:', data.error);
       }
     }
@@ -55,16 +57,20 @@ const App = () => {
   }, []);
 
   return (
-    <div>
+    <div className="app-container">
       <div className="top-section">
+        <div className="top-header-container">
+          <h2 className="app-title-header">Canvo</h2>
+          <button className="add-group-button" onClick={createGroup}>New Group</button>
+        </div>
         {group ? <Group group={group} /> : <div>No group selected</div>}
       </div>
 
       <div className="bottom-section">
-        <button className="add-group-button" onClick={createGroup}>New</button>
+        <h3>Groups</h3>
         <div className="group-previews-container">
           {groups.map((group) => (
-            <button key={group._id} onClick={() => setGroup(group)}>
+            <button className="group-preview-container-button" key={group._id} onClick={() => setGroup(group)}>
               <GroupPreview group={group} />
             </button>
           ))}

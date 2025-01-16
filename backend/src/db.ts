@@ -80,7 +80,7 @@ export namespace Database {
     return block;
   }
 
-  export async function getAllBlocksInGroup(groupId: string, userId: string): Promise<BlockModel[]> {
+  export async function getBlocksForGroup(groupId: string, userId: string): Promise<BlockModel[]> {
     const blocks = await db.any(`
       SELECT b._id, b.content
       FROM blocks b

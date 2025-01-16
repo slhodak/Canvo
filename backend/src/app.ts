@@ -234,7 +234,7 @@ router.get('/api/get_latest_group', async (req: Request, res: Response) => {
 
     const group = await db.getLatestGroup(user._id);
 
-    res.json({
+    return res.json({
       status: "success",
       group: group
     });
@@ -293,7 +293,7 @@ router.get('/api/get_all_groups', async (req: Request, res: Response) => {
 
     const results = await db.getAllGroups(user._id);
 
-    res.json({
+    return res.json({
       status: "success",
       groups: results,
     });
@@ -306,31 +306,28 @@ router.get('/api/get_all_groups', async (req: Request, res: Response) => {
   }
 });
 
-// router.get('/api/get_descendent_blocks/:block_id', async (req: Request, res: Response) => {
-//   const blockId = req.params.block_id;
+router.get('/api/get_blocks_for_group/:group_id', async (req: Request, res: Response) => {
+  const groupId = req.params.group_id;
+  try {
+    const user = await getUserFromSessionToken(req);
+    if (!user) {
+      return res.status(401).json({ error: "Could not find user email from session token" });
+    }
 
-//   try {
-//     const user = await getUserFromSessionToken(req);
-//     if (!user) {
-//       return res.status(401).json({ error: "Could not find user email from session token" });
-//     }
+    const blocks = await db.getBlocksForGroup(groupId, user._id);
 
-//     const results = await db.getDescendentBlocks(blockId, user._id);
-//     res.json({
-//       status: "success",
-//       blocks: results.map((row: any) => ({
-//         blockId: row.block_id,
-//         content: row.content
-//       }))
-//     });
-//   } catch (error) {
-//     if (error instanceof Error) {
-//       res.status(500).json({ error: error.message });
-//     } else {
-//       res.status(500).json({ error: "An unknown error occurred" });
-//     }
-//   }
-// });
+    return res.json({
+      status: "success",
+      blocks: blocks
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ status: "failed", error: error.message });
+    } else {
+      res.status(500).json({ status: "failed", error: "An unknown error occurred" });
+    }
+  }
+});
 
 // router.get('/api/get_block/:block_id', async (req: Request, res: Response) => {
 //   const blockId = req.params.block_id;
@@ -404,7 +401,7 @@ router.post('/api/rephrase', async (req: Request, res: Response) => {
       .map((s: string) => s.trim().replace(/^[123.]+/, ''))
       .filter((s: string) => s);
 
-    res.json({ rephrases: rephrases?.slice(0, 3) });
+    return res.json({ rephrases: rephrases?.slice(0, 3) });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });
@@ -430,7 +427,7 @@ router.post('/api/reflect', async (req: Request, res: Response) => {
 
     const reflection = completion.choices[0].message?.content;
 
-    res.json({ reflection });
+    return res.json({ reflection });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });
@@ -475,7 +472,7 @@ router.post('/api/prompt', async (req: Request, res: Response) => {
 
     const promptResponse = completion.choices[0].message.content;
 
-    res.json({ promptResponse });
+    return res.json({ promptResponse });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });
