@@ -16,7 +16,6 @@ export const Block = ({ block }: BlockProps) => {
 
   useEffect(() => {
     const updateBlock = async () => {
-      console.log('Updating block', block._id, content);
       const response = await fetch(`${SERVER_URL}/api/update_block`, {
         method: 'POST',
         credentials: 'include',
@@ -29,9 +28,7 @@ export const Block = ({ block }: BlockProps) => {
         }),
       });
       const data = await response.json();
-      if (data.status === 'success') {
-        console.log('Block updated successfully');
-      } else {
+      if (data.status !== 'success') {
         console.error('Error updating block:', data.error);
       }
     };

@@ -1,8 +1,7 @@
-/* .block-container {
-  border: 1px solid black;
+.block-container {
   height: 100px;
-  width: 100px;
-} */
+  width: 150px;
+}
 
 .block-content {
   height: 100%;
