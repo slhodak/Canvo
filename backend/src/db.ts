@@ -99,9 +99,9 @@ export namespace Database {
     return blocks;
   }
 
-  export async function createBlock(userId: string): Promise<string | null> {
+  export async function createBlock(userId: string, groupId: string): Promise<string | null> {
     const blockId = uuidv4();
-    await db.none('INSERT INTO blocks (_id, author_id) VALUES ($1, $2)', [blockId, userId]);
+    await db.none('INSERT INTO blocks (_id, author_id, group_id) VALUES ($1, $2, $3)', [blockId, userId, groupId]);
     return blockId;
   }
 

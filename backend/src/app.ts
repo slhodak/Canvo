@@ -263,6 +263,35 @@ router.post('/api/new_group', async (req: Request, res: Response) => {
   }
 });
 
+router.post('/api/new_block/:group_id', async (req: Request, res: Response) => {
+  const groupId = req.params.group_id;
+  if (!groupId) {
+    return res.status(400).json({ error: "No group ID provided" });
+  }
+
+  try {
+    const user = await getUserFromSessionToken(req);
+    if (!user) {
+      return res.status(401).json({ error: "Could not find user email from session token" });
+    }
+
+    const blockId = await db.createBlock(user._id, groupId);
+    if (!blockId) {
+      return res.status(500).json({ status: "failed", error: "Could not create block" });
+    }
+
+    return res.json({
+      status: "success",
+      blockId: blockId
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ status: "failed", error: error.message });
+    }
+    return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
+  }
+});
+
 
 // router.post('/api/update_block', async (req: Request, res: Response) => {
 //   const data = req.body;

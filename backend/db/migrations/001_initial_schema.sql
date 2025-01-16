@@ -34,8 +34,7 @@ CREATE TABLE IF NOT EXISTS groups (
     label TEXT NOT NULL DEFAULT '',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (author_id) REFERENCES users(_id) ON DELETE CASCADE,
-    UNIQUE (author_id, label)
+    FOREIGN KEY (author_id) REFERENCES users(_id) ON DELETE CASCADE
 );
 
 -- Blocks table
@@ -49,8 +48,7 @@ CREATE TABLE IF NOT EXISTS blocks (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (author_id) REFERENCES users(_id) ON DELETE CASCADE,
-    FOREIGN KEY (group_id) REFERENCES groups(_id) ON DELETE CASCADE,
-    UNIQUE (author_id, label)
+    FOREIGN KEY (group_id) REFERENCES groups(_id) ON DELETE CASCADE
 );
 
 -- Transformations table
@@ -66,8 +64,7 @@ CREATE TABLE IF NOT EXISTS transformations (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (author_id) REFERENCES users(_id) ON DELETE CASCADE,
     FOREIGN KEY (group_id) REFERENCES groups(_id) ON DELETE CASCADE,
-    FOREIGN KEY (input_block_id) REFERENCES blocks(_id) ON DELETE CASCADE,
-    UNIQUE (author_id, label)
+    FOREIGN KEY (input_block_id) REFERENCES blocks(_id) ON DELETE CASCADE
 );
 
 -- Transformations output Blocks table

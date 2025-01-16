@@ -12,12 +12,24 @@ const App = () => {
   // Functions
   //////////////////////////////
 
+  const fetchAllGroups = async () => {
+    const response = await fetch(`${SERVER_URL}/api/get_all_groups`, {
+      credentials: 'include',
+    });
+    const data = await response.json();
+    setGroups(data.groups);
+  }
+
   const createGroup = async () => {
     try {
-      await fetch(`${SERVER_URL}/api/new_group`, {
+      const response = await fetch(`${SERVER_URL}/api/new_group`, {
         method: 'POST',
         credentials: 'include',
       });
+      const data = await response.json();
+      if (data.status == 'success') {
+        fetchAllGroups();
+      }
     } catch (error) {
       console.error('Error creating group:', error);
     }
@@ -28,14 +40,6 @@ const App = () => {
   //////////////////////////////
 
   useEffect(() => {
-    async function fetchAllGroups() {
-      const response = await fetch(`${SERVER_URL}/api/get_all_groups`, {
-        credentials: 'include',
-      });
-      const data = await response.json();
-      setGroups(data.groups);
-    }
-
     fetchAllGroups();
   }, []);
 

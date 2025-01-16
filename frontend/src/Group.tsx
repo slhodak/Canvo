@@ -15,13 +15,17 @@ export const Group = ({ group }: { group: GroupModel }) => {
   }, [group._id]);
 
   const addBlock = async () => {
-    const response = await fetch(`${SERVER_URL}/api/new_block`, {
-      method: 'POST',
-      credentials: 'include',
-    });
-    const data = await response.json();
-    if (data.status == 'success') {
-      fetchBlocks();
+    try {
+      const response = await fetch(`${SERVER_URL}/api/new_block/${group._id}`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.status == 'success') {
+        fetchBlocks();
+      }
+    } catch (error) {
+      console.error('Error adding block:', error);
     }
   }
 
@@ -36,7 +40,7 @@ export const Group = ({ group }: { group: GroupModel }) => {
     </div>
     <div className="group-blocks-container">
       {blocks.map((block) => (
-        <div className="block-container">{block.label}</div>
+        <div className="block-container">{block.label ?? 'no content'}</div>
       ))}
     </div>
   </div>;
