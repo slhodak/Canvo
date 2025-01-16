@@ -129,7 +129,7 @@ interface GroupPreviewProps {
 const GroupPreview = ({ group, deleteGroup, setGroup }: GroupPreviewProps) => {
   return (
     <div role="button" tabIndex={0} className="group-preview-container" onClick={() => setGroup(group)}>
-      <span>{group.label ?? 'unknown'}</span>
+      <span>{group.label.length > 0 ? group.label : 'unknown'}</span>
       <button className="group-preview-delete-button" onClick={(e) => {
         e.stopPropagation();
         deleteGroup(group._id);

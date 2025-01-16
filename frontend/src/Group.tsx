@@ -43,7 +43,7 @@ export const Group = ({ group, updateGroupLabel }: GroupProps) => {
 
   useEffect(() => {
     setLabel(group.label);
-  }, [group]);
+  }, [group.label]);
 
   return <div className="group-container">
     <div className="group-header-container">
