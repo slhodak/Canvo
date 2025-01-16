@@ -14,6 +14,7 @@ interface GroupProps {
 const Group = ({ group, updateGroupLabel }: GroupProps) => {
   const [label, setLabel] = useState(group.label);
   const [blocks, setBlocks] = useState<BlockModel[]>([]);
+  const [transformationsById, setTransformationsById] = useState<Record<string, TransformationModel>>({});
   const [transformationsByBlockId, setTransformationsByBlockId] = useState<Record<string, TransformationModel>>({});
   const [transformationOutputsByBlockId, setTransformationOutputsByBlockId] = useState<Record<string, TransformationOutputsModel>>({})
   const [blocksByDepth, setBlocksByDepth] = useState<BlockModel[][]>([]);
@@ -39,14 +40,17 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
     const data = await response.json();
 
     if (data.status === 'success') {
-      // Convert the returned array into a map of block_id to transformations
-      const transformations: TransformationModel[] = data.transformations;
-      const _transformationsByBlockId: Record<string, TransformationModel> = transformations.reduce((acc, transformation) => {
-        const inputBlockId: string = transformation.input_block_id;
-        acc[inputBlockId] = transformation;
-        return acc;
-      }, {} as Record<string, TransformationModel>);
+      // Convert the returned array into the maps we need
+      const _transformationsById: Record<string, TransformationModel> = {};
+      const _transformationsByBlockId: Record<string, TransformationModel> = {};
 
+      const transformations: TransformationModel[] = data.transformations;
+      for (const transformation of transformations) {
+        _transformationsById[transformation._id] = transformation;
+        _transformationsByBlockId[transformation.input_block_id] = transformation;
+      }
+
+      setTransformationsById(_transformationsById);
       setTransformationsByBlockId(_transformationsByBlockId);
     } else {
       console.error(`Error fetching transformations: ${data.error}`)
@@ -91,7 +95,6 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
     // assume you can just "get the transformation output" and think of when to fetch it later
     //
     // start with the root level.
-    //    these are transformations with inputs but no output.
     //    these are any blocks that are no transformation's output
     // find all the blocks that are not the output of any transformation
     // find the level depth of each block by using the transformation_outputs table, and transformations input_block_ids
@@ -103,6 +106,23 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
     //            search for that block in the transformation_outputs table. if it is there, increment the original block's depth by 1 and repeat
     //              if it is not there, store it at its given level and move on to the next block
     //
+    const _blocksByDepth: Record<string, BlockModel[]> = {};
+
+    for (const block of blocks) {
+      let depth = 0;
+      const transformationOutput = transformationOutputsByBlockId[block._id];
+      if (transformationOutput == null) {
+        if (_blocksByDepth[depth] == null) {
+          _blocksByDepth[depth] = [block];
+        } else {
+          _blocksByDepth[depth].push(block);
+        }
+      } else {
+        depth += 1;
+        const transformation = transformationsById[transformationOutput.transformation_id];
+        
+      }
+    }
     // I could either store these blocks by level depth in a dictionary that has numbers as the keys
     //    ensure this has no problems
     //    a dictionary could be more flexible. Because inside each level I could store the elements by id. think of how this will be consumed.
