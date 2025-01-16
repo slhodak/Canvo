@@ -143,6 +143,11 @@ export namespace Database {
     return transformationId;
   }
 
+  export async function updateTransformation(transformationId: string, prompt: string, userId: string) {
+    const result = await db.result('UPDATE transformations SET prompt = $1, updated_at = CURRENT_TIMESTAMP WHERE _id = $2 AND author_id = $3', [prompt, transformationId, userId]);
+    return result;
+  }
+
   export async function getTransformationOutputs(userId: string, blockIds: string[]): Promise<TransformationOutputsModel[] | null> {
     // Get every block
     // get every entry in transformation_outputs with that block id
