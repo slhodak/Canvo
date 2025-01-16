@@ -14,6 +14,7 @@ interface GroupProps {
 const Group = ({ group, updateGroupLabel }: GroupProps) => {
   const [label, setLabel] = useState(group.label);
   const [blocks, setBlocks] = useState<BlockModel[]>([]);
+  const [blocksById, setBlocksById] = useState<Record<string, BlockModel>>({});
   const [transformationsById, setTransformationsById] = useState<Record<string, TransformationModel>>({});
   const [transformationsByBlockId, setTransformationsByBlockId] = useState<Record<string, TransformationModel>>({});
   const [transformationOutputsByBlockId, setTransformationOutputsByBlockId] = useState<Record<string, TransformationOutputsModel>>({})
@@ -25,6 +26,13 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
     });
     const data = await response.json();
     setBlocks(data.blocks);
+
+    const _blocksById = blocks.reduce((acc, block) => {
+      acc[block._id] = block;
+      return acc;
+    }, {} as Record<string, BlockModel>)
+
+    setBlocksById(_blocksById);
     // When we fetch all the blocks, we transform that collection into a set of arrays based on their depth in relation to each other
     // Transformations have input_block_id, and we can get the output_block_id from the transformation_outputs table
     // We can then use this to traverse a tree of blocks and transformations
@@ -72,7 +80,7 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
 
       if (data.status === 'success') {
         const transformationOutputs: TransformationOutputsModel[] = data.transformation_outputs;
-        const _transformationOutputsByBlockId: Record<string, TransformationOutputsModel> = transformationOutputs.reduce((acc, transformationOutput) => {
+        const _transformationOutputsByBlockId = transformationOutputs.reduce((acc, transformationOutput) => {
           acc[transformationOutput.output_block_id] = transformationOutput;
           return acc;
         }, {} as Record<string, TransformationOutputsModel>)
@@ -120,7 +128,7 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
       } else {
         depth += 1;
         const transformation = transformationsById[transformationOutput.transformation_id];
-        
+        const block = blocksById[transformation.input_block_id];
       }
     }
     // I could either store these blocks by level depth in a dictionary that has numbers as the keys
