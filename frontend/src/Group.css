@@ -40,3 +40,9 @@
   gap: 27px 10px;
   flex-wrap: wrap;
 }
+
+.group-block-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

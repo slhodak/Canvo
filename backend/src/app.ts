@@ -458,6 +458,29 @@ router.get('/api/get_transformations_for_group/:group_id', async (req: Request, 
   }
 });
 
+router.post('/api/new_transformation/:group_id/:block_id', async (req: Request, res: Response) => {
+  const groupId = req.params.group_id;
+  const blockId = req.params.block_id;
+
+  try {
+    const user = await getUserFromSessionToken(req);
+    if (!user) {
+      return res.status(401).json({ error: "Could not find user from session token" });
+    }
+
+    const transformationId = await db.createTransformation(user._id, groupId, blockId);
+    if (!transformationId) {
+      return res.status(500).json({ status: "failed", error: "Could not create transformation" });
+    }
+
+    return res.json({ status: "success", transformationId: transformationId });
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ status: "failed", error: error.message });
+    }
+  }
+});
+
 ////////////////////////////////////////////////////////////
 // AI Functions
 ////////////////////////////////////////////////////////////

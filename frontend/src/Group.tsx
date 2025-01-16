@@ -62,6 +62,21 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
     }
   }
 
+  const addTransformation = async (blockId: string) => {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/new_transformation/${group._id}/${blockId}`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.status == 'success') {
+        fetchTransformations();
+      }
+    } catch (error) {
+      console.error('Error adding transformation:', error);
+    }
+  }
+
   useEffect(() => {
     fetchBlocks();
     fetchTransformations();
@@ -87,9 +102,13 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
       {blocks.map((block) => {
         const transformation = transformationsByBlockId[block._id];
         return (
-          <div key={block._id}>
+          <div className="group-block-container" key={block._id}>
             <Block key={block._id} block={block} fetchBlocks={fetchBlocks} />
-            {transformation && <Transformation key={transformation._id} transformation={transformation} />}
+            {transformation ?
+              <Transformation key={transformation._id} transformation={transformation} />
+            :
+              <button className="add-transformation-button" onClick={() => addTransformation(block._id)}>Add Transformation</button>
+            }
           </div>
         )
       })}

@@ -137,4 +137,10 @@ export namespace Database {
     return transformations;
   }
 
+  export async function createTransformation(userId: string, groupId: string, blockId: string): Promise<string | null> {
+    const transformationId = uuidv4();
+    await db.none('INSERT INTO transformations (_id, author_id, group_id, input_block_id) VALUES ($1, $2, $3, $4)', [transformationId, userId, groupId, blockId]);
+    return transformationId;
+  }
+
 }
