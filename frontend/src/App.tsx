@@ -7,7 +7,6 @@ import { Group } from './Group';
 const App = () => {
   const [group, setGroup] = useState<GroupModel | null>(null);
   const [groups, setGroups] = useState<GroupModel[]>([]);
-  const [label, setLabel] = useState(group?.label ?? 'unknown');
 
   //////////////////////////////
   // Functions
@@ -128,10 +127,9 @@ interface GroupPreviewProps {
 }
 
 const GroupPreview = ({ group, deleteGroup, setGroup }: GroupPreviewProps) => {
-  
   return (
     <div role="button" tabIndex={0} className="group-preview-container" onClick={() => setGroup(group)}>
-      <span>{group.label}</span>
+      <span>{group.label ?? 'unknown'}</span>
       <button className="group-preview-delete-button" onClick={(e) => {
         e.stopPropagation();
         deleteGroup(group._id);

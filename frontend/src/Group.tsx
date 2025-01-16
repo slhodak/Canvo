@@ -41,6 +41,10 @@ export const Group = ({ group, updateGroupLabel }: GroupProps) => {
     fetchBlocks();
   }, [fetchBlocks]);
 
+  useEffect(() => {
+    setLabel(group.label);
+  }, [group]);
+
   return <div className="group-container">
     <div className="group-header-container">
       <input
