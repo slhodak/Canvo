@@ -403,31 +403,6 @@ router.get('/api/get_blocks_for_group/:group_id', async (req: Request, res: Resp
   }
 });
 
-// router.get('/api/get_block/:block_id', async (req: Request, res: Response) => {
-//   const blockId = req.params.block_id;
-
-//   try {
-//     const userEmail = await getUserEmailFromSessionToken(req);
-//     if (!userEmail) {
-//       return res.status(401).json({ error: "Could not find user email from session token" });
-//     }
-
-//     const row = await db.getBlock(blockId, userEmail);
-//     if (row) {
-//       return res.json({
-//         blockId: row.block_id,
-//         content: row.content
-//       });
-//     }
-//     res.status(404).json({ error: "Block not found" });
-//   } catch (error) {
-//     if (error instanceof Error) {
-//       return res.status(500).json({ error: error.message });
-//     }
-//     return res.status(500).json({ error: "An unknown error occurred" });
-//   }
-// });
-
 router.delete('/api/delete_block/:block_id', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
   if (!user) {
