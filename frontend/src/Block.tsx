@@ -1,29 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Block.css';
-
-export interface BlockObject {
-  id: number;
-  text: string;
-}
+import { SERVER_URL } from './constants';
+import { BlockModel } from '@wb/shared-types';
 
 interface BlockProps {
-  block: BlockObject;
+  block: BlockModel;
 }
 
-export const Block: React.FC<BlockProps> = ({ block }) => {
-  const [text, setText] = useState<string>(block.text);
+export const Block = ({ block }: BlockProps) => {
+  const [content, setContent] = useState<string>(block.content);
 
   const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setText(event.target.value);
+    setContent(event.target.value);
   };
+
+  useEffect(() => {
+    const updateBlock = async () => {
+      console.log('Updating block', block._id, content);
+      const response = await fetch(`${SERVER_URL}/api/update_block`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          blockId: block._id,
+          content: content,
+        }),
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        console.log('Block updated successfully');
+      } else {
+        console.error('Error updating block:', data.error);
+      }
+    };
+
+    updateBlock();
+  }, [block._id, content])
 
   return (
     <div className="block-container">
       <textarea
-        value={text}
+        value={content}
         onChange={handleChange}
-        className="block-textarea"
-        placeholder="Enter your text here..."
+        className="block-content"
+        placeholder="What's poppin?"
       />
     </div>
   );

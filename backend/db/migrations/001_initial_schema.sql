@@ -3,9 +3,10 @@
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id TEXT UNIQUE NOT NULL,
+    _id TEXT UNIQUE NOT NULL,
     email TEXT UNIQUE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Invites table
@@ -22,37 +23,58 @@ CREATE TABLE IF NOT EXISTS sessions (
     user_email TEXT NOT NULL,
     session_start TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     session_expiration TIMESTAMP NOT NULL,
-    FOREIGN KEY (user_email) REFERENCES users(email)
+    FOREIGN KEY (user_email) REFERENCES users(email) ON DELETE CASCADE
+);
+
+-- Groups table
+CREATE TABLE IF NOT EXISTS groups (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    _id TEXT UNIQUE NOT NULL,
+    author_id TEXT NOT NULL,
+    label TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (author_id) REFERENCES users(_id) ON DELETE CASCADE
 );
 
 -- Blocks table
 CREATE TABLE IF NOT EXISTS blocks (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    _id TEXT UNIQUE NOT NULL,
+    group_id TEXT NOT NULL,
     author_id TEXT NOT NULL,
-    title TEXT NOT NULL,
-    content TEXT NOT NULL,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (author_id) REFERENCES users(user_id),
-    UNIQUE (author_id, title)
+    label TEXT NOT NULL DEFAULT '',
+    content TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (author_id) REFERENCES users(_id) ON DELETE CASCADE,
+    FOREIGN KEY (group_id) REFERENCES groups(_id) ON DELETE CASCADE
 );
 
 -- Transformations table
 CREATE TABLE IF NOT EXISTS transformations (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    title TEXT NOT NULL,
+    _id TEXT UNIQUE NOT NULL,
+    group_id TEXT NOT NULL,
     author_id TEXT NOT NULL,
-    prompt TEXT NOT NULL,
-    FOREIGN KEY (author_id) REFERENCES users(user_id),
-    UNIQUE (author_id, title)
+    input_block_id TEXT NOT NULL,
+    label TEXT NOT NULL DEFAULT '',
+    prompt TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (author_id) REFERENCES users(_id) ON DELETE CASCADE,
+    FOREIGN KEY (group_id) REFERENCES groups(_id) ON DELETE CASCADE,
+    FOREIGN KEY (input_block_id) REFERENCES blocks(_id) ON DELETE CASCADE
 );
 
--- Relationships table for blocks to each other
-CREATE TABLE IF NOT EXISTS relationships (
+-- Transformations output Blocks table
+CREATE TABLE IF NOT EXISTS transformation_outputs (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    parent_block_id TEXT NOT NULL,
-    child_block_id TEXT NOT NULL,
     transformation_id TEXT NOT NULL,
-    FOREIGN KEY (parent_block_id) REFERENCES blocks(block_id),
-    FOREIGN KEY (child_block_id) REFERENCES blocks(block_id),
-    FOREIGN KEY (transformation_id) REFERENCES transformations(transformation_id),
+    output_block_id TEXT NOT NULL,
+    FOREIGN KEY (transformation_id) REFERENCES transformations(_id) ON DELETE CASCADE,
+    FOREIGN KEY (output_block_id) REFERENCES blocks(_id) ON DELETE CASCADE
 );
+
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO canvo_app;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO canvo_app;

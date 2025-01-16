@@ -1,34 +1,41 @@
-import { useState } from 'react';
-import { BlockObject, Block } from './Block';
+import { useState, useEffect } from 'react';
+import { BlockModel, Block } from './Block';
 import './Layer.css';
-
-function generateRandomBlocks(numBlocks: number) {
-  const blocks = [];
-  for (let i = 0; i < numBlocks; i++) {
-    blocks.push({
-      id: i,
-      text: "Hello, world! This is a longer test text to demonstrate the lengthening of the text. Let's add even more text to make it significantly longer and see how it affects the layout and appearance of the blocks within the layer.",
-    });
-  }
-  return blocks;
-}
-
-const testBlocks = generateRandomBlocks(10);
-
-export interface LayerObject {
-  id: number;
-}
+import { SERVER_URL } from './constants';
 
 interface LayerProps {
-  layer: LayerObject;
+  rootBlock: BlockModel;
+  transformation: TransformationModel;
 }
 
-export function Layer({ layer }: LayerProps) {
-  const [blocks, setBlocks] = useState<BlockObject[]>(testBlocks);
+export interface TransformationModel {
+  id: string;
+  title: string;
+  prompt: string;
+}
+
+// A Layer is a group of blocks that are descended and transformed from a single block
+// Layers have a 1:1 relationship with Transformations
+export const Layer = ({ rootBlock, transformation }: LayerProps) => {
+  const [blocks, setBlocks] = useState<BlockModel[]>([]);
+
+  useEffect(() => {
+    async function fetchDescendentBlocks() {
+      const response = await fetch(`${SERVER_URL}/api/get_descendent_blocks/${rootBlock.id}`);
+      const data = await response.json();
+      if (data.status === 'success') {
+        setBlocks(data.blocks);
+      } else {
+        console.error('Error fetching descendent blocks:', data.error);
+      }
+    }
+
+    fetchDescendentBlocks();
+  }, [rootBlock]);
 
   return (
     <div className="layer-container">
-      <div className="layer-header">Layer {layer.id}</div>
+      <div className="layer-header">Transformation ID: {transformation.id}</div>
       <div className="layer-blocks">
         {blocks.map((block) => (
           <Block block={block} />
@@ -36,4 +43,4 @@ export function Layer({ layer }: LayerProps) {
       </div>
     </div>
   );
-}
+};
