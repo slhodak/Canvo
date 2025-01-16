@@ -223,6 +223,12 @@ async function createGroup(user: UserModel, res: Response) {
   });
 }
 
+////////////////////////////////////////////////////////////
+// Routes
+////////////////////////////////////////////////////////////
+
+// Groups
+
 router.get('/api/get_latest_group', async (req: Request, res: Response) => {
   try {
     const user = await getUserFromSessionToken(req);
@@ -241,6 +247,28 @@ router.get('/api/get_latest_group', async (req: Request, res: Response) => {
       return res.status(500).json({ status: "failed", error: error.message });
     }
     return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
+  }
+});
+
+router.get('/api/get_all_groups', async (req: Request, res: Response) => {
+  try {
+    const user = await getUserFromSessionToken(req);
+    if (!user) {
+      return res.status(401).json({ error: "Could not find user email from session token" });
+    }
+
+    const results = await db.getAllGroups(user._id);
+
+    return res.json({
+      status: "success",
+      groups: results,
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "An unknown error occurred" });
+    }
   }
 });
 
@@ -269,7 +297,7 @@ router.post('/api/update_group_label', async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Group not found" });
     }
 
-  return res.json({
+    return res.json({
       status: "success",
       groupId: groupId
     });
@@ -303,6 +331,8 @@ router.delete('/api/delete_group/:group_id', async (req: Request, res: Response)
     return res.status(500).json({ error: "An unknown error occurred" });
   }
 });
+
+// Blocks
 
 router.post('/api/new_block/:group_id', async (req: Request, res: Response) => {
   const groupId = req.params.group_id;
@@ -358,28 +388,6 @@ router.post('/api/update_block', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/api/get_all_groups', async (req: Request, res: Response) => {
-  try {
-    const user = await getUserFromSessionToken(req);
-    if (!user) {
-      return res.status(401).json({ error: "Could not find user email from session token" });
-    }
-
-    const results = await db.getAllGroups(user._id);
-
-    return res.json({
-      status: "success",
-      groups: results,
-    });
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: "An unknown error occurred" });
-    }
-  }
-});
-
 router.get('/api/get_blocks_for_group/:group_id', async (req: Request, res: Response) => {
   const groupId = req.params.group_id;
   try {
@@ -423,6 +431,30 @@ router.delete('/api/delete_block/:block_id', async (req: Request, res: Response)
       return res.status(500).json({ status: "failed", error: error.message });
     }
     return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
+  }
+});
+
+////////////////////////////////////////////////////////////
+// Transformations
+////////////////////////////////////////////////////////////
+
+router.get('/api/get_transformations_for_group/:group_id', async (req: Request, res: Response) => {
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ error: "Could not find user from session token" });
+  }
+
+  const groupId = req.params.group_id;
+
+  try {
+    const transformations = await db.getTransformationsForGroup(groupId, user._id);
+    return res.json({ transformations });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "An unknown error occurred" });
+    }
   }
 });
 

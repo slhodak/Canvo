@@ -14,7 +14,9 @@ if (!process.env.DATABASE_URL) {
 const db = pgp(process.env.DATABASE_URL);
 
 export namespace Database {
+
   // Users
+
   export async function insertUser(email: string) {
     const userId = uuidv4();
     // The database itself can protect against duplicate emails, but we'll check here anyway
@@ -31,6 +33,7 @@ export namespace Database {
   }
 
   // Sessions
+
   export async function getSession(sessionToken: string) {
     const session = await db.oneOrNone('SELECT id, session_token, user_email, session_start, session_expiration FROM sessions WHERE session_token = $1', [sessionToken]);
     return session;
@@ -41,12 +44,14 @@ export namespace Database {
   }
 
   // Invites
+
   export async function getInvite(code: string) {
     const invite = await db.oneOrNone('SELECT id, invite_code, user_email FROM invites WHERE invite_code = $1', [code]);
     return invite;
   }
 
   // Groups
+
   export async function getGroup(groupId: string, userId: string): Promise<GroupModel | null> {
     const group = await db.oneOrNone('SELECT id, _id, author_id, label, updated_at, created_at FROM groups WHERE _id = $1 and author_id = $2', [groupId, userId]);
     return group;
@@ -78,13 +83,8 @@ export namespace Database {
     return result;
   }
 
-  // Transformations
-  export async function getTransformation(transformationId: string, userId: string): Promise<TransformationModel | null> {
-    const transformation = await db.oneOrNone('SELECT id, _id, input_block_id, label FROM transformations WHERE _id = $1 and author_id = $2', [transformationId, userId]);
-    return transformation;
-  }
-
   // Blocks
+
   export async function getBlock(blockId: string, userId: string): Promise<BlockModel | null> {
     const block = await db.oneOrNone('SELECT id, content FROM blocks WHERE id = $1 AND author_id = $2', [blockId, userId]);
     return block;
@@ -124,4 +124,17 @@ export namespace Database {
     const result = await db.result('DELETE FROM blocks WHERE _id = $1 AND author_id = $2', [blockId, userId]);
     return result;
   }
+
+  // Transformations
+
+  export async function getTransformation(transformationId: string, userId: string): Promise<TransformationModel | null> {
+    const transformation = await db.oneOrNone('SELECT id, _id, input_block_id, label FROM transformations WHERE _id = $1 and author_id = $2', [transformationId, userId]);
+    return transformation;
+  }
+
+  export async function getTransformationsForGroup(groupId: string, userId: string): Promise<TransformationModel[]> {
+    const transformations = await db.any('SELECT id, _id, input_block_id, label, prompt FROM transformations WHERE group_id = $1 AND author_id = $2', [groupId, userId]);
+    return transformations;
+  }
+
 }

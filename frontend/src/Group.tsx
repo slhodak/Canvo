@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import './Group.css';
 import { Block } from './Block';
-import { BlockModel, GroupModel } from '@wb/shared-types';
+import { BlockModel, GroupModel, TransformationModel } from '@wb/shared-types';
 import { SERVER_URL } from './constants';
 
 
@@ -13,6 +13,7 @@ interface GroupProps {
 export const Group = ({ group, updateGroupLabel }: GroupProps) => {
   const [label, setLabel] = useState(group.label);
   const [blocks, setBlocks] = useState<BlockModel[]>([]);
+  const [transformations, setTransformations] = useState<TransformationModel[]>([]);
 
   const fetchBlocks = useCallback(async () => {
     const response = await fetch(`${SERVER_URL}/api/get_blocks_for_group/${group._id}`, {
@@ -26,6 +27,15 @@ export const Group = ({ group, updateGroupLabel }: GroupProps) => {
     // Then we store, in memory here, blocks as a 2darray where the first index is the depth of the block in relation to the root block
     // We can then use this to render the blocks in layers in the correct order
     // So first we need to fetch all the transformations as well
+  }, [group._id]);
+
+  const fetchTransformations = useCallback(async () => {
+    const response = await fetch(`${SERVER_URL}/api/get_transformations_for_group/${group._id}`, {
+      credentials: 'include',
+    });
+    const data = await response.json();
+    console.log(data);
+    setTransformations(data.transformations);
   }, [group._id]);
 
   const addBlock = async () => {
@@ -45,7 +55,8 @@ export const Group = ({ group, updateGroupLabel }: GroupProps) => {
 
   useEffect(() => {
     fetchBlocks();
-  }, [fetchBlocks]);
+    fetchTransformations();
+  }, [fetchBlocks, fetchTransformations]);
 
   useEffect(() => {
     setLabel(group.label);
