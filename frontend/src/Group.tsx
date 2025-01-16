@@ -3,7 +3,13 @@ import './Group.css';
 import { BlockModel, GroupModel } from '@wb/shared-types';
 import { SERVER_URL } from './constants';
 
-export const Group = ({ group }: { group: GroupModel }) => {
+
+interface GroupProps {
+  group: GroupModel;
+  deleteGroup: (groupId: string) => void;
+}
+
+export const Group = ({ group }: GroupProps) => {
   const [blocks, setBlocks] = useState<BlockModel[]>([]);
 
   const fetchBlocks = useCallback(async () => {
@@ -28,7 +34,6 @@ export const Group = ({ group }: { group: GroupModel }) => {
       console.error('Error adding block:', error);
     }
   }
-
   useEffect(() => {
     fetchBlocks();
   }, [fetchBlocks]);
@@ -40,12 +45,8 @@ export const Group = ({ group }: { group: GroupModel }) => {
     </div>
     <div className="group-blocks-container">
       {blocks.map((block) => (
-        <div className="block-container">{block.label ?? 'no content'}</div>
+        <div key={block._id} className="block-container">{block.label ?? 'no content'}</div>
       ))}
     </div>
   </div>;
-}
-
-export const GroupPreview = ({ group }: { group: GroupModel }) => {
-  return <div className="group-preview">{group.label ?? 'unknown'}</div>;
 }

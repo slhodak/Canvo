@@ -68,6 +68,11 @@ export namespace Database {
     return groupId;
   }
 
+  export async function deleteGroup(groupId: string, userId: string) {
+    const result = await db.result('DELETE FROM groups WHERE _id = $1 AND author_id = $2', [groupId, userId]);
+    return result;
+  }
+
   // Transformations
   export async function getTransformation(transformationId: string, userId: string): Promise<TransformationModel | null> {
     const transformation = await db.oneOrNone('SELECT id, _id, input_block_id, label FROM transformations WHERE _id = $1 and author_id = $2', [transformationId, userId]);

@@ -263,6 +263,29 @@ router.post('/api/new_group', async (req: Request, res: Response) => {
   }
 });
 
+router.delete('/api/delete_group/:group_id', async (req: Request, res: Response) => {
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ error: "Could not find user email from session token" });
+  }
+
+  const groupId = req.params.group_id;
+
+  try {
+    const result = await db.deleteGroup(groupId, user._id);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Block not found" });
+    }
+
+    return res.json({ status: "success", message: "Block deleted successfully" });
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ error: error.message });
+    }
+    return res.status(500).json({ error: "An unknown error occurred" });
+  }
+});
+
 router.post('/api/new_block/:group_id', async (req: Request, res: Response) => {
   const groupId = req.params.group_id;
   if (!groupId) {
