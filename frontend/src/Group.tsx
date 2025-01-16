@@ -7,7 +7,7 @@ export const Group = ({ group }: { group: GroupModel }) => {
 
   useEffect(() => {
     async function fetchBlocks() {
-      const response = await fetch(`${SERVER_URL}/api/get_blocks_for_group`, {
+      const response = await fetch(`${SERVER_URL}/api/get_blocks_for_group/${group._id}`, {
         credentials: 'include',
       });
       const data = await response.json();
