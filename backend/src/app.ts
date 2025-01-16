@@ -477,6 +477,34 @@ router.post('/api/new_transformation/:group_id/:block_id', async (req: Request, 
   } catch (error) {
     if (error instanceof Error) {
       return res.status(500).json({ status: "failed", error: error.message });
+    } else {
+      return res.status(500).json({ status: "failed", error: "An unknown error occurred"})
+    }
+  }
+});
+
+router.get('/api/transformation_outputs', async (req: Request, res: Response) => {
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
+  }
+
+  const blockIds = req.body.blocks;
+  if (!blockIds) {
+    return res.status(400).json({ status: "failed", error: "Could not fetch transformation outputs: no block ids specified"})
+  }
+
+  try {
+    const transformationOutputs = await db.getTransformationOutputs(user._id, blockIds)
+    if (!transformationOutputs) {
+      return res.status(500).json({ status: "failed", error: "Could not get transformation outputs" })
+    }
+    return res.json({ status: "success", transformationOutputs: transformationOutputs })
+  } catch(error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ status: "failed", error: error.message })
+    } else {
+      return res.status(500).json({ status: "failed", error: "An unknown error occurred"})
     }
   }
 });

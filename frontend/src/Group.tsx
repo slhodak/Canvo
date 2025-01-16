@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import './Group.css';
 import { Block } from './Block';
 import Transformation from './Transformation';
-import { BlockModel, GroupModel, TransformationModel } from '@wb/shared-types';
+import { BlockModel, GroupModel, TransformationModel, TransformationOutputsModel } from '@wb/shared-types';
 import { SERVER_URL } from './constants';
 
 
@@ -15,6 +15,7 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
   const [label, setLabel] = useState(group.label);
   const [blocks, setBlocks] = useState<BlockModel[]>([]);
   const [transformationsByBlockId, setTransformationsByBlockId] = useState<Record<string, TransformationModel>>({});
+  const [transformationOutputs, setTransformationOutputs] = useState<Record<string, TransformationOutputsModel>>({})
   const [blocksByDepth, setBlocksByDepth] = useState<BlockModel[][]>([]);
 
   const fetchBlocks = useCallback(async () => {
@@ -48,6 +49,29 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
     setTransformationsByBlockId(_transformationsByBlockId);
   }, [group._id]);
 
+  const fetchTransformationOutputs = useCallback(async () => {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/get_transformation_outputs`, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          'transformations': blocks.map((block) => block._id),
+        })
+      })
+      const data = await response.json()
+
+      if (data.status === 'success') {
+        setTransformationOutputs(data.transformation_outputs)
+      } else {
+        console.error(`Error fetching transformation outputs: ${data.error}`)
+      }
+    } catch (error) {
+      console.error(`Error fetching transformation outputs rows: ${error}`)
+    }
+  }, [blocks])
+
   const arrangeBlocksByDepth = useCallback(() => {
     // Goal: a 2d list of the blocks based on how many levels deep they are in the tree of block->transformation->outputs
     // needs to know which blocks are children of which transformation. well each transformation has an input but we need to query the
@@ -73,7 +97,6 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
     //    ensure this has no problems
     //    a dictionary could be more flexible. Because inside each level I could store the elements by id. think of how this will be consumed.
     // or I could store them in the dictionary by level depth keys to start, and then convert this into a 2darray before setting the state value
-
   }, [blocks]);
 
   const addBlock = async () => {
@@ -109,8 +132,9 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
   useEffect(() => {
     fetchBlocks();
     fetchTransformations();
+    fetchTransformationOutputs();
     arrangeBlocksByDepth();
-  }, [fetchBlocks, fetchTransformations]);
+  }, [fetchBlocks, fetchTransformations, fetchTransformationOutputs, arrangeBlocksByDepth]);
 
   useEffect(() => {
     setLabel(group.label);
