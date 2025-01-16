@@ -59,7 +59,7 @@ export const Group = ({ group, updateGroupLabel }: GroupProps) => {
     </div>
     <div className="group-blocks-container">
       {blocks.map((block) => (
-        <Block key={block._id} block={block} />
+        <Block key={block._id} block={block} fetchBlocks={fetchBlocks} />
       ))}
     </div>
   </div>;

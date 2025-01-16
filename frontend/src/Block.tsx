@@ -6,9 +6,10 @@ import { XSymbol } from './assets/XSymbol';
 
 interface BlockProps {
   block: BlockModel;
+  fetchBlocks: () => Promise<void>;
 }
 
-export const Block = ({ block }: BlockProps) => {
+export const Block = ({ block, fetchBlocks }: BlockProps) => {
   const [content, setContent] = useState<string>(block.content);
 
   const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -25,6 +26,7 @@ export const Block = ({ block }: BlockProps) => {
       if (data.status !== 'success') {
         console.error('Error deleting block:', data.error);
       }
+      fetchBlocks();
     } catch (error) {
       console.error('Error deleting block:', error);
     }
