@@ -40,10 +40,14 @@ const App = () => {
       const response = await fetch(`${SERVER_URL}/api/delete_group/${groupId}`, {
         method: 'DELETE',
         credentials: 'include',
-    });
-    const data = await response.json();
-    if (data.status == 'success') {
-      fetchAllGroups();
+      });
+      const data = await response.json();
+      if (data.status == 'success') {
+        fetchAllGroups();
+        // If you deleted the current group, set the group to null
+        if (group?._id == groupId) {
+          setGroup(null);
+        }
       }
     } catch (error) {
       console.error('Error deleting group:', error);
