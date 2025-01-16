@@ -15,6 +15,7 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
   const [label, setLabel] = useState(group.label);
   const [blocks, setBlocks] = useState<BlockModel[]>([]);
   const [transformationsByBlockId, setTransformationsByBlockId] = useState<Record<string, TransformationModel>>({});
+  const [blocksByDepth, setBlocksByDepth] = useState<BlockModel[][]>([]);
 
   const fetchBlocks = useCallback(async () => {
     const response = await fetch(`${SERVER_URL}/api/get_blocks_for_group/${group._id}`, {
@@ -46,6 +47,34 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
 
     setTransformationsByBlockId(_transformationsByBlockId);
   }, [group._id]);
+
+  const arrangeBlocksByDepth = useCallback(() => {
+    // Goal: a 2d list of the blocks based on how many levels deep they are in the tree of block->transformation->outputs
+    // needs to know which blocks are children of which transformation. well each transformation has an input but we need to query the
+    // transformation_outputs table to know which block is a child of what transformation
+    // 1. get the transformation_outputs before iterating and cache them here
+    // 2. query for the transofmration_outputs as we iterate
+    // assume you can just "get the transformation output" and think of when to fetch it later
+    //
+    // start with the root level.
+    //    these are transformations with inputs but no output.
+    //    these are any blocks that are no transformation's output
+    // find all the blocks that are not the output of any transformation
+    // find the level depth of each block by using the transformation_outputs table, and transformations input_block_ids
+    //    for each block:
+    //        if it is not in the transformation_outputs, it's level is 0
+    //        if it is in the transformation_outputs, increment it's level by 1
+    //            get the transformation it is an output from
+    //            get the block that is the input to this transformation
+    //            search for that block in the transformation_outputs table. if it is there, increment the original block's depth by 1 and repeat
+    //              if it is not there, store it at its given level and move on to the next block
+    //
+    // I could either store these blocks by level depth in a dictionary that has numbers as the keys
+    //    ensure this has no problems
+    //    a dictionary could be more flexible. Because inside each level I could store the elements by id. think of how this will be consumed.
+    // or I could store them in the dictionary by level depth keys to start, and then convert this into a 2darray before setting the state value
+
+  }, [blocks]);
 
   const addBlock = async () => {
     try {
@@ -80,6 +109,7 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
   useEffect(() => {
     fetchBlocks();
     fetchTransformations();
+    arrangeBlocksByDepth();
   }, [fetchBlocks, fetchTransformations]);
 
   useEffect(() => {
@@ -106,7 +136,7 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
             <Block key={block._id} block={block} fetchBlocks={fetchBlocks} />
             {transformation ?
               <Transformation key={transformation._id} transformation={transformation} />
-            :
+              :
               <button className="add-transformation-button" onClick={() => addTransformation(block._id)}>New Transformation</button>
             }
           </div>
