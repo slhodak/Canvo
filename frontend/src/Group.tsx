@@ -192,9 +192,9 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
         const transformation = transformationsByBlockId[block._id];
         return (
           <div className="group-block-container" key={block._id}>
-            <Block key={block._id} block={block} fetchBlocks={fetchBlocks} />
+            <Block block={block} fetchBlocks={fetchBlocks} />
             {transformation ?
-              <Transformation key={transformation._id} transformation={transformation} />
+              <Transformation transformation={transformation} fetchTransformations={fetchTransformations} />
               :
               <button className="add-transformation-button" onClick={() => addTransformation(block._id)}>New Transformation</button>
             }

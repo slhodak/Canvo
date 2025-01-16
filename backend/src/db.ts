@@ -148,6 +148,11 @@ export namespace Database {
     return result;
   }
 
+  export async function deleteTransformation(transformationId: string, userId: string) {
+    const result = await db.result('DELETE FROM transformations WHERE _id = $1 AND author_id = $2', [transformationId, userId]);
+    return result;
+  }
+
   export async function getTransformationOutputs(userId: string, blockIds: string[]): Promise<TransformationOutputsModel[] | null> {
     // Get every block
     // get every entry in transformation_outputs with that block id

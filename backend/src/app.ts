@@ -503,6 +503,28 @@ router.post('/api/update_transformation/:transformation_id', async (req: Request
   }
 });
 
+router.delete('/api/delete_transformation/:transformation_id', async (req: Request, res: Response) => {
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
+  }
+
+  try {
+    const transformationId = req.params.transformation_id;
+    const result = await db.deleteTransformation(transformationId, user._id);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ status: "failed", error: "Transformation not found" });
+    }
+    return res.json({ status: "success" });
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ status: "failed", error: error.message });
+    } else {
+      return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
+    }
+  }
+});
+
 router.post('/api/query_transformation_outputs', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
   if (!user) {
