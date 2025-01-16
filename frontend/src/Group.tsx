@@ -15,7 +15,7 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
   const [label, setLabel] = useState(group.label);
   const [blocks, setBlocks] = useState<BlockModel[]>([]);
   const [transformationsByBlockId, setTransformationsByBlockId] = useState<Record<string, TransformationModel>>({});
-  const [transformationOutputs, setTransformationOutputs] = useState<Record<string, TransformationOutputsModel>>({})
+  const [transformationOutputsByBlockId, setTransformationOutputsByBlockId] = useState<Record<string, TransformationOutputsModel>>({})
   const [blocksByDepth, setBlocksByDepth] = useState<BlockModel[][]>([]);
 
   const fetchBlocks = useCallback(async () => {
@@ -38,15 +38,19 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
     });
     const data = await response.json();
 
-    // Convert the returned array into a map of block_id to transformations
-    const transformations: TransformationModel[] = data.transformations;
-    const _transformationsByBlockId: Record<string, TransformationModel> = transformations.reduce((acc, transformation) => {
-      const inputBlockId: string = transformation.input_block_id;
-      acc[inputBlockId] = transformation;
-      return acc;
-    }, {} as Record<string, TransformationModel>);
+    if (data.status === 'success') {
+      // Convert the returned array into a map of block_id to transformations
+      const transformations: TransformationModel[] = data.transformations;
+      const _transformationsByBlockId: Record<string, TransformationModel> = transformations.reduce((acc, transformation) => {
+        const inputBlockId: string = transformation.input_block_id;
+        acc[inputBlockId] = transformation;
+        return acc;
+      }, {} as Record<string, TransformationModel>);
 
-    setTransformationsByBlockId(_transformationsByBlockId);
+      setTransformationsByBlockId(_transformationsByBlockId);
+    } else {
+      console.error(`Error fetching transformations: ${data.error}`)
+    }
   }, [group._id]);
 
   const fetchTransformationOutputs = useCallback(async () => {
@@ -63,7 +67,13 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
       const data = await response.json()
 
       if (data.status === 'success') {
-        setTransformationOutputs(data.transformation_outputs)
+        const transformationOutputs: TransformationOutputsModel[] = data.transformation_outputs;
+        const _transformationOutputsByBlockId: Record<string, TransformationOutputsModel> = transformationOutputs.reduce((acc, transformationOutput) => {
+          acc[transformationOutput.output_block_id] = transformationOutput;
+          return acc;
+        }, {} as Record<string, TransformationOutputsModel>)
+
+        setTransformationOutputsByBlockId(_transformationOutputsByBlockId)
       } else {
         console.error(`Error fetching transformation outputs: ${data.error}`)
       }
