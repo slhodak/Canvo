@@ -69,6 +69,10 @@
   cursor: pointer;
 }
 
+.highlighted-group-preview {
+  background-color: white;
+}
+
 .group-preview-delete-button {
   width: 20px;
   height: 20px;
@@ -77,6 +81,7 @@
   align-items: center;
   padding: 0;
   border: none;
+  background-color: transparent;
 }
 
 .delete-group-icon {

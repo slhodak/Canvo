@@ -53,9 +53,8 @@ export const Group = ({ group, updateGroupLabel }: GroupProps) => {
         onChange={(e) => {
           setLabel(e.target.value);
           updateGroupLabel(e.target.value)
-        }
-        }>
-      </input>
+        }}
+      />
       <button className="add-block-button" onClick={addBlock}>Add Block</button>
     </div>
     <div className="group-blocks-container">
