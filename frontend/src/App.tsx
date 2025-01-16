@@ -109,7 +109,8 @@ const GroupPreview = ({ group, deleteGroup, setGroup }: GroupPreviewProps) => {
   return (
     <div role="button" tabIndex={0} className="group-preview-container" onClick={() => setGroup(group)}>
       <div className="group-preview-label">{group.label ?? 'unknown'}</div>
-      <button className="group-preview-delete-button" onClick={() => {
+      <button className="group-preview-delete-button" onClick={(e) => {
+        e.stopPropagation();
         deleteGroup(group._id);
       }}>
         <svg className="delete-group-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">

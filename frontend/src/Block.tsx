@@ -1,33 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import './Block.css';
 import { SERVER_URL } from './constants';
-
-export interface BlockModel {
-  id: number;
-  author_id: string;
-  content: string;
-  title: string;
-  timestamp: string;
-}
+import { BlockModel } from '@wb/shared-types';
 
 interface BlockProps {
   block: BlockModel;
 }
 
-export const Block: React.FC<BlockProps> = ({ block }) => {
-  const [title, setTitle] = useState<string>(block.title);
+export const Block = ({ block }: BlockProps) => {
   const [content, setContent] = useState<string>(block.content);
-  const [timestamp, setTimestamp] = useState<string>(block.timestamp);
 
   const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(event.target.value);
   };
-
-  useEffect(() => {
-    setTitle(block.title);
-    setContent(block.content);
-    setTimestamp(block.timestamp);
-  }, [block]);
 
   useEffect(() => {
     const updateBlock = async () => {
@@ -35,10 +20,8 @@ export const Block: React.FC<BlockProps> = ({ block }) => {
         method: 'POST',
         credentials: 'include',
         body: JSON.stringify({
-          id: block.id,
-          title: title,
+          id: block._id,
           content: content,
-          timestamp: new Date().toISOString(),
         }),
       });
       const data = await response.json();
@@ -50,24 +33,16 @@ export const Block: React.FC<BlockProps> = ({ block }) => {
     };
 
     updateBlock();
-  }, [block.id, title, content])
+  }, [block._id, content])
 
   return (
     <div className="block-container">
-      <div className="block-header">
-        <div className="block-title">{title}</div>
-        <div className="block-timestamp">{timestamp}</div>
-      </div>
       <textarea
         value={content}
         onChange={handleChange}
-        className="block-textarea"
-        placeholder="Enter your text here..."
+        className="block-content"
+        placeholder="What's poppin?"
       />
     </div>
   );
-};
-
-export const BlockPreview = ({ block }: BlockProps) => {
-  return <div className="block-preview">{block.content.slice(0, 100)}</div>;
 };

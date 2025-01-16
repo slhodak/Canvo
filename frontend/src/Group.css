@@ -26,9 +26,3 @@
   gap: 10px;
   flex-wrap: wrap;
 }
-
-.block-container {
-  border: 1px solid black;
-  height: 100px;
-  width: 100px;
-}

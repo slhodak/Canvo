@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import './Group.css';
+import { Block } from './Block';
 import { BlockModel, GroupModel } from '@wb/shared-types';
 import { SERVER_URL } from './constants';
 
@@ -45,7 +46,7 @@ export const Group = ({ group }: GroupProps) => {
     </div>
     <div className="group-blocks-container">
       {blocks.map((block) => (
-        <div key={block._id} className="block-container">{block.label ?? 'no content'}</div>
+        <Block key={block._id} block={block} />
       ))}
     </div>
   </div>;

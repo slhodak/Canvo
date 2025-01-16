@@ -1,21 +1,13 @@
 /* .block-container {
-  display: flex;
-  flex-direction: column;
+  border: 1px solid black;
+  height: 100px;
+  width: 100px;
 } */
 
-.block-textarea {
-  width: 250px;
-  height: 140px;
-  border: 1px solid #ccc;
-  padding: 10px;
+.block-content {
+  height: 100%;
+  width: 100%;
+  border: none;
+  outline: none;
   resize: none;
-}
-
-.block-preview {
-  width: 130px;
-  height: 130px;
-  border: 1px solid #ccc;
-  padding: 10px;
-  resize: none;
-  background-color: #f0f0f0;
 }
