@@ -428,28 +428,28 @@ router.get('/api/get_blocks_for_group/:group_id', async (req: Request, res: Resp
 //   }
 // });
 
-// router.delete('/api/delete_block/:block_id', async (req: Request, res: Response) => {
-//   const userEmail = await getUserEmailFromSessionToken(req);
-//   if (!userEmail) {
-//     return res.status(401).json({ error: "Could not find user email from session token" });
-//   }
+router.delete('/api/delete_block/:block_id', async (req: Request, res: Response) => {
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ error: "Could not find user email from session token" });
+  }
 
-//   const blockId = req.params.block_id;
+  const blockId = req.params.block_id;
 
-//   try {
-//     const result = await db.deleteBlock(blockId, userEmail);
-//     if (result.rowCount === 0) {
-//       return res.status(404).json({ error: "Block not found" });
-//     }
+  try {
+    const result = await db.deleteBlock(blockId, user._id);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Block not found" });
+    }
 
-//     return res.json({ status: "success", message: "Block deleted successfully" });
-//   } catch (error) {
-//     if (error instanceof Error) {
-//       return res.status(500).json({ error: error.message });
-//     }
-//     return res.status(500).json({ error: "An unknown error occurred" });
-//   }
-// });
+    return res.json({ status: "success" });
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ status: "failed", error: error.message });
+    }
+    return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
+  }
+});
 
 ////////////////////////////////////////////////////////////
 // AI Functions

@@ -17,8 +17,8 @@ export const Block = ({ block }: BlockProps) => {
 
   const deleteBlock = async () => {
     try {
-      const response = await fetch(`${SERVER_URL}/api/delete_block`, {
-        method: 'POST',
+      const response = await fetch(`${SERVER_URL}/api/delete_block/${block._id}`, {
+        method: 'DELETE',
         credentials: 'include',
       });
       const data = await response.json();
