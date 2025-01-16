@@ -7,10 +7,11 @@ import { SERVER_URL } from './constants';
 
 interface GroupProps {
   group: GroupModel;
-  deleteGroup: (groupId: string) => void;
+  updateGroupLabel: (label: string) => void;
 }
 
-export const Group = ({ group }: GroupProps) => {
+export const Group = ({ group, updateGroupLabel }: GroupProps) => {
+  const [label, setLabel] = useState(group.label);
   const [blocks, setBlocks] = useState<BlockModel[]>([]);
 
   const fetchBlocks = useCallback(async () => {
@@ -35,13 +36,22 @@ export const Group = ({ group }: GroupProps) => {
       console.error('Error adding block:', error);
     }
   }
+
   useEffect(() => {
     fetchBlocks();
   }, [fetchBlocks]);
 
   return <div className="group-container">
     <div className="group-header-container">
-      <div className="group-label">Group Name: {group.label ?? 'unknown'}</div>
+      <input
+        className="group-label-input"
+        value={label}
+        onChange={(e) => {
+          setLabel(e.target.value);
+          updateGroupLabel(e.target.value)
+        }
+        }>
+      </input>
       <button className="add-block-button" onClick={addBlock}>Add Block</button>
     </div>
     <div className="group-blocks-container">

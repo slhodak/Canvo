@@ -7,6 +7,7 @@ import { Group } from './Group';
 const App = () => {
   const [group, setGroup] = useState<GroupModel | null>(null);
   const [groups, setGroups] = useState<GroupModel[]>([]);
+  const [label, setLabel] = useState(group?.label ?? 'unknown');
 
   //////////////////////////////
   // Functions
@@ -50,6 +51,27 @@ const App = () => {
     }
   }
 
+  const updateGroupLabel = async (label: string) => {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/update_group_label`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ groupId: group?._id, label: label }),
+      });
+      const data = await response.json();
+      if (data.status == 'success') {
+        fetchAllGroups();
+      } else {
+        console.error('Error updating group label:', data.error);
+      }
+    } catch (error) {
+      console.error('Error updating group label:', error);
+    }
+  }
+
   //////////////////////////////
   // useEffect Hooks
   //////////////////////////////
@@ -82,7 +104,7 @@ const App = () => {
           <h2 className="app-title-header">Canvo</h2>
           <button className="add-group-button" onClick={createGroup}>New Group</button>
         </div>
-        {group ? <Group group={group} deleteGroup={deleteGroup} /> : <div>No group selected</div>}
+        {group ? <Group group={group} updateGroupLabel={updateGroupLabel} /> : <div>No group selected</div>}
       </div>
 
       <div className="bottom-section">
@@ -106,40 +128,10 @@ interface GroupPreviewProps {
 }
 
 const GroupPreview = ({ group, deleteGroup, setGroup }: GroupPreviewProps) => {
-  const [label, setLabel] = useState(group.label ?? 'unknown');
-
-  // I could also have a useEffect hook that is dependent on the label state
-  // but this seems simpler
-  // What I also need, though, is to make sure the parent component fetches the groups again
-  const updateGroupLabel = async (label: string) => {
-    try {
-      const response = await fetch(`${SERVER_URL}/api/update_group_label`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ groupId: group._id, label: label }),
-      });
-      const data = await response.json();
-      if (data.status != 'success') {
-        console.error('Error updating group label:', data.error);
-      }
-    } catch (error) {
-      console.error('Error updating group label:', error);
-    }
-  }
-
+  
   return (
     <div role="button" tabIndex={0} className="group-preview-container" onClick={() => setGroup(group)}>
-      <textarea
-        className="group-preview-label-textarea"
-        value={label}
-        onChange={(e) => {
-          setLabel(e.target.value);
-          updateGroupLabel(e.target.value);
-        }}
-      ></textarea>
+      <span>{group.label}</span>
       <button className="group-preview-delete-button" onClick={(e) => {
         e.stopPropagation();
         deleteGroup(group._id);

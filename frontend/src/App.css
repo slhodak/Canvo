@@ -51,13 +51,6 @@
   padding-bottom: 10px;
 }
 
-.group-preview-label-textarea {
-  border: none;
-  outline: none;
-  resize: none;
-  background-color: transparent;
-}
-
 .group-previews-container {
   display: flex;
   flex-direction: row;
