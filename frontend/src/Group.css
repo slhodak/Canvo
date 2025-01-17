@@ -52,7 +52,7 @@
 .group-block-container {
   display: flex;
   flex-direction: column;
-  width: 250px;
+  width: 220px;
   gap: 10px;
 }
 
