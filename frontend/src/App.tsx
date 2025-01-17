@@ -107,6 +107,9 @@ const App = () => {
           <h2 className="app-title-header">Canvo</h2>
           <button className="add-group-button" onClick={createGroup}>New Group</button>
         </div>
+      </div>
+
+      <div className="middle-section">
         {group ? <Group group={group} updateGroupLabel={updateGroupLabel} /> : <div>No group selected</div>}
       </div>
 

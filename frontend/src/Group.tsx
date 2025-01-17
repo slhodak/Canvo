@@ -157,7 +157,7 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
   }, [fetchBlockIds, fetchTransformations]);
 
   useEffect(() => {
-    // fetchTransformationOutputs();
+    fetchTransformationOutputs();
   }, [fetchTransformationOutputs])
 
   useEffect(() => {
