@@ -55,6 +55,19 @@ const Transformation = ({ transformation, fetchTransformations }: Transformation
     }
   };
 
+  const runTransformation = async () => {
+    const response = await fetch(`${SERVER_URL}/api/run_transformation`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ transformationId: transformation._id }),
+    });
+    const data = await response.json();
+    console.log(data);
+  };
+
   return (
     <div className="transformation-container">
       <textarea
@@ -66,7 +79,7 @@ const Transformation = ({ transformation, fetchTransformations }: Transformation
         <button className="transformation-delete-button" onClick={deleteTransformation}>
           <XSymbol />
         </button>
-        <button className="transformation-run-button">Run</button>
+        <button className="transformation-run-button" onClick={runTransformation}>Run</button>
       </div>
     </div>
   );

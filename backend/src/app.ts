@@ -576,27 +576,45 @@ router.post('/api/query_transformation_outputs', async (req: Request, res: Respo
 // AI Functions
 ////////////////////////////////////////////////////////////
 
-router.post('/api/rephrase', async (req: Request, res: Response) => {
-  const { selectedText = '', context = '' } = req.body;
+router.post('/api/run_transformation', async (req: Request, res: Response) => {
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
+  }
+
+  const { transformationId } = req.body;
+
+  const transformation = await db.getTransformation(transformationId, user._id);
+  if (!transformation) {
+    return res.status(404).json({ status: "failed", error: "Transformation not found" });
+  }
+
+  const inputBlock = await db.getBlock(transformation.input_block_id, user._id);
+  if (!inputBlock) {
+    return res.status(404).json({ status: "failed", error: "Input block not found" });
+  }
+
+  const inputBlockContent = inputBlock.content;
+  const prompt = transformation.prompt;
+
+  console.log("Input block content:", inputBlockContent);
+  console.log("Transformation prompt:", prompt);
 
   try {
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
-        { role: 'system', content: 'You are a helpful writing assistant. Provide 3 alternative ways to rephrase the selected text, keeping the same meaning but varying the style.' },
-        { role: 'user', content: `Context: ${context}\n\nSelected text to rephrase: ${selectedText}` }
+        { role: 'system', content: "You will be given a transformation prompt and an input text. You will use the transformation prompt to respond to the requested transformation." },
+        { role: 'user', content: `Input text: '${inputBlockContent}'\n\nTransformation prompt: '${prompt}'` }
       ],
       temperature: 0.7,
       n: 1
     });
 
-    // console.log('OpenAI API Response:', response.data);
+    const output = completion.choices[0].message.content
 
-    const rephrases = completion.choices[0].message.content?.split('\n')
-      .map((s: string) => s.trim().replace(/^[123.]+/, ''))
-      .filter((s: string) => s);
+    return res.json({ output });
 
-    return res.json({ rephrases: rephrases?.slice(0, 3) });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });

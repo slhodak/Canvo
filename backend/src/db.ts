@@ -128,7 +128,7 @@ export namespace Database {
   // Transformations
 
   export async function getTransformation(transformationId: string, userId: string): Promise<TransformationModel | null> {
-    const transformation = await db.oneOrNone('SELECT id, _id, input_block_id, label FROM transformations WHERE _id = $1 and author_id = $2', [transformationId, userId]);
+    const transformation = await db.oneOrNone('SELECT id, _id, input_block_id, label, prompt FROM transformations WHERE _id = $1 and author_id = $2', [transformationId, userId]);
     return transformation;
   }
 
