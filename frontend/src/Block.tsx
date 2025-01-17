@@ -1,39 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './Block.css';
 import { SERVER_URL } from './constants';
-import { BlockModel } from '@wb/shared-types';
 import { XSymbol } from './assets/XSymbol';
 
 interface BlockProps {
-  block: BlockModel;
-  fetchBlocks: () => Promise<void>;
+  blockId: string;
+  fetchBlockIds: () => Promise<void>;
 }
 
-export const Block = ({ block, fetchBlocks }: BlockProps) => {
-  const [content, setContent] = useState<string>(block.content);
+export const Block = ({ blockId, fetchBlockIds }: BlockProps) => {
+  const [content, setContent] = useState<string>('');
+  const blockIdRef = useRef<string>(blockId);
 
   const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    // Fan out update and reset to current content if server update fails
+    updateBlock(content, event.target.value);
     setContent(event.target.value);
   };
 
-  const deleteBlock = async () => {
+  const updateBlock = async (oldContent: string, newContent: string) => {
     try {
-      const response = await fetch(`${SERVER_URL}/api/delete_block/${block._id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-      const data = await response.json();
-      if (data.status !== 'success') {
-        console.error('Error deleting block:', data.error);
-      }
-      fetchBlocks();
-    } catch (error) {
-      console.error('Error deleting block:', error);
-    }
-  };
-
-  useEffect(() => {
-    const updateBlock = async () => {
       const response = await fetch(`${SERVER_URL}/api/update_block`, {
         method: 'POST',
         credentials: 'include',
@@ -41,18 +27,58 @@ export const Block = ({ block, fetchBlocks }: BlockProps) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          blockId: block._id,
-          content: content,
+          blockId: blockIdRef.current,
+          content: newContent,
         }),
       });
+
       const data = await response.json();
       if (data.status !== 'success') {
         console.error('Error updating block:', data.error);
+        setContent(oldContent);
+      }
+    } catch (error) {
+      setContent(oldContent);
+      console.error('Error updating block:', error);
+    }
+  };
+
+  const deleteBlock = async () => {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/delete_block/${blockId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.status !== 'success') {
+        console.error('Error deleting block:', data.error);
+      }
+      fetchBlockIds();
+    } catch (error) {
+      console.error('Error deleting block:', error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchBlock = async () => {
+      try {
+        const response = await fetch(`${SERVER_URL}/api/get_block/${blockIdRef.current}`, {
+          method: 'GET',
+          credentials: 'include',
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+          setContent(data.block.content);
+        } else {
+          console.error(`Could not get block: ${data.error}`)
+        }
+      } catch (error) {
+        console.error('Error fetching block:', error);
       }
     };
 
-    updateBlock();
-  }, [block._id, content])
+    fetchBlock();
+  }, [blockIdRef])
 
   return (
     <div className="block-container">

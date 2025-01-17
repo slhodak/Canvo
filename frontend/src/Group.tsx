@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import './Group.css';
 import { Block } from './Block';
 import Transformation from './Transformation';
-import { BlockModel, GroupModel, TransformationModel, TransformationOutputsModel } from '@wb/shared-types';
+import { GroupModel, TransformationModel, TransformationOutputModel } from '@wb/shared-types';
 import { SERVER_URL } from './constants';
 
 
@@ -13,12 +13,11 @@ interface GroupProps {
 
 const Group = ({ group, updateGroupLabel }: GroupProps) => {
   const [label, setLabel] = useState(group.label);
-  const [blocks, setBlocks] = useState<BlockModel[]>([]);
-  const [blocksById, setBlocksById] = useState<Record<string, BlockModel>>({});
+  const [blockIds, setBlockIds] = useState<string[]>([]);
   const [transformationsById, setTransformationsById] = useState<Record<string, TransformationModel>>({});
   const [transformationsByBlockId, setTransformationsByBlockId] = useState<Record<string, TransformationModel>>({});
-  const [transformationOutputsByBlockId, setTransformationOutputsByBlockId] = useState<Record<string, TransformationOutputsModel>>({})
-  const [blocksByDepth, setBlocksByDepth] = useState<Record<string, BlockModel[]>>({});
+  const [transformationOutputsByBlockId, setTransformationOutputsByBlockId] = useState<Record<string, TransformationOutputModel>>({})
+  const [blocksByDepth, setBlocksByDepth] = useState<Record<string, string[]>>({});
 
   ///////////////////////////////////////////////
   // Independent Methods
@@ -32,7 +31,7 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
       });
       const data = await response.json();
       if (data.status == 'success') {
-        fetchBlocks();
+        fetchBlockIds();
       }
     } catch (error) {
       console.error('Error adding block:', error);
@@ -58,20 +57,16 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
   // Memoized Methods
   ///////////////////////////////////////////////
 
-  const fetchBlocks = useCallback(async () => {
-    const response = await fetch(`${SERVER_URL}/api/get_blocks_for_group/${group._id}`, {
+  const fetchBlockIds = useCallback(async () => {
+    const response = await fetch(`${SERVER_URL}/api/get_block_ids_for_group/${group._id}`, {
       credentials: 'include',
     });
     const data = await response.json();
-    setBlocks(data.blocks);
-
-    const _blocks: BlockModel[] = data.blocks;
-    const _blocksById = _blocks.reduce((acc, block) => {
-      acc[block._id] = block;
-      return acc;
-    }, {} as Record<string, BlockModel>)
-    setBlocksById(_blocksById);
-
+    if (data.status === 'success') {
+      setBlockIds(data.blockIds);
+    } else {
+      console.error(`Could not get block ids: ${data.error}`)
+    }
   }, [group._id]);
 
   const fetchTransformations = useCallback(async () => {
@@ -107,17 +102,17 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          'blockIds': blocks.map((block) => block._id),
+          'blockIds': blockIds,
         })
       })
       const data = await response.json()
 
       if (data.status === 'success') {
-        const transformationOutputs: TransformationOutputsModel[] = data.transformationOutputs;
+        const transformationOutputs: TransformationOutputModel[] = data.transformationOutputs;
         const _transformationOutputsByBlockId = transformationOutputs.reduce((acc, transformationOutput) => {
           acc[transformationOutput.output_block_id] = transformationOutput;
           return acc;
-        }, {} as Record<string, TransformationOutputsModel>)
+        }, {} as Record<string, TransformationOutputModel>)
 
         setTransformationOutputsByBlockId(_transformationOutputsByBlockId)
       } else {
@@ -126,44 +121,43 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
     } catch (error) {
       console.error(`Error fetching transformation outputs rows: ${error}`)
     }
-  }, [blocks])
+  }, [blockIds])
 
   const arrangeBlocksByDepth = useCallback(() => {
-    const _blocksByDepth: Record<string, BlockModel[]> = {};
+    const _blocksByDepth: Record<string, string[]> = {};
 
-    const findBlockDepth = (block: BlockModel, depth: number): number => {
-      const transformationOutput = transformationOutputsByBlockId[block._id];
+    const findBlockDepth = (blockId: string, depth: number): number => {
+      const transformationOutput = transformationOutputsByBlockId[blockId];
       if (transformationOutput == null) {
         return depth;
       }
       const transformation = transformationsById[transformationOutput.transformation_id];
-      const _block = blocksById[transformation.input_block_id];
-      return findBlockDepth(_block, depth + 1)
+      return findBlockDepth(transformation.input_block_id, depth + 1)
     }
 
-    for (const block of Object.values(blocksById)) {
-      const depth = findBlockDepth(block, 0)
+    for (const blockId of blockIds) {
+      const depth = findBlockDepth(blockId, 0)
       if (_blocksByDepth[depth] == null) {
-        _blocksByDepth[depth] = [block];
+        _blocksByDepth[depth] = [blockId];
       } else {
-        _blocksByDepth[depth].push(block);
+        _blocksByDepth[depth].push(blockId);
       }
     }
 
     setBlocksByDepth(_blocksByDepth)
-  }, [blocksById, transformationOutputsByBlockId, transformationsById])
+  }, [blockIds, transformationOutputsByBlockId, transformationsById])
 
   ///////////////////////////////////////////////
   // useEffect Hooks
   ///////////////////////////////////////////////
 
   useEffect(() => {
-    fetchBlocks();
+    fetchBlockIds();
     fetchTransformations();
-  }, [fetchBlocks, fetchTransformations]);
+  }, [fetchBlockIds, fetchTransformations]);
 
   useEffect(() => {
-    fetchTransformationOutputs();
+    // fetchTransformationOutputs();
   }, [fetchTransformationOutputs])
 
   useEffect(() => {
@@ -187,22 +181,22 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
       <button className="add-block-button" onClick={addBlock}>Add Block</button>
     </div>
     <div className="group-block-depth-container">
-      {Object.entries(blocksByDepth).map(([depth, blocks]) => {
+      {Object.entries(blocksByDepth).map(([depth, blockIds]) => {
         return (
           <div className="group-blocks-container" key={`block-depth-${depth}`}>
-              {blocks.map((block) => {
-                const transformation = transformationsByBlockId[block._id];
-                return (
-                  <div className="group-block-container" key={block._id}>
-                    <Block block={block} fetchBlocks={fetchBlocks} />
-                    {transformation ?
-                      <Transformation transformation={transformation} fetchTransformations={fetchTransformations} />
-                      :
-                      <button className="add-transformation-button" onClick={() => addTransformation(block._id)}>New Transformation</button>
-                    }
-                  </div>
-                )
-              })}
+            {blockIds.map((blockId) => {
+              const transformation = transformationsByBlockId[blockId];
+              return (
+                <div className="group-block-container" key={`block-${blockId}`}>
+                  <Block blockId={blockId} fetchBlockIds={fetchBlockIds} />
+                  {transformation ?
+                    <Transformation transformation={transformation} fetchTransformations={fetchTransformations} />
+                    :
+                    <button className="add-transformation-button" onClick={() => addTransformation(blockId)}>New Transformation</button>
+                  }
+                </div>
+              )
+            })}
           </div>
         )
       })}

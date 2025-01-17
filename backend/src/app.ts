@@ -334,6 +334,28 @@ router.delete('/api/delete_group/:group_id', async (req: Request, res: Response)
 
 // Blocks
 
+router.get('/api/get_block/:block_id', async (req: Request, res: Response) => {
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ error: "Could not find user email from session token" });
+  }
+
+  const blockId = req.params.block_id;
+  if (!blockId) {
+    return res.status(400).json({ error: "No block ID provided" });
+  }
+
+  try {
+    const block = await db.getBlock(blockId, user._id);
+    return res.json({ status: "success", block });
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ status: "failed", error: error.message });
+    }
+    return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
+  }
+});
+
 router.post('/api/new_block/:group_id', async (req: Request, res: Response) => {
   const groupId = req.params.group_id;
   if (!groupId) {
@@ -388,7 +410,7 @@ router.post('/api/update_block', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/api/get_blocks_for_group/:group_id', async (req: Request, res: Response) => {
+router.get('/api/get_block_ids_for_group/:group_id', async (req: Request, res: Response) => {
   const groupId = req.params.group_id;
   try {
     const user = await getUserFromSessionToken(req);
@@ -400,7 +422,7 @@ router.get('/api/get_blocks_for_group/:group_id', async (req: Request, res: Resp
 
     return res.json({
       status: "success",
-      blocks: blocks
+      blockIds: blocks.map((block) => block._id)
     });
   } catch (error) {
     if (error instanceof Error) {

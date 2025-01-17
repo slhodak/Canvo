@@ -86,7 +86,7 @@ export namespace Database {
   // Blocks
 
   export async function getBlock(blockId: string, userId: string): Promise<BlockModel | null> {
-    const block = await db.oneOrNone('SELECT id, content FROM blocks WHERE id = $1 AND author_id = $2', [blockId, userId]);
+    const block = await db.oneOrNone('SELECT id, _id, group_id, author_id, label, content FROM blocks WHERE _id = $1 AND author_id = $2', [blockId, userId]);
     return block;
   }
 
@@ -154,9 +154,6 @@ export namespace Database {
   }
 
   export async function getTransformationOutputs(userId: string, blockIds: string[]): Promise<TransformationOutputsModel[] | null> {
-    // Get every block
-    // get every entry in transformation_outputs with that block id
-    // probably doable in SQL
     const results = await db.any('SELECT id, transformation_id, output_block_id FROM transformation_outputs WHERE output_block_id IN ($/blockIds:csv/)', { blockIds })
     return results;
   }
