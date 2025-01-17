@@ -34,13 +34,21 @@
   background-color: var(--button-background-color);
 }
 
-.group-block-depth-container {
+/* Group Layers */
+
+.group-layer-container {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.group-blocks-container {
+.group-layer-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+}
+
+.group-layer-blocks-container {
   display: flex;
   flex-direction: row;
   gap: 27px 10px;
@@ -49,7 +57,9 @@
   padding-bottom: 15px;
 }
 
-.group-block-container {
+/* Group Layer Blocks */
+
+.group-layer-block-container {
   display: flex;
   flex-direction: column;
   width: 220px;

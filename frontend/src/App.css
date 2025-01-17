@@ -20,7 +20,7 @@
 }
 
 .middle-section {
-  height: 60vh;
+  height: 70vh;
   padding: 10px;
   overflow-y: scroll;
   scrollbar-width: thin;
@@ -30,7 +30,7 @@
 }
 
 .bottom-section {
-  height: 30vh;
+  height: 20vh;
   border-top: 1px solid black;
   padding: 10px;
   overflow-y: scroll;

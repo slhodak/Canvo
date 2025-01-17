@@ -7,10 +7,10 @@ import { XSymbol } from './assets/XSymbol';
 interface TransformationProps {
   transformation: TransformationModel;
   fetchTransformations: () => Promise<void>;
-  fetchBlockIds: () => Promise<void>;
+  fetchBlocks: () => Promise<void>;
 }
 
-const Transformation = ({ transformation, fetchTransformations, fetchBlockIds }: TransformationProps) => {
+const Transformation = ({ transformation, fetchTransformations, fetchBlocks }: TransformationProps) => {
   const [prompt, setPrompt] = useState<string>(transformation.prompt);
 
   const handlePromptChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -62,13 +62,13 @@ const Transformation = ({ transformation, fetchTransformations, fetchBlockIds }:
         method: 'POST',
         credentials: 'include',
         headers: {
-        'Content-Type': 'application/json',
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ transformationId: transformation._id }),
       });
       const data = await response.json();
       if (data.status === 'success') {
-        fetchBlockIds();
+        fetchBlocks();
       } else {
         console.error('Error running transformation:', data.error);
       }

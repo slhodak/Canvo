@@ -28,7 +28,7 @@ export interface BlockModel {
   _id: string;
   group_id: string;
   author_id: string;
-  label: string;
+  position: string;
   content: string;
   created_at: Date;
   updated_at: Date;

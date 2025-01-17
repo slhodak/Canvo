@@ -8,8 +8,13 @@
 
 .block-header {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   padding: 4px 0px;
+}
+
+.block-position {
+  font-family: 'Courier New', Courier, monospace;
 }
 
 .block-delete-button {

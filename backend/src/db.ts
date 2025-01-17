@@ -65,7 +65,7 @@ export namespace Database {
   // Groups
 
   export async function getGroup(groupId: string, userId: string): Promise<GroupModel | null> {
-    const values = [groupId, userId]; 
+    const values = [groupId, userId];
     const group = await db.oneOrNone('SELECT id, _id, author_id, label, updated_at, created_at FROM groups WHERE _id = $1 and author_id = $2', values);
     return group;
   }
@@ -86,9 +86,9 @@ export namespace Database {
     return groups;
   }
 
-  export async function createGroup(userId: string) {
+  export async function createGroup(userId: string, label: string) {
     const groupId = uuidv4();
-    await db.none('INSERT INTO groups (_id, author_id) VALUES ($1, $2)', [groupId, userId]);
+    await db.none('INSERT INTO groups (_id, author_id, label) VALUES ($1, $2, $3)', [groupId, userId, label]);
     return groupId;
   }
 
@@ -129,7 +129,7 @@ export namespace Database {
     return blocks;
   }
 
-  export async function createBlock(userId: string, groupId: string, content: string = '', position: string): Promise<string | null> {
+  export async function createBlock(userId: string, groupId: string, content: string, position: string): Promise<string | null> {
     const blockId = uuidv4();
     const values = [blockId, userId, groupId, content, position];
     await db.none('INSERT INTO blocks (_id, author_id, group_id, content, position) VALUES ($1, $2, $3, $4, $5)', values);
@@ -151,7 +151,7 @@ export namespace Database {
 
   export async function getTransformation(transformationId: string, userId: string): Promise<TransformationModel | null> {
     const transformation = await db.oneOrNone(`
-      SELECT id, _id, group_id, input_block_id, label, prompt
+      SELECT id, _id, group_id, input_block_id, position, prompt
       FROM transformations
       WHERE _id = $1 and author_id = $2
     `, [transformationId, userId]);
@@ -160,17 +160,20 @@ export namespace Database {
 
   export async function getTransformationsForGroup(groupId: string, userId: string): Promise<TransformationModel[]> {
     const transformations = await db.any(`
-      SELECT id, _id, input_block_id, label, prompt
+      SELECT id, _id, input_block_id, position, prompt
       FROM transformations
       WHERE group_id = $1 AND author_id = $2
     `, [groupId, userId]);
     return transformations;
   }
 
-  export async function createTransformation(userId: string, groupId: string, blockId: string): Promise<string | null> {
+  export async function createTransformation(userId: string, groupId: string, blockId: string, position: string, prompt: string): Promise<string | null> {
     const transformationId = uuidv4();
-    const values = [transformationId, userId, groupId, blockId];
-    await db.none('INSERT INTO transformations (_id, author_id, group_id, input_block_id) VALUES ($1, $2, $3, $4)', values);
+    const values = [transformationId, userId, groupId, blockId, position, prompt];
+    await db.none(`
+      INSERT INTO transformations (_id, author_id, group_id, input_block_id, position, prompt)
+      VALUES ($1, $2, $3, $4, $5, $6)
+    `, values);
     return transformationId;
   }
 
@@ -185,13 +188,16 @@ export namespace Database {
     return result;
   }
 
-  export async function getTransformationOutputs(userId: string, blockIds: string[]): Promise<TransformationOutputModel[] | null> {
-    const values = [blockIds];
+  export async function getTransformationOutputs(blockIds: string[]): Promise<TransformationOutputModel[] | null> {
+    if (blockIds.length === 0) {
+      return [];
+    }
+
     const results = await db.any(`
       SELECT id, transformation_id, output_block_id
       FROM transformation_outputs
-      WHERE output_block_id IN ($/blockIds:csv/)
-    `, values);
+      WHERE output_block_id IN ($1:csv)
+    `, [blockIds]);
     return results;
   }
 

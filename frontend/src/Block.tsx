@@ -2,15 +2,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import './Block.css';
 import { SERVER_URL } from './constants';
 import { XSymbol } from './assets/XSymbol';
+import { BlockModel } from '@wb/shared-types';
 
 interface BlockProps {
-  blockId: string;
-  fetchBlockIds: () => Promise<void>;
+  block: BlockModel;
+  fetchBlocks: () => Promise<void>;
 }
 
-export const Block = ({ blockId, fetchBlockIds }: BlockProps) => {
-  const [content, setContent] = useState<string>('');
-  const blockIdRef = useRef<string>(blockId);
+export const Block = ({ block, fetchBlocks }: BlockProps) => {
+  const [content, setContent] = useState<string>(block.content);
+  const blockIdRef = useRef<string>(block._id);
 
   const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     // Fan out update and reset to current content if server update fails
@@ -45,7 +46,7 @@ export const Block = ({ blockId, fetchBlockIds }: BlockProps) => {
 
   const deleteBlock = async () => {
     try {
-      const response = await fetch(`${SERVER_URL}/api/delete_block/${blockId}`, {
+      const response = await fetch(`${SERVER_URL}/api/delete_block/${block._id}`, {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -53,36 +54,16 @@ export const Block = ({ blockId, fetchBlockIds }: BlockProps) => {
       if (data.status !== 'success') {
         console.error('Error deleting block:', data.error);
       }
-      fetchBlockIds();
+      fetchBlocks();
     } catch (error) {
       console.error('Error deleting block:', error);
     }
   };
 
-  useEffect(() => {
-    const fetchBlock = async () => {
-      try {
-        const response = await fetch(`${SERVER_URL}/api/get_block/${blockIdRef.current}`, {
-          method: 'GET',
-          credentials: 'include',
-        });
-        const data = await response.json();
-        if (data.status === 'success') {
-          setContent(data.block.content);
-        } else {
-          console.error(`Could not get block: ${data.error}`)
-        }
-      } catch (error) {
-        console.error('Error fetching block:', error);
-      }
-    };
-
-    fetchBlock();
-  }, [blockIdRef])
-
   return (
     <div className="block-container">
       <div className="block-header">
+        <div className="block-position">{block.position}</div>
         <button className="block-delete-button" onClick={deleteBlock}>
           <XSymbol />
         </button>

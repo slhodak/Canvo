@@ -31,20 +31,22 @@ CREATE TABLE IF NOT EXISTS groups (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     _id TEXT UNIQUE NOT NULL,
     author_id TEXT NOT NULL,
-    label TEXT NOT NULL DEFAULT '',
+    label TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (author_id) REFERENCES users(_id) ON DELETE CASCADE
 );
 
 -- Blocks table
+-- Position is in the format "1.1.1" and gives both the horizontal and vertical position
+-- The number of numbers in Position gives the depth, while each individual number is the horizontal order in the row
 CREATE TABLE IF NOT EXISTS blocks (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     _id TEXT UNIQUE NOT NULL,
     group_id TEXT NOT NULL,
     author_id TEXT NOT NULL,
-    position TEXT NOT NULL DEFAULT '1',
-    content TEXT NOT NULL DEFAULT '',
+    position TEXT NOT NULL,
+    content TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (author_id) REFERENCES users(_id) ON DELETE CASCADE,
@@ -58,8 +60,8 @@ CREATE TABLE IF NOT EXISTS transformations (
     group_id TEXT NOT NULL,
     author_id TEXT NOT NULL,
     input_block_id TEXT NOT NULL,
-    label TEXT NOT NULL DEFAULT '',
-    prompt TEXT NOT NULL DEFAULT '',
+    position TEXT NOT NULL,
+    prompt TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (author_id) REFERENCES users(_id) ON DELETE CASCADE,
