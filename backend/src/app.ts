@@ -597,9 +597,6 @@ router.post('/api/run_transformation', async (req: Request, res: Response) => {
   const inputBlockContent = inputBlock.content;
   const prompt = transformation.prompt;
 
-  console.log("Input block content:", inputBlockContent);
-  console.log("Transformation prompt:", prompt);
-
   try {
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
