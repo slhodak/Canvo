@@ -12,12 +12,35 @@
   height: 100vh;
 }
 
-/* Top section */
+/* Sections */
 
 .top-section {
-  height: 70vh;
+  height: 10vh;
   padding: 10px;
 }
+
+.middle-section {
+  height: 60vh;
+  padding: 10px;
+  overflow-y: scroll;
+  scrollbar-width: thin;
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+}
+
+.bottom-section {
+  height: 30vh;
+  border-top: 1px solid black;
+  padding: 10px;
+  overflow-y: scroll;
+  scrollbar-width: thin;
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+}
+
+/* Top section */
 
 .app-title-header {
   margin: 0;
@@ -34,17 +57,10 @@
 .add-group-button {
   padding: 10px 20px;
   border: none;
-  background-color: lightblue;
+  background-color: var(--button-background-color);
 }
 
 /* Bottom section */
-
-.bottom-section {
-  border-top: 1px solid black;
-  padding: 10px;
-  height: 30vh;
-  overflow-y: scroll;
-}
 
 .group-previews-header {
   margin: 0;

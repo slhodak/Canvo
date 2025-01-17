@@ -223,6 +223,12 @@ async function createGroup(user: UserModel, res: Response) {
   });
 }
 
+////////////////////////////////////////////////////////////
+// Routes
+////////////////////////////////////////////////////////////
+
+// Groups
+
 router.get('/api/get_latest_group', async (req: Request, res: Response) => {
   try {
     const user = await getUserFromSessionToken(req);
@@ -241,6 +247,28 @@ router.get('/api/get_latest_group', async (req: Request, res: Response) => {
       return res.status(500).json({ status: "failed", error: error.message });
     }
     return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
+  }
+});
+
+router.get('/api/get_all_groups', async (req: Request, res: Response) => {
+  try {
+    const user = await getUserFromSessionToken(req);
+    if (!user) {
+      return res.status(401).json({ error: "Could not find user email from session token" });
+    }
+
+    const results = await db.getAllGroups(user._id);
+
+    return res.json({
+      status: "success",
+      groups: results,
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "An unknown error occurred" });
+    }
   }
 });
 
@@ -269,7 +297,7 @@ router.post('/api/update_group_label', async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Group not found" });
     }
 
-  return res.json({
+    return res.json({
       status: "success",
       groupId: groupId
     });
@@ -301,6 +329,30 @@ router.delete('/api/delete_group/:group_id', async (req: Request, res: Response)
       return res.status(500).json({ error: error.message });
     }
     return res.status(500).json({ error: "An unknown error occurred" });
+  }
+});
+
+// Blocks
+
+router.get('/api/get_block/:block_id', async (req: Request, res: Response) => {
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ error: "Could not find user email from session token" });
+  }
+
+  const blockId = req.params.block_id;
+  if (!blockId) {
+    return res.status(400).json({ error: "No block ID provided" });
+  }
+
+  try {
+    const block = await db.getBlock(blockId, user._id);
+    return res.json({ status: "success", block });
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ status: "failed", error: error.message });
+    }
+    return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
   }
 });
 
@@ -358,29 +410,7 @@ router.post('/api/update_block', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/api/get_all_groups', async (req: Request, res: Response) => {
-  try {
-    const user = await getUserFromSessionToken(req);
-    if (!user) {
-      return res.status(401).json({ error: "Could not find user email from session token" });
-    }
-
-    const results = await db.getAllGroups(user._id);
-
-    return res.json({
-      status: "success",
-      groups: results,
-    });
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: "An unknown error occurred" });
-    }
-  }
-});
-
-router.get('/api/get_blocks_for_group/:group_id', async (req: Request, res: Response) => {
+router.get('/api/get_block_ids_for_group/:group_id', async (req: Request, res: Response) => {
   const groupId = req.params.group_id;
   try {
     const user = await getUserFromSessionToken(req);
@@ -392,7 +422,7 @@ router.get('/api/get_blocks_for_group/:group_id', async (req: Request, res: Resp
 
     return res.json({
       status: "success",
-      blocks: blocks
+      blockIds: blocks.map((block) => block._id)
     });
   } catch (error) {
     if (error instanceof Error) {
@@ -402,31 +432,6 @@ router.get('/api/get_blocks_for_group/:group_id', async (req: Request, res: Resp
     }
   }
 });
-
-// router.get('/api/get_block/:block_id', async (req: Request, res: Response) => {
-//   const blockId = req.params.block_id;
-
-//   try {
-//     const userEmail = await getUserEmailFromSessionToken(req);
-//     if (!userEmail) {
-//       return res.status(401).json({ error: "Could not find user email from session token" });
-//     }
-
-//     const row = await db.getBlock(blockId, userEmail);
-//     if (row) {
-//       return res.json({
-//         blockId: row.block_id,
-//         content: row.content
-//       });
-//     }
-//     res.status(404).json({ error: "Block not found" });
-//   } catch (error) {
-//     if (error instanceof Error) {
-//       return res.status(500).json({ error: error.message });
-//     }
-//     return res.status(500).json({ error: "An unknown error occurred" });
-//   }
-// });
 
 router.delete('/api/delete_block/:block_id', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
@@ -452,35 +457,175 @@ router.delete('/api/delete_block/:block_id', async (req: Request, res: Response)
 });
 
 ////////////////////////////////////////////////////////////
+// Transformations
+////////////////////////////////////////////////////////////
+
+router.get('/api/get_transformations_for_group/:group_id', async (req: Request, res: Response) => {
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
+  }
+
+  const groupId = req.params.group_id;
+
+  try {
+    const transformations = await db.getTransformationsForGroup(groupId, user._id);
+    return res.json({ status: "success", transformations });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ status: "failed", error: error.message });
+    } else {
+      res.status(500).json({ status: "failed", error: "An unknown error occurred" });
+    }
+  }
+});
+
+router.post('/api/new_transformation/:group_id/:block_id', async (req: Request, res: Response) => {
+  const groupId = req.params.group_id;
+  const blockId = req.params.block_id;
+
+  try {
+    const user = await getUserFromSessionToken(req);
+    if (!user) {
+      return res.status(401).json({ error: "Could not find user from session token" });
+    }
+
+    const transformationId = await db.createTransformation(user._id, groupId, blockId);
+    if (!transformationId) {
+      return res.status(500).json({ status: "failed", error: "Could not create transformation" });
+    }
+
+    return res.json({ status: "success", transformationId: transformationId });
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ status: "failed", error: error.message });
+    } else {
+      return res.status(500).json({ status: "failed", error: "An unknown error occurred" })
+    }
+  }
+});
+
+router.post('/api/update_transformation', async (req: Request, res: Response) => {
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
+  }
+
+  try {
+    const { transformationId, prompt } = req.body;
+    await db.updateTransformation(transformationId, prompt, user._id);
+    return res.json({ status: "success" });
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ status: "failed", error: error.message });
+    } else {
+      return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
+    }
+  }
+});
+
+router.delete('/api/delete_transformation/:transformation_id', async (req: Request, res: Response) => {
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
+  }
+
+  try {
+    const transformationId = req.params.transformation_id;
+    const result = await db.deleteTransformation(transformationId, user._id);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ status: "failed", error: "Transformation not found" });
+    }
+    return res.json({ status: "success" });
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ status: "failed", error: error.message });
+    } else {
+      return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
+    }
+  }
+});
+
+router.post('/api/query_transformation_outputs', async (req: Request, res: Response) => {
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
+  }
+
+  const blockIds = req.body.blockIds;
+  if (!blockIds) {
+    return res.status(400).json({ status: "failed", error: "Could not fetch transformation outputs: no block ids specified" })
+  }
+
+  try {
+    const transformationOutputs = await db.getTransformationOutputs(user._id, blockIds)
+    if (!transformationOutputs) {
+      return res.status(500).json({ status: "failed", error: "Could not get transformation outputs" })
+    }
+    return res.json({ status: "success", transformationOutputs })
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ status: "failed", error: error.message })
+    } else {
+      return res.status(500).json({ status: "failed", error: "An unknown error occurred" })
+    }
+  }
+});
+
+////////////////////////////////////////////////////////////
 // AI Functions
 ////////////////////////////////////////////////////////////
 
-router.post('/api/rephrase', async (req: Request, res: Response) => {
-  const { selectedText = '', context = '' } = req.body;
+router.post('/api/run_transformation', async (req: Request, res: Response) => {
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
+  }
+
+  const { transformationId } = req.body;
+
+  const transformation = await db.getTransformation(transformationId, user._id);
+  if (!transformation) {
+    return res.status(404).json({ status: "failed", error: "Transformation not found" });
+  }
+
+  const inputBlock = await db.getBlock(transformation.input_block_id, user._id);
+  if (!inputBlock) {
+    return res.status(404).json({ status: "failed", error: "Input block not found" });
+  }
+
+  const inputBlockContent = inputBlock.content;
+  const prompt = transformation.prompt;
 
   try {
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
-        { role: 'system', content: 'You are a helpful writing assistant. Provide 3 alternative ways to rephrase the selected text, keeping the same meaning but varying the style.' },
-        { role: 'user', content: `Context: ${context}\n\nSelected text to rephrase: ${selectedText}` }
+        { role: 'system', content: "You will be given a transformation prompt and an input text. You will use the transformation prompt to respond to the requested transformation." },
+        { role: 'user', content: `Input text: '${inputBlockContent}'\n\nTransformation prompt: '${prompt}'` }
       ],
       temperature: 0.7,
       n: 1
     });
 
-    // console.log('OpenAI API Response:', response.data);
+    const output = completion.choices[0].message.content
+    if (!output) {
+      return res.status(500).json({ status: "failed", error: "Could not get output from OpenAI" });
+    }
 
-    const rephrases = completion.choices[0].message.content?.split('\n')
-      .map((s: string) => s.trim().replace(/^[123.]+/, ''))
-      .filter((s: string) => s);
+    const outputBlockId = await db.createBlock(user._id, transformation.group_id, output);
+    if (!outputBlockId) {
+      return res.status(500).json({ status: "failed", error: "Could not create output block" });
+    }
+    await db.createTransformationOutput(transformationId, outputBlockId);
 
-    return res.json({ rephrases: rephrases?.slice(0, 3) });
+    return res.json({ status: "success", output });
+
   } catch (error) {
     if (error instanceof Error) {
-      res.status(500).json({ error: error.message });
+      return res.status(500).json({ status: "failed", error: error.message });
     } else {
-      res.status(500).json({ error: "An unknown error occurred" });
+      return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
     }
   }
 });

@@ -1,33 +1,41 @@
 .block-container {
-  height: 100px;
-  width: 150px;
-}
-
-.block-content {
-  height: 100%;
-  width: 100%;
-  border: none;
-  outline: none;
-  resize: none;
-  background-color: var(--textarea-nonediting-background-color);
-  scrollbar-width: thin; /* For Firefox */
-  &::-webkit-scrollbar {
-    width: 6px; /* For WebKit browsers */
-  }
-}
-
-.block-content:focus {
-  background-color: var(--textarea-editing-background-color);
+  display: flex;
+  flex-direction: column;
+  height: 150px;
+  width: 250px;
+  padding: 0px;
 }
 
 .block-header {
   display: flex;
   justify-content: flex-end;
+  padding: 4px 0px;
 }
 
 .block-delete-button {
   background-color: transparent;
   border: none;
   cursor: pointer;
-  padding: 0;
+  height: 16px;
+  padding: 0px;
+}
+
+.block-content-textarea {
+  flex-grow: 1;
+  width: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  background-color: var(--textarea-nonediting-background-color);
+  scrollbar-width: thin;
+
+  /* For Firefox */
+  &::-webkit-scrollbar {
+    width: 6px;
+    /* For WebKit browsers */
+  }
+}
+
+.block-content-textarea:focus {
+  background-color: var(--textarea-editing-background-color);
 }

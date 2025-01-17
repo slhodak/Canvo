@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import './App.css'
 import { SERVER_URL } from './constants';
 import { GroupModel } from '@wb/shared-types';
-import { Group } from './Group';
+import Group from './Group';
 
 const App = () => {
   const [group, setGroup] = useState<GroupModel | null>(null);
@@ -107,6 +107,9 @@ const App = () => {
           <h2 className="app-title-header">Canvo</h2>
           <button className="add-group-button" onClick={createGroup}>New Group</button>
         </div>
+      </div>
+
+      <div className="middle-section">
         {group ? <Group group={group} updateGroupLabel={updateGroupLabel} /> : <div>No group selected</div>}
       </div>
 
