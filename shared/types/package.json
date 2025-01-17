@@ -1,0 +1,15 @@
+{
+  "name": "@wb/shared-types",
+  "license": "UNLICENSED",
+  "private": true,
+  "version": "1.0.0",
+  "main": "dist/types.js",
+  "types": "dist/types.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "packageManager": "yarn@4.2.2"
+}
