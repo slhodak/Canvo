@@ -609,14 +609,23 @@ router.post('/api/run_transformation', async (req: Request, res: Response) => {
     });
 
     const output = completion.choices[0].message.content
+    if (!output) {
+      return res.status(500).json({ status: "failed", error: "Could not get output from OpenAI" });
+    }
 
-    return res.json({ output });
+    const outputBlockId = await db.createBlock(user._id, transformation.group_id, output);
+    if (!outputBlockId) {
+      return res.status(500).json({ status: "failed", error: "Could not create output block" });
+    }
+    await db.createTransformationOutput(transformationId, outputBlockId);
+
+    return res.json({ status: "success", output });
 
   } catch (error) {
     if (error instanceof Error) {
-      res.status(500).json({ error: error.message });
+      return res.status(500).json({ status: "failed", error: error.message });
     } else {
-      res.status(500).json({ error: "An unknown error occurred" });
+      return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
     }
   }
 });

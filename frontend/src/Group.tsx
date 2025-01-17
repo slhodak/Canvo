@@ -180,6 +180,7 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
       />
       <button className="add-block-button" onClick={addBlock}>Add Block</button>
     </div>
+
     <div className="group-block-depth-container">
       {Object.entries(blocksByDepth).map(([depth, blockIds]) => {
         return (
@@ -190,7 +191,7 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
                 <div className="group-block-container" key={`block-${blockId}`}>
                   <Block blockId={blockId} fetchBlockIds={fetchBlockIds} />
                   {transformation ?
-                    <Transformation transformation={transformation} fetchTransformations={fetchTransformations} />
+                    <Transformation transformation={transformation} fetchTransformations={fetchTransformations} fetchBlockIds={fetchBlockIds} />
                     :
                     <button className="add-transformation-button" onClick={() => addTransformation(blockId)}>New Transformation</button>
                   }
