@@ -1,7 +1,7 @@
 import pgPromise from 'pg-promise';
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
-import { UserModel, GroupModel, BlockModel, TransformationModel, TransformationOutputsModel } from '@wb/shared-types';
+import { UserModel, GroupModel, BlockModel, TransformationModel, TransformationOutputModel } from '@wb/shared-types';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -153,7 +153,7 @@ export namespace Database {
     return result;
   }
 
-  export async function getTransformationOutputs(userId: string, blockIds: string[]): Promise<TransformationOutputsModel[] | null> {
+  export async function getTransformationOutputs(userId: string, blockIds: string[]): Promise<TransformationOutputModel[] | null> {
     const results = await db.any('SELECT id, transformation_id, output_block_id FROM transformation_outputs WHERE output_block_id IN ($/blockIds:csv/)', { blockIds })
     return results;
   }

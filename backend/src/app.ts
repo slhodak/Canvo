@@ -505,15 +505,14 @@ router.post('/api/new_transformation/:group_id/:block_id', async (req: Request, 
   }
 });
 
-router.post('/api/update_transformation/:transformation_id', async (req: Request, res: Response) => {
+router.post('/api/update_transformation', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
   if (!user) {
     return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
   }
 
   try {
-    const transformationId = req.params.transformation_id;
-    const { prompt } = req.body;
+    const { transformationId, prompt } = req.body;
     await db.updateTransformation(transformationId, prompt, user._id);
     return res.json({ status: "success" });
   } catch (error) {
