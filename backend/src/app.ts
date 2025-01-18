@@ -653,7 +653,7 @@ router.post('/api/run_transformation', async (req: Request, res: Response) => {
 
       const position = `${inputBlock.position}.${outputCount}`;
       // If a block already exists at this position, update its content instead of creating a new one
-      const existingBlock = await db.getBlock(position, user._id);
+      const existingBlock = await db.getBlockAtPosition(transformation.group_id, position, user._id);
       if (existingBlock) {
         await db.updateBlock(existingBlock._id, output, user._id);
       } else {

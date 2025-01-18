@@ -110,6 +110,11 @@ export namespace Database {
     return block;
   }
 
+  export async function getBlockAtPosition(group_id: string, position: string, userId: string): Promise<BlockModel | null> {
+    const block = await db.oneOrNone('SELECT id, _id, group_id, author_id, position, content FROM blocks WHERE group_id = $1 AND position = $2 AND author_id = $3', [group_id, position, userId]);
+    return block;
+  }
+
   export async function getBlocksForGroup(groupId: string, userId: string): Promise<BlockModel[]> {
     const blocks = await db.any(`
       SELECT b._id, b.content, b.position
