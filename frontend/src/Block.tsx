@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import './Block.css';
 import { SERVER_URL } from './constants';
 import { XSymbol } from './assets/XSymbol';

@@ -652,12 +652,18 @@ router.post('/api/run_transformation', async (req: Request, res: Response) => {
       }
 
       const position = `${inputBlock.position}.${outputCount}`;
-      const outputBlockId = await db.createBlock(user._id, transformation.group_id, output, position);
-      if (!outputBlockId) {
-        errors.push(`Could not create output block at position ${position}`);
-        continue;
+      // If a block already exists at this position, update its content instead of creating a new one
+      const existingBlock = await db.getBlock(position, user._id);
+      if (existingBlock) {
+        await db.updateBlock(existingBlock._id, output, user._id);
+      } else {
+        const outputBlockId = await db.createBlock(user._id, transformation.group_id, output, position);
+        if (!outputBlockId) {
+          errors.push(`Could not create output block at position ${position}`);
+          continue;
+        }
+        await db.createTransformationOutput(transformationId, outputBlockId);
       }
-      await db.createTransformationOutput(transformationId, outputBlockId);
       outputCount++;
     }
 
