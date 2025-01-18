@@ -602,11 +602,24 @@ router.post('/api/run_transformation', async (req: Request, res: Response) => {
 
   const inputBlockContent = inputBlock.content;
   const prompt = transformation.prompt;
+  const expectedOutputs = transformation.outputs;
 
   const systemPrompt = `
-    You will be given a transformation prompt, an input text, and a number of outputs.
+    You will be given a transformation prompt, an input text, and a number of expected outputs.
     You will use the transformation prompt to respond to the requested transformation.
-    Before each output, you will respond on a separate line with "BEGIN OUTPUT".
+    You will produce the expected number of outputs.
+    Before each output, you will add a separate line that says "BEGIN OUTPUT".
+    You will not include any other text in your response.
+
+    For example, for the prompt:
+    Input text: A person crosses the street\nTransformation prompt: Possible reasons\nOutputs: 3
+    You would respond with:
+    BEGIN OUTPUT
+    The person may want to buy something on the other side of the street
+    BEGIN OUTPUT
+    The person might work on the other side of the street
+    BEGIN OUTPUT
+    The person might be visiting a friend on the other side of the street
   `;
 
   try {
@@ -614,7 +627,7 @@ router.post('/api/run_transformation', async (req: Request, res: Response) => {
       model: 'gpt-3.5-turbo',
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: `Input text: '${inputBlockContent}'\n\nTransformation prompt: '${prompt}'` }
+        { role: 'user', content: `Input text: '${inputBlockContent}'\nTransformation prompt: '${prompt}'\nOutputs: ${expectedOutputs}` }
       ],
       temperature: 0.7,
       n: 1
@@ -632,6 +645,12 @@ router.post('/api/run_transformation', async (req: Request, res: Response) => {
 
     let outputCount = 0;
     for (const output of outputs) {
+      if (output.length === 0) {
+        // Skip any empty outputs
+        console.debug('Skipping empty output');
+        continue;
+      }
+
       const position = `${inputBlock.position}.${outputCount}`;
       const outputBlockId = await db.createBlock(user._id, transformation.group_id, output, position);
       if (!outputBlockId) {
