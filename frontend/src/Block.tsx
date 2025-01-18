@@ -62,7 +62,8 @@ export const Block = ({ block, fetchBlocks }: BlockProps) => {
   };
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(content).then(() => {
+    const textToCopy = `${block.position}${content}`;
+    navigator.clipboard.writeText(textToCopy).then(() => {
       console.log('Content copied to clipboard');
     }).catch(err => {
       console.error('Failed to copy content: ', err);
