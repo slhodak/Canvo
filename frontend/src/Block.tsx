@@ -3,6 +3,7 @@ import './Block.css';
 import { SERVER_URL } from './constants';
 import { XSymbol } from './assets/XSymbol';
 import { BlockModel } from '@wb/shared-types';
+import CopyIcon from './assets/CopyIcon';
 
 interface BlockProps {
   block: BlockModel;
@@ -60,10 +61,21 @@ export const Block = ({ block, fetchBlocks }: BlockProps) => {
     }
   };
 
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(content).then(() => {
+      console.log('Content copied to clipboard');
+    }).catch(err => {
+      console.error('Failed to copy content: ', err);
+    });
+  };
+
   return (
     <div className="block-container">
       <div className="block-header">
         <div className="block-position">{block.position}</div>
+        <button className="block-copy-button" onClick={copyToClipboard}>
+          <CopyIcon />
+        </button>
         <button className="block-delete-button" onClick={deleteBlock}>
           <XSymbol />
         </button>
