@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import './Block.css';
 import { SERVER_URL } from './constants';
 import { XSymbol } from './assets/XSymbol';
@@ -12,7 +12,13 @@ interface BlockProps {
 
 export const Block = ({ block, fetchBlocks }: BlockProps) => {
   const [content, setContent] = useState<string>(block.content);
-  const blockIdRef = useRef<string>(block._id);
+  const blockIdRef = useRef<string>(block._id); // Is this really still necessary?
+
+  // If we don't do this, the content will not update when a new block arrives
+  // It's okay because content is not a dependency for any other hooks
+  useEffect(() => {
+    setContent(block.content);
+  }, [block]);
 
   const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     // Fan out update and reset to current content if server update fails

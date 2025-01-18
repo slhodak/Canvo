@@ -169,6 +169,7 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
   }, [fetchBlocks, fetchTransformations]);
 
   useEffect(() => {
+    console.log('arranging blocks by depth');
     arrangeBlocksByDepth();
   }, [arrangeBlocksByDepth])
 
