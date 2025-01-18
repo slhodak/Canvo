@@ -103,10 +103,8 @@ const App = () => {
   return (
     <div className="app-container">
       <div className="top-section">
-        <div className="top-header-container">
-          <h2 className="app-title-header">Canvo</h2>
-          <button className="add-group-button" onClick={createGroup}>New Group</button>
-        </div>
+        <h2 className="app-title-header">Canvo</h2>
+        <button className="add-group-button" onClick={createGroup}>New Group</button>
       </div>
 
       <div className="middle-section">

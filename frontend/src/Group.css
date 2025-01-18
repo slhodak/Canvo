@@ -1,5 +1,4 @@
 .group-container {
-  margin-top: 10px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -39,27 +38,39 @@
 .group-layer-container {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  border-top: 1px solid rgb(0, 0, 0, 0.15);
 }
 
 .group-layer-header {
   display: flex;
   flex-direction: row;
   justify-content: flex-end;
+  padding-top: 10px;
 }
+
+/*
+  The header takes care of the top padding and the layer blocks container takes care of the bottom padding
+  This keeps the layer blocks container's scrollbar from butting up against the bottom of the block containers
+  While adding padding at the top above the header
+*/
 
 .group-layer-blocks-container {
   display: flex;
   flex-direction: row;
   gap: 27px 10px;
-  flex-wrap: wrap;
-  border-bottom: 1px solid rgb(0, 0, 0, 0.15);
-  padding-bottom: 15px;
+  padding-bottom: 10px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
 }
 
 /* Group Layer Blocks */
 
 .group-layer-block-container {
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   width: 220px;

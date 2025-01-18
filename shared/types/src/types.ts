@@ -40,8 +40,8 @@ export interface TransformationModel {
   group_id: string;
   author_id: string;
   input_block_id: string;
-  label: string;
   prompt: string;
+  outputs: number;
   created_at: Date;
   updated_at: Date;
 }

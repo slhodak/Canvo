@@ -2,10 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import './Group.css';
 import { Block } from './Block';
 import Transformation from './Transformation';
-import { GroupModel, BlockModel, TransformationModel, TransformationOutputModel } from '@wb/shared-types';
+import { GroupModel, BlockModel, TransformationModel } from '@wb/shared-types';
+import { compareBlockPositions } from './Utils';
 import { SERVER_URL } from './constants';
-import BlockTree from './BlockTree';
-
 
 interface GroupProps {
   group: GroupModel;
@@ -16,10 +15,7 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
   const [label, setLabel] = useState(group.label);
   const [blocks, setBlocks] = useState<BlockModel[]>([]);
   const [blocksByDepth, setBlocksByDepth] = useState<BlockModel[][]>([]);
-  const [blockTree, setBlockTree] = useState<BlockTree>(new BlockTree());
-  const [transformationsById, setTransformationsById] = useState<Record<string, TransformationModel>>({});
   const [transformationsByBlockId, setTransformationsByBlockId] = useState<Record<string, TransformationModel>>({});
-  const [transformationOutputsByBlockId, setTransformationOutputsByBlockId] = useState<Record<string, TransformationOutputModel>>({})
 
   ///////////////////////////////////////////////
   // Independent Methods
@@ -53,9 +49,16 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
 
   const addTransformation = async (blockId: string) => {
     try {
-      const response = await fetch(`${SERVER_URL}/api/new_transformation/${group._id}/${blockId}`, {
+      const response = await fetch(`${SERVER_URL}/api/new_transformation`, {
         method: 'POST',
         credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          'groupId': group._id,
+          'blockId': blockId,
+        })
       });
       const data = await response.json();
       if (data.status == 'success') {
@@ -72,15 +75,20 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
       return 0;
     }
 
-    let highestPosition = 0;
-    for (const block of blocksAtDepth) {
-      /// 0.2.1 -> [0, 2, 1], e.g. at depth 2, the highest position is 1
-      const position = Number(block.position.split('.')[depth]);
-      if (position > highestPosition) {
-        highestPosition = position;
-      }
+    // Assume the blocks at each depth are sorted; this is done by the arrangeBlocksByDepth method
+    const lastBlock = blocksAtDepth[blocksAtDepth.length - 1];
+    const positionParts = lastBlock.position.split('.');
+    if (positionParts.length != depth + 1) {
+      console.error(`
+        Error encountered while calculating the next block position for depth ${depth}:
+        Expected block position to have ${depth + 1} parts, but got ${positionParts.length}
+      `);
+      return 0;
     }
-    return highestPosition + 1;
+    const positionLastPartIndex = positionParts.length - 1;
+    const positionLastRow = positionParts[positionLastPartIndex];
+    positionParts[positionLastPartIndex] = (Number(positionLastRow) + 1).toString();
+    return positionParts.join('.');
   }
 
   ///////////////////////////////////////////////
@@ -93,7 +101,6 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
     });
     const data = await response.json();
     if (data.status === 'success') {
-      console.log(`setting blocks: ${data.blocks}`);
       setBlocks(data.blocks);
     } else {
       console.error(`Could not get block ids: ${data.error}`)
@@ -108,60 +115,31 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
 
     if (data.status === 'success') {
       // Convert the returned array into the maps we need
-      const _transformationsById: Record<string, TransformationModel> = {};
       const _transformationsByBlockId: Record<string, TransformationModel> = {};
 
       const transformations: TransformationModel[] = data.transformations;
       for (const transformation of transformations) {
-        _transformationsById[transformation._id] = transformation;
         _transformationsByBlockId[transformation.input_block_id] = transformation;
       }
 
-      setTransformationsById(_transformationsById);
       setTransformationsByBlockId(_transformationsByBlockId);
     } else {
       console.error(`Could not get transformations: ${data.error}`)
     }
   }, [group._id]);
 
-  const fetchTransformationOutputs = useCallback(async () => {
-    try {
-      const response = await fetch(`${SERVER_URL}/api/query_transformation_outputs`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          'blockIds': blocks.map((block) => block._id),
-        })
-      })
-      const data = await response.json()
-
-      if (data.status === 'success') {
-        const transformationOutputs: TransformationOutputModel[] = data.transformationOutputs;
-        const _transformationOutputsByBlockId = transformationOutputs.reduce((acc, transformationOutput) => {
-          acc[transformationOutput.output_block_id] = transformationOutput;
-          return acc;
-        }, {} as Record<string, TransformationOutputModel>)
-
-        setTransformationOutputsByBlockId(_transformationOutputsByBlockId)
-      } else {
-        console.error(`Error fetching transformation outputs: ${data.error}`)
-      }
-    } catch (error) {
-      console.error(`Error fetching transformation outputs rows: ${error}`)
-    }
-  }, [blocks])
-
   const arrangeBlocksByDepth = useCallback(() => {
     const _blocksByDepth: BlockModel[][] = [];
     for (const block of blocks) {
       const depth = block.position.split('.').length - 1;
-      if (_blocksByDepth.length < depth + 1) {
-        _blocksByDepth.push([]);
+      if (_blocksByDepth[depth] === undefined) {
+        _blocksByDepth[depth] = [];
       }
       _blocksByDepth[depth].push(block);
+    }
+
+    for (let i = 0; i < _blocksByDepth.length; i++) {
+      _blocksByDepth[i] = _blocksByDepth[i].sort(compareBlockPositions)
     }
     setBlocksByDepth(_blocksByDepth);
   }, [blocks])
@@ -174,10 +152,6 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
     fetchBlocks();
     fetchTransformations();
   }, [fetchBlocks, fetchTransformations]);
-
-  useEffect(() => {
-    fetchTransformationOutputs();
-  }, [fetchTransformationOutputs])
 
   useEffect(() => {
     arrangeBlocksByDepth();
@@ -201,15 +175,14 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
     </div>
 
     <div className="group-layers-container">
-      {/* position: will use the position to arrange the blocks. but it will need some kind of data structure like this */}
       {Object.entries(blocksByDepth).map(([depth, blocks]) => {
         return (
           <div className="group-layer-container" key={`block-depth-${depth}`}>
-            <div className="group-layer-header">
-              {Number(depth) > 0 &&
+            {Number(depth) > 0 &&
+              <div className="group-layer-header">
                 <button className="add-block-button" onClick={() => addBlock(Number(depth))}>Add Block</button>
-              }
-            </div>
+              </div>
+            }
             <div className="group-layer-blocks-container" key={`block-depth-${depth}`}>
               {blocks.map((block) => {
                 const transformation = transformationsByBlockId[block._id];

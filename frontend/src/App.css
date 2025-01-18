@@ -17,12 +17,17 @@
 .top-section {
   height: 10vh;
   padding: 10px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgb(150, 150, 150);
 }
 
 .middle-section {
   height: 70vh;
   padding: 10px;
-  overflow-y: scroll;
+  overflow-y: auto;
   scrollbar-width: thin;
   &::-webkit-scrollbar {
     width: 6px;
@@ -33,7 +38,7 @@
   height: 20vh;
   border-top: 1px solid black;
   padding: 10px;
-  overflow-y: scroll;
+  overflow-y: auto;
   scrollbar-width: thin;
   &::-webkit-scrollbar {
     width: 6px;
@@ -43,15 +48,8 @@
 /* Top section */
 
 .app-title-header {
-  margin: 0;
   color: rgba(0, 0, 0, 0.5);
   line-height: 1.0;
-}
-
-.top-header-container {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
 }
 
 .add-group-button {

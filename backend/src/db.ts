@@ -151,7 +151,7 @@ export namespace Database {
 
   export async function getTransformation(transformationId: string, userId: string): Promise<TransformationModel | null> {
     const transformation = await db.oneOrNone(`
-      SELECT id, _id, group_id, input_block_id, position, prompt
+      SELECT id, _id, group_id, input_block_id, prompt, outputs
       FROM transformations
       WHERE _id = $1 and author_id = $2
     `, [transformationId, userId]);
@@ -160,26 +160,32 @@ export namespace Database {
 
   export async function getTransformationsForGroup(groupId: string, userId: string): Promise<TransformationModel[]> {
     const transformations = await db.any(`
-      SELECT id, _id, input_block_id, position, prompt
+      SELECT id, _id, input_block_id, prompt, outputs
       FROM transformations
       WHERE group_id = $1 AND author_id = $2
     `, [groupId, userId]);
     return transformations;
   }
 
-  export async function createTransformation(userId: string, groupId: string, blockId: string, position: string, prompt: string): Promise<string | null> {
+  export async function createTransformation(userId: string, groupId: string, blockId: string, prompt: string, outputs: number): Promise<string | null> {
     const transformationId = uuidv4();
-    const values = [transformationId, userId, groupId, blockId, position, prompt];
+    const values = [transformationId, userId, groupId, blockId, prompt, outputs];
     await db.none(`
-      INSERT INTO transformations (_id, author_id, group_id, input_block_id, position, prompt)
+      INSERT INTO transformations (_id, author_id, group_id, input_block_id, prompt, outputs)
       VALUES ($1, $2, $3, $4, $5, $6)
     `, values);
     return transformationId;
   }
 
-  export async function updateTransformation(transformationId: string, prompt: string, userId: string) {
+  export async function updateTransformationPrompt(transformationId: string, prompt: string, userId: string) {
     const values = [prompt, transformationId, userId];
     const result = await db.result('UPDATE transformations SET prompt = $1, updated_at = CURRENT_TIMESTAMP WHERE _id = $2 AND author_id = $3', values);
+    return result;
+  }
+
+  export async function updateTransformationOutputs(transformationId: string, outputs: number, userId: string) {
+    const values = [outputs, transformationId, userId];
+    const result = await db.result('UPDATE transformations SET outputs = $1, updated_at = CURRENT_TIMESTAMP WHERE _id = $2 AND author_id = $3', values);
     return result;
   }
 
@@ -187,6 +193,8 @@ export namespace Database {
     const result = await db.result('DELETE FROM transformations WHERE _id = $1 AND author_id = $2', [transformationId, userId]);
     return result;
   }
+
+  // Transformation outputs
 
   export async function getTransformationOutputs(blockIds: string[]): Promise<TransformationOutputModel[] | null> {
     if (blockIds.length === 0) {

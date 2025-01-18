@@ -480,9 +480,11 @@ router.get('/api/get_transformations_for_group/:group_id', async (req: Request, 
   }
 });
 
-router.post('/api/new_transformation/:group_id/:block_id', async (req: Request, res: Response) => {
-  const groupId = req.params.group_id;
-  const blockId = req.params.block_id;
+router.post('/api/new_transformation', async (req: Request, res: Response) => {
+  const { groupId, blockId } = req.body;
+  if (!groupId || !blockId) {
+    return res.status(400).json({ status: "failed", error: "Could not add transformation: No group or block id provided" });
+  }
 
   try {
     const user = await getUserFromSessionToken(req);
@@ -490,13 +492,7 @@ router.post('/api/new_transformation/:group_id/:block_id', async (req: Request, 
       return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
     }
 
-    const block = await db.getBlock(blockId, user._id);
-    if (!block) {
-      return res.status(404).json({ status: "failed", error: "Could not add transformation: Block not found" });
-    }
-
-    const position = `${block.position}.0`;
-    const transformationId = await db.createTransformation(user._id, groupId, blockId, position, '');
+    const transformationId = await db.createTransformation(user._id, groupId, blockId, '', 1);
     if (!transformationId) {
       return res.status(500).json({ status: "failed", error: "Could not create transformation" });
     }
@@ -518,8 +514,13 @@ router.post('/api/update_transformation', async (req: Request, res: Response) =>
   }
 
   try {
-    const { transformationId, prompt } = req.body;
-    await db.updateTransformation(transformationId, prompt, user._id);
+    const { transformationId, prompt, outputs } = req.body;
+    if (prompt) {
+      await db.updateTransformationPrompt(transformationId, prompt, user._id);
+    }
+    if (outputs) {
+      await db.updateTransformationOutputs(transformationId, outputs, user._id);
+    }
     return res.json({ status: "success" });
   } catch (error) {
     if (error instanceof Error) {
@@ -551,6 +552,10 @@ router.delete('/api/delete_transformation/:transformation_id', async (req: Reque
     }
   }
 });
+
+////////////////////////////////////////////////////////////
+// Transformation Outputs
+////////////////////////////////////////////////////////////
 
 router.post('/api/query_transformation_outputs', async (req: Request, res: Response) => {
   const blockIds = req.body.blockIds;
@@ -598,30 +603,46 @@ router.post('/api/run_transformation', async (req: Request, res: Response) => {
   const inputBlockContent = inputBlock.content;
   const prompt = transformation.prompt;
 
+  const systemPrompt = `
+    You will be given a transformation prompt, an input text, and a number of outputs.
+    You will use the transformation prompt to respond to the requested transformation.
+    Before each output, you will respond on a separate line with "BEGIN OUTPUT".
+  `;
+
   try {
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
-        { role: 'system', content: "You will be given a transformation prompt and an input text. You will use the transformation prompt to respond to the requested transformation." },
+        { role: 'system', content: systemPrompt },
         { role: 'user', content: `Input text: '${inputBlockContent}'\n\nTransformation prompt: '${prompt}'` }
       ],
       temperature: 0.7,
       n: 1
     });
 
-    const output = completion.choices[0].message.content
-    if (!output) {
+    const response = completion.choices[0].message.content
+    if (!response) {
       return res.status(500).json({ status: "failed", error: "Could not get output from OpenAI" });
     }
 
-    const position = inputBlock.position + ".0";
-    const outputBlockId = await db.createBlock(user._id, transformation.group_id, output, position);
-    if (!outputBlockId) {
-      return res.status(500).json({ status: "failed", error: "Could not create output block" });
-    }
-    await db.createTransformationOutput(transformationId, outputBlockId);
+    console.log(response);
 
-    return res.json({ status: "success", output });
+    const outputs = response.split('BEGIN OUTPUT');
+    const errors = [];
+
+    let outputCount = 0;
+    for (const output of outputs) {
+      const position = `${inputBlock.position}.${outputCount}`;
+      const outputBlockId = await db.createBlock(user._id, transformation.group_id, output, position);
+      if (!outputBlockId) {
+        errors.push(`Could not create output block at position ${position}`);
+        continue;
+      }
+      await db.createTransformationOutput(transformationId, outputBlockId);
+      outputCount++;
+    }
+
+    return res.json({ status: "success", outputCount: outputs.length, errors });
 
   } catch (error) {
     if (error instanceof Error) {
