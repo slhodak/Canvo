@@ -5,6 +5,7 @@ import Transformation from './Transformation';
 import { GroupModel, BlockModel, TransformationModel } from '@wb/shared-types';
 import { compareBlockPositions } from './Utils';
 import { SERVER_URL } from './constants';
+import CopyIcon from './assets/CopyIcon';
 
 interface GroupProps {
   group: GroupModel;
@@ -89,6 +90,20 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
     const positionLastRow = positionParts[positionLastPartIndex];
     positionParts[positionLastPartIndex] = (Number(positionLastRow) + 1).toString();
     return positionParts.join('.');
+  }
+
+  const copyAllBlocks = (depth: number) => {
+    const blocksAtDepth = blocksByDepth[depth];
+    if (!blocksAtDepth || blocksAtDepth.length == 0) {
+      return;
+    }
+
+    const textToCopy = blocksAtDepth.map(block => `${block.position}\n${block.content}`).join('\n\n');
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      console.log('All blocks content copied to clipboard');
+    }).catch(err => {
+      console.error('Failed to copy content: ', err);
+    });
   }
 
   ///////////////////////////////////////////////
@@ -178,11 +193,12 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
       {Object.entries(blocksByDepth).map(([depth, blocks]) => {
         return (
           <div className="group-layer-container" key={`block-depth-${depth}`}>
-            {Number(depth) > 0 &&
-              <div className="group-layer-header">
-                <button className="add-block-button" onClick={() => addBlock(Number(depth))}>Add Block</button>
-              </div>
-            }
+            <div className="group-layer-header">
+              <button className="group-layer-copy-button" onClick={() => copyAllBlocks(Number(depth))}>
+                <CopyIcon />
+              </button>
+              {Number(depth) > 0 && <button className="group-layer-add-block-button" onClick={() => addBlock(Number(depth))}>Add Block</button>}
+            </div>
             <div className="group-layer-blocks-container" key={`block-depth-${depth}`}>
               {blocks.map((block) => {
                 const transformation = transformationsByBlockId[block._id];

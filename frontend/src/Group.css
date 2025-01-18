@@ -28,13 +28,6 @@
   background-color: var(--textarea-editing-background-color);
 }
 
-.add-block-button {
-  border: none;
-  background-color: var(--button-background-color);
-}
-
-/* Group Layers */
-
 .group-layer-container {
   display: flex;
   flex-direction: column;
@@ -44,8 +37,23 @@
 .group-layer-header {
   display: flex;
   flex-direction: row;
+  align-items: center;
   justify-content: flex-end;
+  gap: 10px;
   padding-top: 10px;
+}
+
+.group-layer-add-block-button {
+  border: none;
+  background-color: var(--button-background-color);
+}
+
+.group-layer-copy-button {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  height: 22px;
+  padding: 0px;
 }
 
 /*
@@ -62,6 +70,7 @@
   flex-wrap: nowrap;
   overflow-x: auto;
   scrollbar-width: thin;
+
   &::-webkit-scrollbar {
     width: 6px;
   }
