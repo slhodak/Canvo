@@ -1,16 +1,75 @@
 .layer-container {
   display: flex;
   flex-direction: column;
-  overflow: scroll;
-  margin: 0px 10px;
+  border-top: 1px solid rgb(0, 0, 0, 0.15);
 }
 
 .layer-header {
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.layer-blocks {
   display: flex;
   flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 10px;
+}
+
+.layer-add-block-button {
+  border: none;
+  background-color: var(--button-background-color);
+}
+
+.layer-copy-button {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  height: 22px;
+  padding: 0px;
+}
+
+/*
+  The header takes care of the top padding and the layer blocks container takes care of the bottom padding
+  This keeps the layer blocks container's scrollbar from butting up against the bottom of the block containers
+  While adding padding at the top above the header
+*/
+
+.layer-blocks-container {
+  display: flex;
+  flex-direction: row;
+  gap: 27px 10px;
+  padding-bottom: 10px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+}
+
+/* Group Layer Blocks */
+
+.layer-block-container {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.layer-block-zoom-s {
+  width: 220px;
+}
+
+.layer-block-zoom-m {
+  width: 320px;
+}
+
+.layer-block-zoom-l {
+  width: 500px;
+}
+
+.layer-add-transformation-button {
+  height: 2rem;
+  padding: 0px;
+  border: none;
+  background-color: var(--button-background-color);
 }

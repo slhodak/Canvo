@@ -1,0 +1,27 @@
+.triple-button-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+}
+
+.triple-button-square-left,
+.triple-button-square-center,
+.triple-button-square-right {
+  padding: 0px;
+}
+
+.triple-button-square-left {
+  width: 20px;
+  height: 20px;
+}
+
+.triple-button-square-center {
+  width: 24px;
+  height: 24px;
+}
+
+.triple-button-square-right {
+  width: 28px;
+  height: 28px;
+}

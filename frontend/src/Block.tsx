@@ -8,9 +8,10 @@ import CopyIcon from './assets/CopyIcon';
 interface BlockProps {
   block: BlockModel;
   fetchBlocks: () => Promise<void>;
+  zoom: string;
 }
 
-export const Block = ({ block, fetchBlocks }: BlockProps) => {
+const Block = ({ block, fetchBlocks, zoom }: BlockProps) => {
   const [content, setContent] = useState<string>(block.content);
   const blockIdRef = useRef<string>(block._id); // Is this really still necessary?
 
@@ -77,7 +78,7 @@ export const Block = ({ block, fetchBlocks }: BlockProps) => {
   };
 
   return (
-    <div className="block-container">
+    <div className={`block-container block-zoom-${zoom}`}>
       <div className="block-header">
         <div className="block-position">{block.position}</div>
         <button className="block-copy-button" onClick={copyToClipboard}>
@@ -96,3 +97,5 @@ export const Block = ({ block, fetchBlocks }: BlockProps) => {
     </div>
   );
 };
+
+export default Block;
