@@ -1,3 +1,16 @@
+* {
+  &::-webkit-scrollbar {
+    width: 12px;
+    height: 6px;
+    border: none;
+    background: rgba(0, 0, 0, 0.07);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+  }
+}
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;

@@ -217,9 +217,14 @@ async function createGroup(user: UserModel, res: Response) {
     return res.status(500).json({ status: "failed", error: "Could not create group" });
   }
 
+  const group = await db.getGroup(groupId, user._id);
+  if (!group) {
+    return res.status(500).json({ status: "failed", error: "Could not get group" });
+  }
+
   return res.json({
     status: "success",
-    groupId: groupId
+    group: group
   });
 }
 
@@ -278,7 +283,6 @@ router.post('/api/new_group', async (req: Request, res: Response) => {
     if (!user) {
       return res.status(401).json({ error: "Could not find user email from session token" });
     }
-    console.log("Creating group for user:", user);
 
     return await createGroup(user, res);
   } catch (error) {
@@ -481,9 +485,9 @@ router.get('/api/get_transformations_for_group/:group_id', async (req: Request, 
 });
 
 router.post('/api/new_transformation', async (req: Request, res: Response) => {
-  const { groupId, blockId } = req.body;
-  if (!groupId || !blockId) {
-    return res.status(400).json({ status: "failed", error: "Could not add transformation: No group or block id provided" });
+  const { groupId, blockId, position } = req.body;
+  if (!groupId || !blockId || !position) {
+    return res.status(400).json({ status: "failed", error: "Could not add transformation: No group or block id or position provided" });
   }
 
   try {
@@ -492,7 +496,7 @@ router.post('/api/new_transformation', async (req: Request, res: Response) => {
       return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
     }
 
-    const transformationId = await db.createTransformation(user._id, groupId, blockId, '', 1);
+    const transformationId = await db.createTransformation(user._id, groupId, blockId, '', 1, position);
     if (!transformationId) {
       return res.status(500).json({ status: "failed", error: "Could not create transformation" });
     }
@@ -603,6 +607,10 @@ router.post('/api/run_transformation', async (req: Request, res: Response) => {
   const inputBlockContent = inputBlock.content;
   const prompt = transformation.prompt;
   const expectedOutputs = transformation.outputs;
+  const position = transformation.position;
+  if (!position) {
+    return res.status(500).json({ status: "failed", error: "Transformation position not found" });
+  }
 
   const systemPrompt = `
     You will be given a transformation prompt, an input text, and a number of expected outputs.
@@ -651,7 +659,7 @@ router.post('/api/run_transformation', async (req: Request, res: Response) => {
         continue;
       }
 
-      const position = `${inputBlock.position}.${outputCount}`;
+      const position = `${inputBlock.position}.${transformation.position}:${outputCount}`;
       // If a block already exists at this position, update its content instead of creating a new one
       const existingBlock = await db.getBlockAtPosition(transformation.group_id, position, user._id);
       if (existingBlock) {

@@ -97,6 +97,13 @@ const Transformation = ({ transformation, fetchTransformations, fetchBlocks }: T
 
   return (
     <div className="transformation-container">
+      <div className="transformation-header-container">
+        <p className="transformation-position">{transformation.position}</p>
+        <button className="transformation-delete-button" onClick={deleteTransformation}>
+          <XSymbol />
+        </button>
+      </div>
+
       <textarea
         className="transformation-prompt-textarea"
         value={prompt}
@@ -104,15 +111,14 @@ const Transformation = ({ transformation, fetchTransformations, fetchBlocks }: T
       />
 
       <div className="transformation-footer-container">
-        <button className="transformation-delete-button" onClick={deleteTransformation}>
-          <XSymbol />
-        </button>
+        <p className="transformation-outputs-label">Outputs:</p>
         <input
           type="number"
           className="transformation-outputs-number-input"
           value={outputs}
           onChange={handleOutputsChange}
         />
+
         <button className="transformation-run-button" onClick={runTransformation}>Run</button>
       </div>
     </div>

@@ -1,7 +1,7 @@
 .layer-container {
   display: flex;
   flex-direction: column;
-  border-top: 1px solid rgb(0, 0, 0, 0.15);
+  border-top: 1px solid rgb(0, 0, 0, 0.35);
 }
 
 .layer-header {
@@ -10,7 +10,8 @@
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
-  padding-top: 10px;
+  padding-top: 5px;
+  padding-bottom: 5px;
 }
 
 .layer-add-block-button {
@@ -39,11 +40,7 @@
   padding-bottom: 10px;
   flex-wrap: nowrap;
   overflow-x: auto;
-  scrollbar-width: thin;
-
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
+  border-top: 1px dotted gray;
 }
 
 /* Group Layer Blocks */

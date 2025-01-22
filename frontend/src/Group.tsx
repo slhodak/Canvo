@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import './Group.css';
+import './Layer.css';
 import Layer from './Layer';
 import { GroupModel, BlockModel } from '@wb/shared-types';
-import { compareBlockPositions } from './Utils';
+import { compareBlockPositions, Position } from './Utils';
 import { SERVER_URL } from './constants';
 
 interface GroupProps {
@@ -51,18 +52,23 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
 
     // Assume the blocks at each depth are sorted; this is done by the arrangeBlocksByDepth method
     const lastBlock = blocksAtDepth[blocksAtDepth.length - 1];
-    const positionParts = lastBlock.position.split('.');
-    if (positionParts.length != depth + 1) {
+    const positionTrail = lastBlock.position.split('.');
+    if (positionTrail.length != depth + 1) {
       console.error(`
         Error encountered while calculating the next block position for depth ${depth}:
-        Expected block position to have ${depth + 1} parts, but got ${positionParts.length}
+        Expected block position to have ${depth + 1} parts, but got ${positionTrail.length}
       `);
       return 0;
     }
-    const positionLastPartIndex = positionParts.length - 1;
-    const positionLastRow = positionParts[positionLastPartIndex];
-    positionParts[positionLastPartIndex] = (Number(positionLastRow) + 1).toString();
-    return positionParts.join('.');
+
+    // Get the last position in the trail and increment the block id
+    const lastPositionIndex = positionTrail.length - 1;
+    const lastPosition = Position.from(positionTrail[lastPositionIndex]);
+    lastPosition.incrementBlockId();
+
+    // Reunite the new position with the trail it came from (works too if trail was 1-long)
+    positionTrail[lastPositionIndex] = lastPosition.toString();
+    return positionTrail.join('.');
   }
 
   ///////////////////////////////////////////////
@@ -123,7 +129,7 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
           updateGroupLabel(e.target.value)
         }}
       />
-      <button className="add-block-button" onClick={() => addBlock(0)}>Add Block</button>
+      <button className="layer-add-block-button" onClick={() => addBlock(0)}>Add Block</button>
     </div>
 
     <div className="group-layers-container">

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import './Layer.css';
+import { compareTransformationPositions } from './Utils';
 import Block from './Block';
 import Transformation from './Transformation';
 import { BlockModel, TransformationModel } from '@wb/shared-types';
@@ -22,7 +23,7 @@ enum Zoom {
 }
 
 export const Layer = ({ groupId, depth, blocks, addBlock, fetchBlocks }: LayerProps) => {
-  const [transformationsByBlockId, setTransformationsByBlockId] = useState<Record<string, TransformationModel>>({});
+  const [transformationsByBlockId, setTransformationsByBlockId] = useState<Record<string, TransformationModel[]>>({});
   const [zoom, setZoom] = useState(Zoom.Small);
 
   const setZoomFromChoice = (choice: number) => {
@@ -55,12 +56,20 @@ export const Layer = ({ groupId, depth, blocks, addBlock, fetchBlocks }: LayerPr
     const data = await response.json();
 
     if (data.status === 'success') {
-      // Convert the returned array into the maps we need
-      const _transformationsByBlockId: Record<string, TransformationModel> = {};
+      // Convert the returned flat list into the map we need
+      const _transformationsByBlockId: Record<string, TransformationModel[]> = {};
 
       const transformations: TransformationModel[] = data.transformations;
       for (const transformation of transformations) {
-        _transformationsByBlockId[transformation.input_block_id] = transformation;
+        if (!_transformationsByBlockId[transformation.input_block_id]) {
+          _transformationsByBlockId[transformation.input_block_id] = [];
+        }
+        _transformationsByBlockId[transformation.input_block_id].push(transformation);
+      }
+
+      // Sort the transformations for each block
+      for (const blockId in _transformationsByBlockId) {
+        _transformationsByBlockId[blockId].sort((a, b) => compareTransformationPositions(a, b));
       }
 
       setTransformationsByBlockId(_transformationsByBlockId);
@@ -69,7 +78,16 @@ export const Layer = ({ groupId, depth, blocks, addBlock, fetchBlocks }: LayerPr
     }
   }, [groupId]);
 
+  const nextTransformationPositionForBlock = (blockId: string) => {
+    const transformations = transformationsByBlockId[blockId];
+    if (!transformations || transformations.length == 0) {
+      return 'a';
+    }
+    return String.fromCharCode(transformations[transformations.length - 1].position.charCodeAt(0) + 1);
+  }
+
   const addTransformation = async (blockId: string) => {
+    const position = nextTransformationPositionForBlock(blockId);
     try {
       const response = await fetch(`${SERVER_URL}/api/new_transformation`, {
         method: 'POST',
@@ -80,6 +98,7 @@ export const Layer = ({ groupId, depth, blocks, addBlock, fetchBlocks }: LayerPr
         body: JSON.stringify({
           'groupId': groupId,
           'blockId': blockId,
+          'position': position
         })
       });
       const data = await response.json();
@@ -107,15 +126,16 @@ export const Layer = ({ groupId, depth, blocks, addBlock, fetchBlocks }: LayerPr
 
       <div className="layer-blocks-container" key={`block-depth-${depth}`}>
         {blocks.map((block) => {
-          const transformation = transformationsByBlockId[block._id];
+          const transformations = transformationsByBlockId[block._id];
           return (
             <div className={`layer-block-container layer-block-zoom-${zoom}`} key={`block-${block._id}`}>
               <Block block={block} fetchBlocks={fetchBlocks} zoom={zoom} />
-              {transformation ?
-                <Transformation transformation={transformation} fetchTransformations={fetchTransformations} fetchBlocks={fetchBlocks} />
-                :
-                <button className="layer-add-transformation-button" onClick={() => addTransformation(block._id)}>New Transformation</button>
+              {(transformations && transformations.length > 0) &&
+                transformations.map((transformation) => (
+                  <Transformation key={transformation._id} transformation={transformation} fetchTransformations={fetchTransformations} fetchBlocks={fetchBlocks} />
+                ))
               }
+              <button className="layer-add-transformation-button" onClick={() => addTransformation(block._id)}>Add Transformation</button>
             </div>
           )
         })}

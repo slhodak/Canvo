@@ -28,7 +28,8 @@ const App = () => {
       });
       const data = await response.json();
       if (data.status == 'success') {
-        fetchAllGroups();
+        await fetchAllGroups();
+        setGroup(data.group);
       }
     } catch (error) {
       console.error('Error creating group:', error);
