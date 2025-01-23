@@ -190,6 +190,15 @@ export namespace Database {
     return transformations;
   }
 
+  export async function getTransformationsByInputBlockId(blockId: string, userId: string): Promise<TransformationModel[]> {
+    const transformations = await db.any(`
+      SELECT id, _id, group_id, input_block_id, prompt, outputs, position, locked
+      FROM transformations
+      WHERE input_block_id = $1 AND author_id = $2
+    `, [blockId, userId]);
+    return transformations;
+  }
+
   export async function createTransformation(userId: string, groupId: string, blockId: string, prompt: string, outputs: number, position: string): Promise<string | null> {
     const transformationId = uuidv4();
     const values = [transformationId, userId, groupId, blockId, prompt, outputs, position];
@@ -209,6 +218,12 @@ export namespace Database {
   export async function updateTransformationOutputs(transformationId: string, outputs: number, userId: string) {
     const values = [outputs, transformationId, userId];
     const result = await db.result('UPDATE transformations SET outputs = $1, updated_at = CURRENT_TIMESTAMP WHERE _id = $2 AND author_id = $3', values);
+    return result;
+  }
+
+  export async function updateTransformationLocked(transformationId: string, locked: boolean, userId: string) {
+    const values = [locked, transformationId, userId];
+    const result = await db.result('UPDATE transformations SET locked = $1, updated_at = CURRENT_TIMESTAMP WHERE _id = $2 AND author_id = $3', values);
     return result;
   }
 

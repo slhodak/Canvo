@@ -5,14 +5,12 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import { v4 as uuidv4 } from 'uuid';
-import OpenAI from "openai";
 import path from 'path';
 import { Database as db } from './db';
 import { UserModel } from '@wb/shared-types';
+import { runTransformation, TransformationResult } from './llm';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
-
-const openai = new OpenAI();
 
 const app: Express = express();
 const router = Router();
@@ -544,12 +542,16 @@ router.post('/api/update_transformation', async (req: Request, res: Response) =>
   }
 
   try {
-    const { transformationId, prompt, outputs } = req.body;
+    const { transformationId, prompt, outputs, locked } = req.body;
     if (prompt) {
       await db.updateTransformationPrompt(transformationId, prompt, user._id);
     }
     if (outputs) {
       await db.updateTransformationOutputs(transformationId, outputs, user._id);
+    }
+    if (locked) {
+      console.log('updating transformation locked', transformationId, locked);
+      await db.updateTransformationLocked(transformationId, locked, user._id);
     }
     return res.json({ status: "success" });
   } catch (error) {
@@ -619,92 +621,41 @@ router.post('/api/run_transformation', async (req: Request, res: Response) => {
   }
 
   const { transformationId } = req.body;
-
   const transformation = await db.getTransformation(transformationId, user._id);
   if (!transformation) {
     return res.status(404).json({ status: "failed", error: "Transformation not found" });
   }
 
-  const inputBlock = await db.getBlock(transformation.input_block_id, user._id);
-  if (!inputBlock) {
-    return res.status(404).json({ status: "failed", error: "Input block not found" });
+  if (transformation.locked) {
+    return res.status(400).json({ status: "failed", error: "Transformation is locked" });
   }
 
-  const inputBlockContent = inputBlock.content;
-  const prompt = transformation.prompt;
-  const expectedOutputs = transformation.outputs;
-  const position = transformation.position;
-  if (!position) {
-    return res.status(500).json({ status: "failed", error: "Transformation position not found" });
-  }
+  const errors: string[] = [];
+  let outputs: number = 0;
 
-  const systemPrompt = `
-    You will be given a transformation prompt, an input text, and a number of expected outputs.
-    You will use the transformation prompt to respond to the requested transformation.
-    You will produce the expected number of outputs.
-    Before each output, you will add a separate line that says "BEGIN OUTPUT".
-    You will not include any other text in your response.
-
-    For example, for the prompt:
-    Input text: A person crosses the street\nTransformation prompt: Possible reasons\nOutputs: 3
-    You would respond with:
-    BEGIN OUTPUT
-    The person may want to buy something on the other side of the street
-    BEGIN OUTPUT
-    The person might work on the other side of the street
-    BEGIN OUTPUT
-    The person might be visiting a friend on the other side of the street
-  `;
-
+  // Transformation cascading: running a transformation will run all of its (unlocked) child transformations
+  // This is done iteratively insted of recursively in order to collect errors and the total count of outputs
   try {
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: `Input text: '${inputBlockContent}'\nTransformation prompt: '${prompt}'\nOutputs: ${expectedOutputs}` }
-      ],
-      temperature: 0.7,
-      n: 1
-    });
+    const queue = [transformation];
+    while (queue.length > 0) {
+      const transformation = queue.shift();
+      if (!transformation) {
+        break;
+      }
 
-    const response = completion.choices[0].message.content
-    if (!response) {
-      return res.status(500).json({ status: "failed", error: "Could not get output from OpenAI" });
-    }
-
-    console.log(response);
-
-    const outputs = response.split('BEGIN OUTPUT');
-    const errors = [];
-
-    // Create or update the output blocks
-    let outputCount = 0;
-    for (const output of outputs) {
-      if (output.length === 0) {
-        // Skip any empty outputs
-        console.debug('Skipping empty output');
+      // Skip locked transformations
+      if (transformation.locked) {
         continue;
       }
 
-      // If a block already exists at the target position, update its content instead of creating a new one
-      const position = `${inputBlock.position}.${transformation.position}:${outputCount}`;
-      const existingBlock = await db.getBlockAtPosition(transformation.group_id, position, user._id);
-      if (existingBlock && existingBlock.locked) {
-        console.debug(`Will not update output block at position ${position}: Block is locked`);
-      } else if (existingBlock) {
-        await db.updateBlock(existingBlock._id, output, user._id);
-      } else {
-        const outputBlockId = await db.createBlock(user._id, transformation.group_id, output, position);
-        if (!outputBlockId) {
-          errors.push(`Could not create output block at position ${position}`);
-          continue;
-        }
-        await db.createTransformationOutput(transformationId, outputBlockId);
-      }
-      outputCount++;
+      // Run the transformation and store the results
+      const transformationResult: TransformationResult = await runTransformation(transformation, user._id);
+      outputs += transformationResult.outputs;
+      errors.push(...transformationResult.errors);
+      queue.push(...transformationResult.childTransformations);
     }
 
-    return res.json({ status: "success", outputCount: outputs.length, errors });
+    return res.json({ status: "success", outputs, errors });
 
   } catch (error) {
     if (error instanceof Error) {

@@ -3,6 +3,7 @@ import './Transformation.css';
 import { SERVER_URL } from './constants';
 import { TransformationModel } from '@wb/shared-types';
 import { XSymbol } from './assets/XSymbol';
+import { LockIcon } from './assets/LockIcon';
 
 interface TransformationProps {
   transformation: TransformationModel;
@@ -11,8 +12,14 @@ interface TransformationProps {
 }
 
 const Transformation = ({ transformation, fetchTransformations, fetchBlocks }: TransformationProps) => {
+  const [locked, setLocked] = useState<boolean>(transformation.locked);
   const [prompt, setPrompt] = useState<string>(transformation.prompt);
   const [outputs, setOutputs] = useState<number>(transformation.outputs);
+
+  const toggleLock = () => {
+    updateTransformation({ newLocked: !locked });
+    setLocked(!locked);
+  };
 
   const handlePromptChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     // Fan out update and reset to current prompt if server update fails
@@ -25,9 +32,10 @@ const Transformation = ({ transformation, fetchTransformations, fetchBlocks }: T
     setOutputs(Number(event.target.value));
   };
 
-  const updateTransformation = async ({ newPrompt, newOutputs }: { newPrompt?: string, newOutputs?: number }) => {
+  const updateTransformation = async ({ newPrompt, newOutputs, newLocked }: { newPrompt?: string, newOutputs?: number, newLocked?: boolean }) => {
     const oldPrompt = prompt;
     const oldOutputs = outputs;
+    const oldLocked = locked;
 
     const body: Record<string, string | number> = {
       transformationId: transformation._id,
@@ -38,7 +46,11 @@ const Transformation = ({ transformation, fetchTransformations, fetchBlocks }: T
     if (newPrompt) {
       body['prompt'] = newPrompt;
     }
+    if (newLocked !== undefined) {
+      body['locked'] = newLocked.toString();
+    }
 
+    console.log('updating transformation', body);
     try {
       const response = await fetch(`${SERVER_URL}/api/update_transformation`, {
         method: 'POST',
@@ -53,11 +65,13 @@ const Transformation = ({ transformation, fetchTransformations, fetchBlocks }: T
       if (data.status !== 'success') {
         setPrompt(oldPrompt);
         setOutputs(oldOutputs);
+        setLocked(oldLocked);
         console.error('Error updating transformation:', data.error);
       }
     } catch (error) {
       setPrompt(oldPrompt);
       setOutputs(oldOutputs);
+      setLocked(oldLocked);
       console.error('Error updating transformation:', error);
     }
   }
@@ -75,6 +89,10 @@ const Transformation = ({ transformation, fetchTransformations, fetchBlocks }: T
   };
 
   const runTransformation = async () => {
+    if (locked) {
+      return;
+    }
+
     try {
       const response = await fetch(`${SERVER_URL}/api/run_transformation`, {
         method: 'POST',
@@ -99,6 +117,9 @@ const Transformation = ({ transformation, fetchTransformations, fetchBlocks }: T
     <div className="transformation-container">
       <div className="transformation-header-container">
         <p className="transformation-position">{transformation.position}</p>
+        <button className="transformation-lock-button" onClick={toggleLock}>
+          <LockIcon locked={locked} />
+        </button>
         <button className="transformation-delete-button" onClick={deleteTransformation}>
           <XSymbol />
         </button>
@@ -119,7 +140,7 @@ const Transformation = ({ transformation, fetchTransformations, fetchBlocks }: T
           onChange={handleOutputsChange}
         />
 
-        <button className="transformation-run-button" onClick={runTransformation}>Run</button>
+        <button className={`transformation-run-button ${locked ? 'locked' : ''}`} onClick={runTransformation}>Run</button>
       </div>
     </div>
   );

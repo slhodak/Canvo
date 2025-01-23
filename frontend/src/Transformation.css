@@ -41,6 +41,14 @@
   font-family: 'Courier New', Courier, monospace;
 }
 
+.transformation-lock-button {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  height: 16px;
+  padding: 0px;
+}
+
 .transformation-delete-button {
   background-color: transparent;
   border: none;
@@ -89,4 +97,9 @@
   padding: 6px;
   width: 25%;
   align-self: flex-end;
+}
+
+.transformation-run-button.locked {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.5);
 }
