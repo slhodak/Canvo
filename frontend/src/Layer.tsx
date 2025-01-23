@@ -129,7 +129,7 @@ export const Layer = ({ groupId, depth, blocks, addBlock, fetchBlocks }: LayerPr
           const transformations = transformationsByBlockId[block._id];
           return (
             <div className={`layer-block-container layer-block-zoom-${zoom}`} key={`block-${block._id}`}>
-              <Block block={block} fetchBlocks={fetchBlocks} zoom={zoom} />
+              <Block depth={depth} block={block} fetchBlocks={fetchBlocks} zoom={zoom} />
               {(transformations && transformations.length > 0) &&
                 transformations.map((transformation) => (
                   <Transformation key={transformation._id} transformation={transformation} fetchTransformations={fetchTransformations} fetchBlocks={fetchBlocks} />

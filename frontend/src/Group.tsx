@@ -98,7 +98,7 @@ const Group = ({ group, updateGroupLabel }: GroupProps) => {
     }
 
     for (let i = 0; i < _blocksByDepth.length; i++) {
-      _blocksByDepth[i] = _blocksByDepth[i].sort(compareBlockPositions)
+      _blocksByDepth[i].sort(compareBlockPositions)
     }
     setBlocksByDepth(_blocksByDepth);
   }, [blocks])

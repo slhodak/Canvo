@@ -30,6 +30,7 @@ export interface BlockModel {
   author_id: string;
   position: string;
   content: string;
+  locked: boolean;
   created_at: Date;
   updated_at: Date;
 }
@@ -43,6 +44,7 @@ export interface TransformationModel {
   position: string;
   prompt: string;
   outputs: number;
+  locked: boolean;
   created_at: Date;
   updated_at: Date;
 }
