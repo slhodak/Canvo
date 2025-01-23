@@ -49,6 +49,36 @@ export const Layer = ({ groupId, depth, blocks, addBlock, fetchBlocks }: LayerPr
     });
   }
 
+  const runAllTransformations = (blockId: string) => {
+    const transformations = transformationsByBlockId[blockId];
+    for (const transformation of transformations) {
+      if (!transformation.locked) {
+        runTransformation(transformation._id);
+      }
+    }
+  }
+
+  const runTransformation = async (transformationId: string) => {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/run_transformation`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ transformationId: transformationId }),
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        fetchBlocks();
+      } else {
+        console.error('Error running transformation:', data.error);
+      }
+    } catch (error) {
+      console.error('Error running transformation:', error);
+    }
+  };
+
   const fetchTransformations = useCallback(async () => {
     const response = await fetch(`${SERVER_URL}/api/get_transformations_for_group/${groupId}`, {
       credentials: 'include',
@@ -129,11 +159,14 @@ export const Layer = ({ groupId, depth, blocks, addBlock, fetchBlocks }: LayerPr
           const transformations = transformationsByBlockId[block._id];
           return (
             <div className={`layer-block-container layer-block-zoom-${zoom}`} key={`block-${block._id}`}>
-              <Block depth={depth} block={block} fetchBlocks={fetchBlocks} zoom={zoom} />
+              <Block depth={Number(depth)} block={block} fetchBlocks={fetchBlocks} zoom={zoom} />
               {(transformations && transformations.length > 0) &&
                 transformations.map((transformation) => (
-                  <Transformation key={transformation._id} transformation={transformation} fetchTransformations={fetchTransformations} fetchBlocks={fetchBlocks} />
+                  <Transformation key={transformation._id} transformation={transformation} fetchTransformations={fetchTransformations} runTransformation={runTransformation} />
                 ))
+              }
+              {(transformations && transformations.length > 1) && 
+                <button className="layer-run-all-transformations-button" onClick={() => runAllTransformations(block._id)}>Run All</button>
               }
               <button className="layer-add-transformation-button" onClick={() => addTransformation(block._id)}>Add Transformation</button>
             </div>

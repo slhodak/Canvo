@@ -8,10 +8,10 @@ import { LockIcon } from './assets/LockIcon';
 interface TransformationProps {
   transformation: TransformationModel;
   fetchTransformations: () => Promise<void>;
-  fetchBlocks: () => Promise<void>;
+  runTransformation: (transformationId: string) => Promise<void>;
 }
 
-const Transformation = ({ transformation, fetchTransformations, fetchBlocks }: TransformationProps) => {
+const Transformation = ({ transformation, fetchTransformations, runTransformation }: TransformationProps) => {
   const [locked, setLocked] = useState<boolean>(transformation.locked);
   const [prompt, setPrompt] = useState<string>(transformation.prompt);
   const [outputs, setOutputs] = useState<number>(transformation.outputs);
@@ -24,12 +24,21 @@ const Transformation = ({ transformation, fetchTransformations, fetchBlocks }: T
   const handlePromptChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     // Fan out update and reset to current prompt if server update fails
     updateTransformation({ newPrompt: event.target.value });
+    console.log('updating prompt', event.target.value);
     setPrompt(event.target.value);
   };
 
   const handleOutputsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     updateTransformation({ newOutputs: Number(event.target.value) });
     setOutputs(Number(event.target.value));
+  };
+
+  const handleRun = () => {
+    if (!locked && prompt) {
+      runTransformation(transformation._id);
+    } else {
+      console.warn('Transformation is locked or has no prompt');
+    }
   };
 
   const updateTransformation = async ({ newPrompt, newOutputs, newLocked }: { newPrompt?: string, newOutputs?: number, newLocked?: boolean }) => {
@@ -88,31 +97,6 @@ const Transformation = ({ transformation, fetchTransformations, fetchBlocks }: T
     }
   };
 
-  const runTransformation = async () => {
-    if (locked) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`${SERVER_URL}/api/run_transformation`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ transformationId: transformation._id }),
-      });
-      const data = await response.json();
-      if (data.status === 'success') {
-        fetchBlocks();
-      } else {
-        console.error('Error running transformation:', data.error);
-      }
-    } catch (error) {
-      console.error('Error running transformation:', error);
-    }
-  };
-
   return (
     <div className="transformation-container">
       <div className="transformation-header-container">
@@ -140,7 +124,7 @@ const Transformation = ({ transformation, fetchTransformations, fetchBlocks }: T
           onChange={handleOutputsChange}
         />
 
-        <button className={`transformation-run-button ${locked ? 'locked' : ''}`} onClick={runTransformation}>Run</button>
+        <button className={`transformation-run-button ${locked ? 'locked' : ''}`} onClick={handleRun}>Run</button>
       </div>
     </div>
   );

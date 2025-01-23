@@ -63,6 +63,14 @@
   width: 500px;
 }
 
+.layer-run-all-transformations-button {
+  height: 2rem;
+  padding: 0px;
+  border: none;
+  background-color: var(--button-background-color);
+  margin-bottom: 5px;
+}
+
 .layer-add-transformation-button {
   height: 2rem;
   padding: 0px;
