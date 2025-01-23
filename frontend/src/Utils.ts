@@ -31,17 +31,18 @@ export class Position {
 }
 
 // We assume the depths are equal
-// Position is made of block _ids and transformation relative_ids
-// input: '1.A:1', '1.B:0'
+// Block.position is a trail of position segments, each made of a block _id and transformation relative_id
+// The root block has no transformation relative_id
+// input: '1.a:1.b:1' '1.b:0.a:2'
 // output: -1
-// Depth is the number of blocks in the position
 export function compareBlockPositions(a: BlockModel, b: BlockModel): number {
-  // Split on the period to get the block _id and transformation relative_id
+  // Split on the period to get the position trail segments
   const aPositions = a.position.split('.');
   const bPositions = b.position.split('.');
 
   const aDepth = aPositions.length;
   const bDepth = bPositions.length;
+  // Depth is the number of position segments in the position trail
   if (aDepth !== bDepth) {
     console.error('Could not compare positions: expected equal depths');
     return 0;
@@ -52,7 +53,7 @@ export function compareBlockPositions(a: BlockModel, b: BlockModel): number {
     const bPosition = Position.from(bPositions[i]);
 
     // If neither position has a transformation relative_id, compare the block _ids
-    // This is true of the first block in the group and any blocks added to a layer manually
+    // This is true of the first block in the group
     if (!aPosition.transformationRelativeId && !bPosition.transformationRelativeId) {
       if (aPosition.blockId < bPosition.blockId) {
         return -1;
@@ -76,6 +77,14 @@ export function compareBlockPositions(a: BlockModel, b: BlockModel): number {
         return -1;
       }
       if (aPosition.transformationRelativeId > bPosition.transformationRelativeId) {
+        return 1;
+      }
+
+      // If the transformation relative_ids are equal, compare the block _ids
+      if (aPosition.blockId < bPosition.blockId) {
+        return -1;
+      }
+      if (aPosition.blockId > bPosition.blockId) {
         return 1;
       }
     }

@@ -106,18 +106,26 @@ export namespace Database {
 
   export async function getBlock(blockId: string, userId: string): Promise<BlockModel | null> {
     const values = [blockId, userId];
-    const block = await db.oneOrNone('SELECT id, _id, group_id, author_id, position, content FROM blocks WHERE _id = $1 AND author_id = $2', values);
+    const block = await db.oneOrNone(`
+      SELECT id, _id, group_id, author_id, position, content, locked
+      FROM blocks
+      WHERE _id = $1 AND author_id = $2
+    `, values);
     return block;
   }
 
   export async function getBlockAtPosition(group_id: string, position: string, userId: string): Promise<BlockModel | null> {
-    const block = await db.oneOrNone('SELECT id, _id, group_id, author_id, position, content FROM blocks WHERE group_id = $1 AND position = $2 AND author_id = $3', [group_id, position, userId]);
+    const block = await db.oneOrNone(`
+      SELECT id, _id, group_id, author_id, position, content, locked
+      FROM blocks
+      WHERE group_id = $1 AND position = $2 AND author_id = $3
+    `, [group_id, position, userId]);
     return block;
   }
 
   export async function getBlocksForGroup(groupId: string, userId: string): Promise<BlockModel[]> {
     const blocks = await db.any(`
-      SELECT b._id, b.content, b.position
+      SELECT b._id, b.content, b.position, b.locked
       FROM blocks b
       WHERE b.group_id = $1 AND b.author_id = $2
     `, [groupId, userId]);
@@ -126,7 +134,7 @@ export namespace Database {
 
   export async function getOutputBlocks(transformationId: string, userId: string): Promise<BlockModel[]> {
     const blocks = await db.any(`
-      SELECT b._id, b.content, b.position
+      SELECT b._id, b.content, b.position, b.locked
       FROM blocks b
       LEFT JOIN transformation_outputs r ON b._id = r.output_block_id
       WHERE r.transformation_id = $1 AND b.author_id = $2
@@ -147,6 +155,16 @@ export namespace Database {
     return result;
   }
 
+  export async function lockBlock(blockId: string, userId: string) {
+    const values = [blockId, userId];
+    await db.none('UPDATE blocks SET locked = TRUE WHERE _id = $1 AND author_id = $2', values);
+  }
+
+  export async function unlockBlock(blockId: string, userId: string) {
+    const values = [blockId, userId];
+    await db.none('UPDATE blocks SET locked = FALSE WHERE _id = $1 AND author_id = $2', values);
+  }
+
   export async function deleteBlock(blockId: string, userId: string) {
     const result = await db.result('DELETE FROM blocks WHERE _id = $1 AND author_id = $2', [blockId, userId]);
     return result;
@@ -156,7 +174,7 @@ export namespace Database {
 
   export async function getTransformation(transformationId: string, userId: string): Promise<TransformationModel | null> {
     const transformation = await db.oneOrNone(`
-      SELECT id, _id, group_id, input_block_id, prompt, outputs, position
+      SELECT id, _id, group_id, input_block_id, prompt, outputs, position, locked
       FROM transformations
       WHERE _id = $1 and author_id = $2
     `, [transformationId, userId]);
@@ -165,7 +183,7 @@ export namespace Database {
 
   export async function getTransformationsForGroup(groupId: string, userId: string): Promise<TransformationModel[]> {
     const transformations = await db.any(`
-      SELECT id, _id, input_block_id, prompt, outputs, position
+      SELECT id, _id, input_block_id, prompt, outputs, position, locked
       FROM transformations
       WHERE group_id = $1 AND author_id = $2
     `, [groupId, userId]);

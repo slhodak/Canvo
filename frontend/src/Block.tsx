@@ -4,22 +4,50 @@ import { SERVER_URL } from './constants';
 import { XSymbol } from './assets/XSymbol';
 import { BlockModel } from '@wb/shared-types';
 import CopyIcon from './assets/CopyIcon';
+import { LockIcon } from './assets/LockIcon';
 
 interface BlockProps {
+  depth: number;
   block: BlockModel;
   fetchBlocks: () => Promise<void>;
   zoom: string;
 }
 
-const Block = ({ block, fetchBlocks, zoom }: BlockProps) => {
+const Block = ({ depth, block, fetchBlocks, zoom }: BlockProps) => {
+  const [locked, setLocked] = useState<boolean>(block.locked);
   const [content, setContent] = useState<string>(block.content);
   const blockIdRef = useRef<string>(block._id); // Is this really still necessary?
 
   // If we don't do this, the content will not update when a new block arrives
   // It's okay because content is not a dependency for any other hooks
   useEffect(() => {
+    setLocked(block.locked);
     setContent(block.content);
   }, [block]);
+
+  const toggleLock = async () => {
+    const oldLocked = locked;
+    setLocked(!locked);
+
+    try {
+      const response = await fetch(`${SERVER_URL}/api/lock_block`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ blockId: blockIdRef.current, locked: !oldLocked }),
+      });
+      const data = await response.json();
+      if (data.status !== 'success') {
+        console.error('Error locking block:', data.error);
+        setLocked(oldLocked);
+      }
+    } catch (error) {
+      console.error('Error locking block:', error);
+      setLocked(oldLocked);
+    }
+  };
 
   const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     // Fan out update and reset to current content if server update fails
@@ -81,6 +109,9 @@ const Block = ({ block, fetchBlocks, zoom }: BlockProps) => {
     <div className={`block-container block-zoom-${zoom}`}>
       <div className="block-header">
         <div className="block-position">{block.position}</div>
+        {depth > 0 && <button className="block-lock-button" onClick={toggleLock}>
+          <LockIcon locked={locked} />
+        </button>}
         <button className="block-copy-button" onClick={copyToClipboard}>
           <CopyIcon />
         </button>

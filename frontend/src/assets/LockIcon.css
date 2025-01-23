@@ -1,0 +1,12 @@
+.lock-icon {
+  fill: rgba(0, 0, 0, 0.5);
+  stroke: none;
+}
+
+.lock-icon.unlocked {
+  fill: rgba(0, 0, 0, 0.5);
+}
+
+.lock-icon.locked {
+  fill: rgba(0, 0, 0, 0.75);
+}

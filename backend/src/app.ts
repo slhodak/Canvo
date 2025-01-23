@@ -360,6 +360,29 @@ router.get('/api/get_block/:block_id', async (req: Request, res: Response) => {
   }
 });
 
+router.get('/api/get_blocks_for_group/:group_id', async (req: Request, res: Response) => {
+  const groupId = req.params.group_id;
+  try {
+    const user = await getUserFromSessionToken(req);
+    if (!user) {
+      return res.status(401).json({ error: "Could not find user email from session token" });
+    }
+
+    const blocks = await db.getBlocksForGroup(groupId, user._id);
+
+    return res.json({
+      status: "success",
+      blocks: blocks
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ status: "failed", error: error.message });
+    } else {
+      res.status(500).json({ status: "failed", error: "An unknown error occurred" });
+    }
+  }
+});
+
 router.post('/api/new_block', async (req: Request, res: Response) => {
   const { group_id, position } = req.body;
   if (!group_id || !position) {
@@ -389,29 +412,6 @@ router.post('/api/new_block', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/api/get_blocks_for_group/:group_id', async (req: Request, res: Response) => {
-  const groupId = req.params.group_id;
-  try {
-    const user = await getUserFromSessionToken(req);
-    if (!user) {
-      return res.status(401).json({ error: "Could not find user email from session token" });
-    }
-
-    const blocks = await db.getBlocksForGroup(groupId, user._id);
-
-    return res.json({
-      status: "success",
-      blocks: blocks
-    });
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ status: "failed", error: error.message });
-    } else {
-      res.status(500).json({ status: "failed", error: "An unknown error occurred" });
-    }
-  }
-});
-
 router.post('/api/update_block', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
   if (!user) {
@@ -429,6 +429,32 @@ router.post('/api/update_block', async (req: Request, res: Response) => {
     }
 
     await updateBlock(res, data.blockId, data.content, user._id);
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ error: error.message });
+    }
+    return res.status(500).json({ error: "An unknown error occurred" });
+  }
+});
+
+router.post('/api/lock_block', async (req: Request, res: Response) => {
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ error: "Could not find user email from session token" });
+  }
+
+  const { blockId, locked } = req.body;
+  if (!blockId || typeof locked !== 'boolean') {
+    return res.status(400).json({ error: "No blockId or locked value provided" });
+  }
+
+  try {
+    if (locked) {
+      await db.lockBlock(blockId, user._id);
+    } else {
+      await db.unlockBlock(blockId, user._id);
+    }
+    return res.json({ status: "success" });
   } catch (error) {
     if (error instanceof Error) {
       return res.status(500).json({ error: error.message });
@@ -651,6 +677,7 @@ router.post('/api/run_transformation', async (req: Request, res: Response) => {
     const outputs = response.split('BEGIN OUTPUT');
     const errors = [];
 
+    // Create or update the output blocks
     let outputCount = 0;
     for (const output of outputs) {
       if (output.length === 0) {
@@ -659,10 +686,12 @@ router.post('/api/run_transformation', async (req: Request, res: Response) => {
         continue;
       }
 
+      // If a block already exists at the target position, update its content instead of creating a new one
       const position = `${inputBlock.position}.${transformation.position}:${outputCount}`;
-      // If a block already exists at this position, update its content instead of creating a new one
       const existingBlock = await db.getBlockAtPosition(transformation.group_id, position, user._id);
-      if (existingBlock) {
+      if (existingBlock && existingBlock.locked) {
+        console.debug(`Will not update output block at position ${position}: Block is locked`);
+      } else if (existingBlock) {
         await db.updateBlock(existingBlock._id, output, user._id);
       } else {
         const outputBlockId = await db.createBlock(user._id, transformation.group_id, output, position);
