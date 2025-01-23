@@ -28,6 +28,7 @@
   --textarea-nonediting-background-color: rgba(0, 0, 0, 0.08);
   --textarea-editing-background-color: white;
   --button-background-color: lightblue;
+  --container-vertical-spacing: 6px;
 }
 
 a {
