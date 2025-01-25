@@ -97,6 +97,11 @@ export namespace Database {
     return result;
   }
 
+  export async function updateGroupUpdatedAt(groupId: string) {
+    const result = await db.result('UPDATE groups SET updated_at = CURRENT_TIMESTAMP WHERE _id = $1', [groupId]);
+    return result;
+  }
+
   export async function deleteGroup(groupId: string, userId: string) {
     const result = await db.result('DELETE FROM groups WHERE _id = $1 AND author_id = $2', [groupId, userId]);
     return result;
@@ -125,7 +130,7 @@ export namespace Database {
 
   export async function getBlocksForGroup(groupId: string, userId: string): Promise<BlockModel[]> {
     const blocks = await db.any(`
-      SELECT b._id, b.content, b.position, b.locked
+      SELECT b._id, b.content, b.position, b.locked, b.group_id
       FROM blocks b
       WHERE b.group_id = $1 AND b.author_id = $2
     `, [groupId, userId]);

@@ -196,19 +196,6 @@ app.use('/api', async (req: Request, res: Response, next) => {
   next();
 });
 
-async function updateBlock(res: Response, blockId: string, text: string, userId: string) {
-  const result = await db.updateBlock(blockId, text, userId);
-
-  if (result.rowCount === 0) {
-    return res.status(404).json({ error: "Text ID not found" });
-  }
-
-  return res.json({
-    status: "success",
-    blockId: blockId
-  });
-}
-
 async function createGroup(user: UserModel, res: Response) {
   const groupId = await db.createGroup(user._id, 'untitled');
   if (!groupId) {
@@ -398,6 +385,8 @@ router.post('/api/new_block', async (req: Request, res: Response) => {
       return res.status(500).json({ status: "failed", error: "Could not create block" });
     }
 
+    await db.updateGroupUpdatedAt(group_id);
+
     return res.json({
       status: "success",
       blockId: blockId
@@ -416,17 +405,27 @@ router.post('/api/update_block', async (req: Request, res: Response) => {
     return res.status(401).json({ error: "Could not find user email from session token" });
   }
 
-  const data = req.body;
-  if (!data.blockId) {
+  const { blockId, content, groupId } = req.body;
+  if (!blockId) {
     return res.status(400).json({ error: "No blockId provided" });
   }
 
   try {
-    if (typeof data.content !== 'string') {
+    if (typeof content !== 'string') {
       return res.status(400).json({ error: "Content is not a string" });
     }
 
-    await updateBlock(res, data.blockId, data.content, user._id);
+    const result = await db.updateBlock(blockId, content, user._id);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Text ID not found" });
+    }
+
+    await db.updateGroupUpdatedAt(groupId);
+
+    return res.json({
+      status: "success",
+      blockId: blockId
+    });
   } catch (error) {
     if (error instanceof Error) {
       return res.status(500).json({ error: error.message });
@@ -441,9 +440,13 @@ router.post('/api/lock_block', async (req: Request, res: Response) => {
     return res.status(401).json({ error: "Could not find user email from session token" });
   }
 
-  const { blockId, locked } = req.body;
+  const { blockId, locked, groupId } = req.body;
   if (!blockId || typeof locked !== 'boolean') {
     return res.status(400).json({ error: "No blockId or locked value provided" });
+  }
+
+  if (!groupId) {
+    return res.status(400).json({ error: "No groupId provided" });
   }
 
   try {
@@ -452,6 +455,9 @@ router.post('/api/lock_block', async (req: Request, res: Response) => {
     } else {
       await db.unlockBlock(blockId, user._id);
     }
+
+    await db.updateGroupUpdatedAt(groupId);
+
     return res.json({ status: "success" });
   } catch (error) {
     if (error instanceof Error) {
@@ -461,19 +467,24 @@ router.post('/api/lock_block', async (req: Request, res: Response) => {
   }
 });
 
-router.delete('/api/delete_block/:block_id', async (req: Request, res: Response) => {
+router.post('/api/delete_block', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
   if (!user) {
     return res.status(401).json({ error: "Could not find user email from session token" });
   }
 
-  const blockId = req.params.block_id;
+  const { blockId, groupId } = req.body;
+  if (!blockId || !groupId) {
+    return res.status(400).json({ error: "No blockId or groupId provided" });
+  }
 
   try {
     const result = await db.deleteBlock(blockId, user._id);
     if (result.rowCount === 0) {
       return res.status(404).json({ error: "Block not found" });
     }
+
+    await db.updateGroupUpdatedAt(groupId);
 
     return res.json({ status: "success" });
   } catch (error) {

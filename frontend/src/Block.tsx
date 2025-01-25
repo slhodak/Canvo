@@ -36,7 +36,7 @@ const Block = ({ depth, block, fetchBlocks, zoom }: BlockProps) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ blockId: blockIdRef.current, locked: !oldLocked }),
+        body: JSON.stringify({ blockId: blockIdRef.current, locked: !oldLocked, groupId: block.group_id }),
       });
       const data = await response.json();
       if (data.status !== 'success') {
@@ -66,6 +66,7 @@ const Block = ({ depth, block, fetchBlocks, zoom }: BlockProps) => {
         body: JSON.stringify({
           blockId: blockIdRef.current,
           content: newContent,
+          groupId: block.group_id,
         }),
       });
 
@@ -82,9 +83,16 @@ const Block = ({ depth, block, fetchBlocks, zoom }: BlockProps) => {
 
   const deleteBlock = async () => {
     try {
-      const response = await fetch(`${SERVER_URL}/api/delete_block/${block._id}`, {
-        method: 'DELETE',
+      const response = await fetch(`${SERVER_URL}/api/delete_block`, {
+        method: 'POST',
         credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          blockId: block._id,
+          groupId: block.group_id,
+        }),
       });
       const data = await response.json();
       if (data.status !== 'success') {
