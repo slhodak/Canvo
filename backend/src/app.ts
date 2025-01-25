@@ -640,8 +640,13 @@ router.post('/api/run_transformation', async (req: Request, res: Response) => {
         break;
       }
 
-      // Skip locked transformations
-      if (transformation.locked) {
+      const block = await db.getBlock(transformation.input_block_id, user._id);
+      if (!block) {
+        errors.push(`Block not found for transformation: ${transformation.input_block_id}`);
+        continue;
+      }
+
+      if (block.locked || transformation.locked) {
         continue;
       }
 

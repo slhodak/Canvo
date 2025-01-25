@@ -7,6 +7,8 @@ dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 const openai = new OpenAI();
 
+const model = 'gpt-4o-mini';
+
 const systemPrompt = `
   You will be given a transformation prompt, an input text, and a number of expected outputs.
   You will use the transformation prompt to respond to the requested transformation.
@@ -27,7 +29,7 @@ const systemPrompt = `
 
 async function callChatCompletion(prompt: string, inputText: string, expectedOutputs: number): Promise<string> {
   const completion = await openai.chat.completions.create({
-    model: 'gpt-3.5-turbo',
+    model: model,
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: `Input text: '${inputText}'\nTransformation prompt: '${prompt}'\nOutputs: ${expectedOutputs}` }
