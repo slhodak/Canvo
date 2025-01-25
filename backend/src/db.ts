@@ -188,7 +188,7 @@ export namespace Database {
 
   export async function getTransformationsForGroup(groupId: string, userId: string): Promise<TransformationModel[]> {
     const transformations = await db.any(`
-      SELECT id, _id, input_block_id, prompt, outputs, position, locked
+      SELECT id, _id, group_id, input_block_id, prompt, outputs, position, locked
       FROM transformations
       WHERE group_id = $1 AND author_id = $2
     `, [groupId, userId]);

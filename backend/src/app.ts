@@ -536,6 +536,8 @@ router.post('/api/new_transformation', async (req: Request, res: Response) => {
       return res.status(500).json({ status: "failed", error: "Could not create transformation" });
     }
 
+    await db.updateGroupUpdatedAt(groupId);
+
     return res.json({ status: "success", transformationId: transformationId });
   } catch (error) {
     if (error instanceof Error) {
@@ -553,7 +555,7 @@ router.post('/api/update_transformation', async (req: Request, res: Response) =>
   }
 
   try {
-    const { transformationId, prompt, outputs, locked } = req.body;
+    const { groupId, transformationId, prompt, outputs, locked } = req.body;
     if (prompt) {
       await db.updateTransformationPrompt(transformationId, prompt, user._id);
     }
@@ -561,9 +563,9 @@ router.post('/api/update_transformation', async (req: Request, res: Response) =>
       await db.updateTransformationOutputs(transformationId, outputs, user._id);
     }
     if (locked) {
-      console.log('updating transformation locked', transformationId, locked);
       await db.updateTransformationLocked(transformationId, locked, user._id);
     }
+    await db.updateGroupUpdatedAt(groupId);
     return res.json({ status: "success" });
   } catch (error) {
     if (error instanceof Error) {
@@ -574,18 +576,25 @@ router.post('/api/update_transformation', async (req: Request, res: Response) =>
   }
 });
 
-router.delete('/api/delete_transformation/:transformation_id', async (req: Request, res: Response) => {
+router.post('/api/delete_transformation', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
   if (!user) {
     return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
   }
 
+  const { groupId, transformationId } = req.body;
+  if (!groupId || !transformationId) {
+    return res.status(400).json({ status: "failed", error: "No groupId or transformationId provided" });
+  }
+
   try {
-    const transformationId = req.params.transformation_id;
     const result = await db.deleteTransformation(transformationId, user._id);
     if (result.rowCount === 0) {
       return res.status(404).json({ status: "failed", error: "Transformation not found" });
     }
+
+    await db.updateGroupUpdatedAt(groupId);
+
     return res.json({ status: "success" });
   } catch (error) {
     if (error instanceof Error) {
@@ -631,7 +640,11 @@ router.post('/api/run_transformation', async (req: Request, res: Response) => {
     return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
   }
 
-  const { transformationId } = req.body;
+  const { groupId, transformationId } = req.body;
+  if (!groupId || !transformationId) {
+    return res.status(400).json({ status: "failed", error: "No groupId or transformationId provided" });
+  }
+
   const transformation = await db.getTransformation(transformationId, user._id);
   if (!transformation) {
     return res.status(404).json({ status: "failed", error: "Transformation not found" });
@@ -665,6 +678,8 @@ router.post('/api/run_transformation', async (req: Request, res: Response) => {
       errors.push(...transformationResult.errors);
       queue.push(...transformationResult.childTransformations);
     }
+
+    await db.updateGroupUpdatedAt(groupId);
 
     return res.json({ status: "success", outputs, errors });
 

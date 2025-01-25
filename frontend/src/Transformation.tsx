@@ -45,9 +45,10 @@ const Transformation = ({ transformation, fetchTransformations, runTransformatio
     const oldPrompt = prompt;
     const oldOutputs = outputs;
     const oldLocked = locked;
-
+  
     const body: Record<string, string | number> = {
       transformationId: transformation._id,
+      groupId: transformation.group_id,
     };
     if (newOutputs) {
       body['outputs'] = newOutputs;
@@ -87,9 +88,13 @@ const Transformation = ({ transformation, fetchTransformations, runTransformatio
 
   const deleteTransformation = async () => {
     try {
-      await fetch(`${SERVER_URL}/api/delete_transformation/${transformation._id}`, {
-        method: 'DELETE',
+      await fetch(`${SERVER_URL}/api/delete_transformation`, {
+        method: 'POST',
         credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ groupId: transformation.group_id, transformationId: transformation._id }),
       });
       fetchTransformations();
     } catch (error) {

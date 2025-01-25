@@ -66,7 +66,7 @@ export const Layer = ({ groupId, depth, blocks, addBlock, fetchBlocks }: LayerPr
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ transformationId: transformationId }),
+        body: JSON.stringify({ groupId: groupId, transformationId: transformationId }),
       });
       const data = await response.json();
       if (data.status === 'success') {
