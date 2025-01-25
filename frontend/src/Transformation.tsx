@@ -24,7 +24,6 @@ const Transformation = ({ transformation, fetchTransformations, runTransformatio
   const handlePromptChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     // Fan out update and reset to current prompt if server update fails
     updateTransformation({ newPrompt: event.target.value });
-    console.log('updating prompt', event.target.value);
     setPrompt(event.target.value);
   };
 
@@ -57,10 +56,9 @@ const Transformation = ({ transformation, fetchTransformations, runTransformatio
       body['prompt'] = newPrompt;
     }
     if (newLocked !== undefined) {
-      body['locked'] = newLocked.toString();
+      body['locked'] = newLocked ? 'true' : 'false';
     }
 
-    console.log('updating transformation', body);
     try {
       const response = await fetch(`${SERVER_URL}/api/update_transformation`, {
         method: 'POST',

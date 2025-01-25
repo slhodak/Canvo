@@ -16,7 +16,7 @@ interface BlockProps {
 const Block = ({ depth, block, fetchBlocks, zoom }: BlockProps) => {
   const [locked, setLocked] = useState<boolean>(block.locked);
   const [content, setContent] = useState<string>(block.content);
-  const blockIdRef = useRef<string>(block._id); // Is this really still necessary?
+  // const blockIdRef = useRef<string>(block._id); // Is this really still necessary?
 
   // If we don't do this, the content will not update when a new block arrives
   // It's okay because content is not a dependency for any other hooks
@@ -25,37 +25,31 @@ const Block = ({ depth, block, fetchBlocks, zoom }: BlockProps) => {
     setContent(block.content);
   }, [block]);
 
-  const toggleLock = async () => {
-    const oldLocked = locked;
+  const toggleLock = () => {
+    updateBlock({ newLocked: !locked });
     setLocked(!locked);
-
-    try {
-      const response = await fetch(`${SERVER_URL}/api/lock_block`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ blockId: blockIdRef.current, locked: !oldLocked, groupId: block.group_id }),
-      });
-      const data = await response.json();
-      if (data.status !== 'success') {
-        console.error('Error locking block:', data.error);
-        setLocked(oldLocked);
-      }
-    } catch (error) {
-      console.error('Error locking block:', error);
-      setLocked(oldLocked);
-    }
   };
 
-  const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    // Fan out update and reset to current content if server update fails
-    updateBlock(content, event.target.value);
+  const handleContentChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    updateBlock({ newContent: event.target.value });
     setContent(event.target.value);
   };
 
-  const updateBlock = async (oldContent: string, newContent: string) => {
+  const updateBlock = async ({ newContent, newLocked }: { newContent?: string, newLocked?: boolean }) => {
+    const oldContent = content;
+    const oldLocked = locked;
+
+    const body: Record<string, string | number> = {
+      blockId: block._id,
+      groupId: block.group_id,
+    };
+    if (newContent) {
+      body['content'] = newContent;
+    }
+    if (newLocked !== undefined) {
+      body['locked'] = newLocked ? 'true' : 'false';
+    }
+
     try {
       const response = await fetch(`${SERVER_URL}/api/update_block`, {
         method: 'POST',
@@ -63,20 +57,18 @@ const Block = ({ depth, block, fetchBlocks, zoom }: BlockProps) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          blockId: blockIdRef.current,
-          content: newContent,
-          groupId: block.group_id,
-        }),
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();
       if (data.status !== 'success') {
-        console.error('Error updating block:', data.error);
         setContent(oldContent);
+        setLocked(oldLocked);
+        console.error('Error updating block:', data.error);
       }
     } catch (error) {
       setContent(oldContent);
+      setLocked(oldLocked);
       console.error('Error updating block:', error);
     }
   };
@@ -129,7 +121,7 @@ const Block = ({ depth, block, fetchBlocks, zoom }: BlockProps) => {
       </div>
       <textarea
         value={content}
-        onChange={handleChange}
+        onChange={handleContentChange}
         className="block-content-textarea"
         placeholder="What's poppin?"
       />

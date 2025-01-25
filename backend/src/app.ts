@@ -405,19 +405,25 @@ router.post('/api/update_block', async (req: Request, res: Response) => {
     return res.status(401).json({ error: "Could not find user email from session token" });
   }
 
-  const { blockId, content, groupId } = req.body;
-  if (!blockId) {
-    return res.status(400).json({ error: "No blockId provided" });
+  const { blockId, content, locked, groupId } = req.body;
+  if (!blockId || !groupId) {
+    return res.status(400).json({ error: "No blockId or groupId provided" });
   }
 
   try {
-    if (typeof content !== 'string') {
-      return res.status(400).json({ error: "Content is not a string" });
+    if (typeof content === 'string') {
+      const result = await db.updateBlock(blockId, content, user._id);
+      if (result.rowCount === 0) {
+        return res.status(404).json({ error: "Text ID not found" });
+      }
     }
 
-    const result = await db.updateBlock(blockId, content, user._id);
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: "Text ID not found" });
+    if (locked !== undefined) {
+      if (locked) {
+        await db.lockBlock(blockId, user._id);
+      } else {
+        await db.unlockBlock(blockId, user._id);
+      }
     }
 
     await db.updateGroupUpdatedAt(groupId);
@@ -426,39 +432,6 @@ router.post('/api/update_block', async (req: Request, res: Response) => {
       status: "success",
       blockId: blockId
     });
-  } catch (error) {
-    if (error instanceof Error) {
-      return res.status(500).json({ error: error.message });
-    }
-    return res.status(500).json({ error: "An unknown error occurred" });
-  }
-});
-
-router.post('/api/lock_block', async (req: Request, res: Response) => {
-  const user = await getUserFromSessionToken(req);
-  if (!user) {
-    return res.status(401).json({ error: "Could not find user email from session token" });
-  }
-
-  const { blockId, locked, groupId } = req.body;
-  if (!blockId || typeof locked !== 'boolean') {
-    return res.status(400).json({ error: "No blockId or locked value provided" });
-  }
-
-  if (!groupId) {
-    return res.status(400).json({ error: "No groupId provided" });
-  }
-
-  try {
-    if (locked) {
-      await db.lockBlock(blockId, user._id);
-    } else {
-      await db.unlockBlock(blockId, user._id);
-    }
-
-    await db.updateGroupUpdatedAt(groupId);
-
-    return res.json({ status: "success" });
   } catch (error) {
     if (error instanceof Error) {
       return res.status(500).json({ error: error.message });
