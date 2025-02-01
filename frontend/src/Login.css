@@ -1,0 +1,14 @@
+.login-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.login-container > p {
+  font-size: 1.5rem;
+  background-color: rgb(254, 253, 211);
+  width: 100%;
+  text-align: center;
+}

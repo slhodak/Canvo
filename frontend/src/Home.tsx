@@ -1,37 +1,29 @@
-import App from './App';
-import AuthForm from './AuthForm';
-import { useState, useEffect } from 'react';
-import { SERVER_URL } from './constants';
+import { useEffect, useState } from "react";
+import { SERVER_URL } from "./constants";
+import App from "./App";
+import LoginOrSignup from "./Login";
 
-const Home = () => {
+export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const checkSession = async () => {
+    const checkAuthentication = async () => {
       const response = await fetch(`${SERVER_URL}/auth/check`, {
-        method: 'GET',
         credentials: 'include',
       });
       const data = await response.json();
       if (data.status === 'success') {
         setIsAuthenticated(true);
-      } else {
+      } else if (data.status === 'failed') {
         setIsAuthenticated(false);
       }
     };
-
-    checkSession();
+    checkAuthentication();
   }, []);
 
-  if (isAuthenticated === null) {
-    return <div></div>;
+  if (isAuthenticated === true) {
+    return <App />;
   }
 
-  return isAuthenticated === false ? (
-    <AuthForm setIsAuthenticated={setIsAuthenticated} />
-  ) : (
-    <App />
-  );
+  return <LoginOrSignup isAuthenticated={isAuthenticated} />;
 };
-
-export default Home;

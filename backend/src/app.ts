@@ -1,4 +1,4 @@
-import express, { Router, Express, Request, Response } from "express";
+import express, { Router, Express, Request, Response, NextFunction } from "express";
 import cors from "cors";
 import jwt from "jsonwebtoken";
 import helmet from "helmet";
@@ -9,6 +9,7 @@ import path from 'path';
 import { Database as db } from './db';
 import { UserModel } from '@wb/shared-types';
 import { runTransformation, TransformationResult } from './llm';
+import stytch from 'stytch';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -21,7 +22,30 @@ const jwtSecret = process.env.JWT_SECRET || '';
 if (jwtSecret.length == 0) {
   throw new Error('Cannot start server: JWT_SECRET is not set');
 }
-const thirtyDaysInSeconds = 30 * 24 * 60 * 60;
+const sixtyMinutesInSeconds = 60 * 60;
+const SESSION_TOKEN = "session_token";
+const FRONTEND_DOMAIN = process.env.APP_DOMAIN;
+if (!FRONTEND_DOMAIN) {
+  throw new Error('Cannot start server: APP_DOMAIN is not set');
+}
+
+// Set up Stytch Authentication
+
+const stytchProjectId = process.env.STYTCH_PROJECT_ID;
+if (stytchProjectId === null || stytchProjectId === undefined) {
+  throw new Error('Cannot start server: STYTCH_PROJECT_ID is not set');
+}
+const stytchSecret = process.env.STYTCH_SECRET;
+if (stytchSecret === null || stytchSecret === undefined) {
+  throw new Error('Cannot start server: STYTCH_SECRET is not set');
+}
+
+const stytchClient = new stytch.Client({
+  project_id: stytchProjectId,
+  secret: stytchSecret,
+});
+
+// App Middleware
 
 app.use(cookieParser());
 
@@ -53,23 +77,8 @@ app.use(express.json());
 ////////////////////////////////////////////////////////////
 if (process.env.NODE_ENV == 'development') {
   app.get('/', (req: Request, res: Response) => {
-    res.status(404).send(`
-      <html>
-        <body>
-          <div style="font-size: 24px; font-weight: bold; margin-bottom: 10px;">
-            404
-          </div>
-          <div style="font-size: 20px; margin-bottom: 10px;">
-            You are running the backend server in development mode.
-            It will not serve the static site files in development mode.
-            Run the frontend's own development server and request the site from there.
-          </div>
-          <div>
-            <a href="http://localhost:5173">Frontend Development Server</a>
-          </div>
-        </body>
-      </html>
-    `);
+    // When the app is running in development mode, the frontend is served by Vite
+    res.redirect(FRONTEND_DOMAIN)
   });
 } else {
   const buildPath = path.join(__dirname, '../../frontend/dist');
@@ -88,71 +97,31 @@ app.get('/favicon.ico', (req: Request, res: Response) => {
 // User Authentication
 ////////////////////////////////////////////////////////////
 
-async function requestContainsValidSessionToken(req: Request): Promise<{ isValid: boolean, userEmail: string | null }> {
-  const sessionToken = req.cookies?.session_token;
-  if (!sessionToken) {
-    return { isValid: false, userEmail: null };
-  }
-
+async function checkSessionToken(sessionToken: string): Promise<boolean> {
   try {
-    const session = await db.getSession(sessionToken);
-
-    if (session && new Date(session.session_expiration) > new Date()) {
-      return { isValid: true, userEmail: session.user_email };
-    } else {
-      return { isValid: false, userEmail: null };
-    }
+    // Authenticate the Session Token
+    const response = await stytchClient.sessions.authenticate({ session_token: sessionToken });
+    return response.status_code === 200
   } catch (error) {
     console.error('Error checking session token:', error);
-    return { isValid: false, userEmail: null };
+    return false
   }
 }
 
-// Create session cookie and store it in the database
-async function createSessionToken(res: Response, email: string) {
-  const salt = uuidv4();
-  const sessionToken = jwt.sign({ email: email, salt: salt }, jwtSecret, { expiresIn: '30d' });
-  // Javascript uses milliseconds for dates
-  const sessionExpiration = new Date(Date.now() + thirtyDaysInSeconds * 1000);
-  await db.insertSession(sessionToken, email, sessionExpiration);
-  return sessionToken;
+// Middleware to authenticate the session token
+// Requests from the frontend will include a session token as a cookie
+async function authenticate(req: Request, res: Response, next: NextFunction) {
+  const sessionToken = req.cookies?.session_token;
+  if (!sessionToken) {
+    return res.json({ status: 'failed', error: 'No session token found' });
+  }
+
+  if (await checkSessionToken(sessionToken)) {
+    next();
+  } else {
+    return res.json({ status: 'failed', error: 'Session token invalid' });
+  }
 }
-
-// Validate an invite code and create a session cookie if it is valid
-router.post('/auth/invite', async (req: Request, res: Response) => {
-  const { email, code } = req.body;
-
-  if (!email || !code) {
-    return res.status(400).json({ error: "No email or invite code provided" });
-  }
-
-  try {
-    const invite = await db.getInvite(code);
-
-    if (!invite) {
-      return res.status(404).json({ error: "Invite code not found" });
-    }
-
-    if (invite.user_email !== email) {
-      return res.status(401).json({ error: "Invite code does not match email" });
-    }
-
-    await db.insertUser(email);
-
-    // Create a session cookie and return it to the user
-    const sessionToken = await createSessionToken(res, email);
-    // Javascript uses milliseconds for dates, so express.js uses milliseconds for the maxAge
-    res.cookie('session_token', sessionToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', maxAge: thirtyDaysInSeconds * 1000 });
-
-    return res.json({
-      status: "success",
-    });
-  } catch (error) {
-    if (error instanceof Error) {
-      return res.status(500).json({ error: error.message });
-    }
-  }
-});
 
 async function getUserFromSessionToken(req: Request): Promise<UserModel | null> {
   const sessionToken = req.cookies?.session_token;
@@ -168,54 +137,75 @@ async function getUserFromSessionToken(req: Request): Promise<UserModel | null> 
   return await db.getUser(session.user_email);
 }
 
-// Check if the session token is valid
-router.get('/auth/check', async (req: Request, res: Response) => {
-  const { isValid } = await requestContainsValidSessionToken(req);
+// Redirects from stytch to this endpoint will include an oauth token in the query parameters
+router.get('/auth/authenticate', async (req: Request, res: Response) => {
+  try {
+    const oauthToken = req.query.token as string;
+    if (!oauthToken) {
+      return res.status(401).json({
+        redirectUrl: FRONTEND_DOMAIN,
+        status: 'failed',
+      });
+    }
 
-  return res.json({
-    status: isValid ? "success" : "failed",
-  });
+    // Authenticate the OAuth token
+    const response = await stytchClient.oauth.authenticate({
+      token: oauthToken,
+      session_duration_minutes: 60,
+    })
+
+    const sessionToken = response.session_token;
+    const sessionExpirationString = response.provider_values.expires_at;
+    const email = response.user.emails[0].email;
+
+    // console.debug("Creating a user in the db if they do not exist");
+    // TODO: Create a user in our database if they don't exist
+    const user = await db.getUser(email);
+    if (!user) {
+      await db.insertUser(email);
+    }
+
+    // console.debug("Creating a session for this user in the sessions table");
+    const sessionExpiration = sessionExpirationString ? new Date(sessionExpirationString) : new Date(Date.now() + sixtyMinutesInSeconds * 1000);
+    await db.insertSession(sessionToken, email, sessionExpiration);
+
+    // The session expires in 60 minutes, as specified in the oauth authentication request above
+    res.cookie(SESSION_TOKEN, sessionToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', maxAge: sixtyMinutesInSeconds * 1000 });
+    res.redirect(FRONTEND_DOMAIN);
+
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(`Authentication failed with error: ${error}`);
+      return res.redirect(FRONTEND_DOMAIN);
+    } else {
+      console.error('Authentication failed with an unknown error');
+      return res.redirect(FRONTEND_DOMAIN);
+    }
+  }
 });
 
+// The frontend SPA will check the validity of its session token when it first opens
+router.get('/auth/check', async (req: Request, res: Response) => {
+  const sessionToken = req.cookies?.session_token;
+  if (sessionToken === undefined) {
+    // This prevents the frontend from showing a 'failed' message if there was no session token to check
+    return res.json({ status: 'neutral' });
+  }
+
+  const success = await checkSessionToken(sessionToken);
+  if (!success) {
+    return res.json({ status: 'failed' });
+  } else {
+    return res.json({ status: 'success' });
+  }
+})
+
 ////////////////////////////////////////////////////////////
-// Database Functions at /api/*
+// API Routes
 ////////////////////////////////////////////////////////////
 
 // Middleware to guard the /api/* routes
-app.use('/api', async (req: Request, res: Response, next) => {
-  const { isValid, userEmail } = await requestContainsValidSessionToken(req);
-
-  if (!isValid) {
-    return res.status(401).json({ error: "Session token is missing or expired" });
-  }
-
-  if (!userEmail) {
-    return res.status(401).json({ error: "No user user email for session token" });
-  }
-
-  next();
-});
-
-async function createGroup(user: UserModel, res: Response) {
-  const groupId = await db.createGroup(user._id, 'untitled');
-  if (!groupId) {
-    return res.status(500).json({ status: "failed", error: "Could not create group" });
-  }
-
-  const group = await db.getGroup(groupId, user._id);
-  if (!group) {
-    return res.status(500).json({ status: "failed", error: "Could not get group" });
-  }
-
-  return res.json({
-    status: "success",
-    group: group
-  });
-}
-
-////////////////////////////////////////////////////////////
-// Routes
-////////////////////////////////////////////////////////////
+app.use('/api', authenticate);
 
 // Groups
 
@@ -269,7 +259,20 @@ router.post('/api/new_group', async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Could not find user email from session token" });
     }
 
-    return await createGroup(user, res);
+    const groupId = await db.createGroup(user._id, 'untitled');
+    if (!groupId) {
+      return res.status(500).json({ status: "failed", error: "Could not create group" });
+    }
+
+    const group = await db.getGroup(groupId, user._id);
+    if (!group) {
+      return res.status(500).json({ status: "failed", error: "Could not get group" });
+    }
+
+    return res.json({
+      status: "success",
+      group: group
+    });
   } catch (error) {
     if (error instanceof Error) {
       return res.status(500).json({ status: "failed", error: error.message });

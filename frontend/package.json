@@ -10,6 +10,8 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@stytch/react": "^19.2.0",
+    "@stytch/vanilla-js": "^5.13.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "textarea-caret": "^3.1.0"

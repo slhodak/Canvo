@@ -1,6 +1,7 @@
 # General
 .gitignore
 .env
+.env.*
 README.md
 
 # Node & Typescript
