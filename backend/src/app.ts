@@ -60,7 +60,8 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'", 'https://www.canvo.app'],
-      connectSrc: ["'self'", 'https://www.canvo.app']
+      connectSrc: ["'self'", 'https://www.canvo.app', 'https://*.stytch.com'],
+      imgSrc: ["'self'", 'https://www.canvo.app', 'https://*.stytch.com']
     }
   },
   strictTransportSecurity: {
