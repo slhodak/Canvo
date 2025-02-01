@@ -44,6 +44,11 @@ for file in ./db/migrations/*.sql; do
     psql $DB_NAME -f "$file"
   fi
 
+  if [ $? -ne 0 ]; then
+    echo "Error: failed to execute $file"
+    exit 1
+  fi
+
   # Record that this migration has been run
   echo "$FILE_NAME" >> ./db/db_version.txt
 done
