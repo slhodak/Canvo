@@ -41,7 +41,9 @@ if [ "$ENVIRONMENT" == "prod" ]; then
   else
     echo "Database '$DB_NAME' does not exist. Creating database..."
     PGPASSWORD=$DB_ADMIN_PASSWORD psql -U postgres -c "CREATE DATABASE $DB_NAME;"
-    PGPASSWORD=$DB_ADMIN_PASSWORD psql -U postgres -d $DB_NAME -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO $DB_USER;"
+    PGPASSWORD=$DB_ADMIN_PASSWORD psql -U postgres -d $DB_NAME -c "GRANT USAGE ON SCHEMA public TO $DB_USER;"
+    PGPASSWORD=$DB_ADMIN_PASSWORD psql -U postgres -d $DB_NAME -c "GRANT CREATE ON SCHEMA public TO $DB_USER;"
+    PGPASSWORD=$DB_ADMIN_PASSWORD psql -U postgres -d $DB_NAME -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO $DB_USER;"
   fi
 
 elif [ "$ENVIRONMENT" == "dev" ]; then
