@@ -39,14 +39,9 @@ for file in ./db/migrations/*.sql; do
   fi
 
   if [[ "$ENVIRONMENT" == "prod" ]]; then
-    PGPASSWORD=$DB_APP_PASSWORD psql -U $DB_USER -d $DB_NAME -f "$file"
+    PGPASSWORD=$DB_APP_PASSWORD psql -v ON_ERROR_STOP=1 -U $DB_USER -d $DB_NAME -f "$file"
   else
-    psql $DB_NAME -f "$file"
-  fi
-
-  if [ $? -ne 0 ]; then
-    echo "Error: failed to execute $file"
-    exit 1
+    psql -v ON_ERROR_STOP=1 $DB_NAME -f "$file"
   fi
 
   # Record that this migration has been run
