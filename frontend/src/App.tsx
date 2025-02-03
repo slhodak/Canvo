@@ -113,11 +113,13 @@ const App = () => {
       </div>
 
       <div className="bottom-section">
-        <h3 className="group-previews-header">Groups</h3>
-        <div className="group-previews-container">
+        <div className="group-previews-header-container">
+          <h3 className="group-previews-header">Groups</h3>
           <button className="add-group-button" onClick={createGroup}>
             <PlusIcon />
           </button>
+        </div>
+        <div className="group-previews-container">
           {groups.map((_group) => {
             const highlighted = group?._id === _group._id;
             return (
