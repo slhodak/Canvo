@@ -45,9 +45,16 @@
 }
 
 .add-group-button {
-  padding: 10px 20px;
-  border: none;
-  background-color: var(--button-background-color);
+  padding: 16px;
+  border: 2px double black;
+  border-radius: 0%;
+  height: 60px;
+  width: 60px;
+  background-color: transparent;
+}
+
+.add-group-button:hover {
+  background-color: rgba(255, 255, 255, 0.4);
 }
 
 /* Bottom section */

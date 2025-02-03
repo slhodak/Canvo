@@ -3,6 +3,7 @@ import './App.css'
 import { SERVER_URL } from './constants';
 import { GroupModel } from '@wb/shared-types';
 import Group from './Group';
+import PlusIcon from './assets/PlusIcon';
 
 const App = () => {
   const [group, setGroup] = useState<GroupModel | null>(null);
@@ -105,7 +106,6 @@ const App = () => {
     <div className="app-container">
       <div className="top-section">
         <h2 className="app-title-header">Canvo</h2>
-        <button className="add-group-button" onClick={createGroup}>New Group</button>
       </div>
 
       <div className="middle-section">
@@ -115,6 +115,9 @@ const App = () => {
       <div className="bottom-section">
         <h3 className="group-previews-header">Groups</h3>
         <div className="group-previews-container">
+          <button className="add-group-button" onClick={createGroup}>
+            <PlusIcon />
+          </button>
           {groups.map((_group) => {
             const highlighted = group?._id === _group._id;
             return (
