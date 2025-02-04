@@ -1,7 +1,15 @@
 import React, { useState, useRef } from 'react';
-import { NodeModel, Node } from './Node';
+import { BaseNode, OutputNode, PromptNode, TextNode } from './NodeModel';
+import { Node } from './Node';
 import './NetworkEditor.css';
 import { NetworkEditorUtils as neu } from './Utils';
+
+export interface VisualNode {
+  id: string;
+  node: BaseNode;
+  x: number;
+  y: number;
+}
 
 export interface Connection {
   id: string;
@@ -29,10 +37,10 @@ export interface WireState {
 }
 
 const NetworkEditor = () => {
-  const [nodes, setNodes] = useState<NodeModel[]>([
-    { id: '1', name: 'Input', x: 100, y: 100, inputs: 0, outputs: 1 },
-    { id: '2', name: 'Process', x: 300, y: 100, inputs: 2, outputs: 1 },
-    { id: '3', name: 'Output', x: 500, y: 100, inputs: 1, outputs: 0 },
+  const [nodes, setNodes] = useState<VisualNode[]>([
+    { id: '1', node: new TextNode('1'), x: 100, y: 100 },
+    { id: '2', node: new PromptNode('2'), x: 300, y: 100 },
+    { id: '3', node: new OutputNode('3'), x: 500, y: 100 },
   ]);
 
   const [connections, setConnections] = useState<Connection[]>([]);

@@ -1,18 +1,10 @@
 import { NetworkEditorUtils as neu } from './Utils';
 import { Connection, WireState } from './NetworkEditor';
 import './Node.css';
-
-export interface NodeModel {
-  id: string;
-  name: string;
-  x: number;
-  y: number;
-  inputs: number;
-  outputs: number;
-}
+import { VisualNode } from './NetworkEditor';
 
 interface NodeProps {
-  node: NodeModel;
+  node: VisualNode;
   connections: Connection[];
   wireState: WireState;
   handleMouseDown: (e: React.MouseEvent, nodeId: string) => void;
@@ -39,14 +31,14 @@ export const Node = ({ node, connections, wireState, handleMouseDown, startDrawi
   }
 
   return (
-    <g key={node.id}>
+    <g key={node.node.id}>
       {/* Node Rectangle */}
       <rect
         x={node.x}
         y={node.y}
         width={neu.NODE_WIDTH}
         height={neu.NODE_HEIGHT}
-        onMouseDown={(e) => handleMouseDown(e, node.id)}
+        onMouseDown={(e) => handleMouseDown(e, node.node.id)}
         className="node-rectangle"
       />
 
@@ -56,14 +48,14 @@ export const Node = ({ node, connections, wireState, handleMouseDown, startDrawi
         y={node.y + neu.NODE_HEIGHT / 2}
         className="node-name"
       >
-        {node.name}
+        {node.node.name}
       </text>
 
       {/* Input Ports */}
-      {Array.from({ length: node.inputs }).map((_, i) => {
+      {Array.from({ length: node.node.inputs }).map((_, i) => {
         const pos = neu.getPortPosition(node, true, i);
         const connection = connections.find(
-          conn => conn.toNode === node.id && conn.toInput === i
+          conn => conn.toNode === node.node.id && conn.toInput === i
         );
 
         return (
@@ -72,7 +64,7 @@ export const Node = ({ node, connections, wireState, handleMouseDown, startDrawi
               cx={pos.x}
               cy={pos.y}
               r={neu.PORT_RADIUS}
-              onMouseDown={(e) => handleConnectionClick(e, true, connection?.id, node.id, i)}
+              onMouseDown={(e) => handleConnectionClick(e, true, connection?.id, node.node.id, i)}
               className={`node-input-port ${connection && "connected"} ${wireState.isDrawing && "drawing"}`}
             />
           </g>
@@ -80,10 +72,10 @@ export const Node = ({ node, connections, wireState, handleMouseDown, startDrawi
       })}
 
       {/* Output Ports */}
-      {Array.from({ length: node.outputs }).map((_, i) => {
+      {Array.from({ length: node.node.outputs }).map((_, i) => {
         const pos = neu.getPortPosition(node, false, i);
         const connection = connections.find(
-          conn => conn.fromNode === node.id && conn.fromOutput === i
+          conn => conn.fromNode === node.node.id && conn.fromOutput === i
         );
 
         return (
