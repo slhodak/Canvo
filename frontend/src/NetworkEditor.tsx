@@ -123,25 +123,8 @@ const NetworkEditor = () => {
     }
   };
 
-  // TODO: Expect the connection itself instead of the tonodeid and input index
-  const disconnectWire = (toNodeId: string, inputIndex: number) => {
-    const existingConnectionToNode = connections.find(
-      conn => conn.toNode === toNodeId && conn.toInput === inputIndex
-    );
-
-    const existingConnectionFromNode = connections.find(
-      conn => conn.fromNode === toNodeId && conn.fromOutput === inputIndex
-    );
-
-    if (existingConnectionToNode) {
-      setConnections(connections.filter(conn => conn.id !== existingConnectionToNode.id));
-      return;
-    }
-
-    if (existingConnectionFromNode) {
-      setConnections(connections.filter(conn => conn.id !== existingConnectionFromNode.id));
-      return;
-    }
+  const disconnectWire = (connectionId: string) => {
+    setConnections(connections.filter(conn => conn.id !== connectionId));
   };
 
   const endDrawingWire = (toNodeId: string, inputIndex: number) => {

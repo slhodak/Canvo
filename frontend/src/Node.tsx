@@ -17,21 +17,16 @@ interface NodeProps {
   handleMouseDown: (e: React.MouseEvent, nodeId: string) => void;
   startDrawingWire: (nodeId: string, outputIndex: number, startX: number, startY: number) => void;
   endDrawingWire: (toNodeId: string, inputIndex: number) => void;
-  disconnectWire: (toNodeId: string, inputIndex: number) => void;
+  disconnectWire: (connectionId: string) => void;
 }
 
 export const Node = ({ node, connections, handleMouseDown, startDrawingWire, endDrawingWire, disconnectWire }: NodeProps) => {
-  const handleConnectionClick = (e: React.MouseEvent, isInputPort: boolean, isConnected: boolean, nodeId: string, inputIndex: number) => {
-    console.log(isInputPort, isConnected, nodeId, inputIndex);
-    if (isInputPort) {
-      if (isConnected) {
-        disconnectWire(nodeId, inputIndex);
-      } else {
-        endDrawingWire(nodeId, inputIndex);
-      }
+  const handleConnectionClick = (e: React.MouseEvent, isInputPort: boolean, connectionId: string | null = null, nodeId: string, inputIndex: number) => {
+    if (connectionId) {
+      disconnectWire(connectionId);
     } else {
-      if (isConnected) {
-        disconnectWire(nodeId, inputIndex);
+      if (isInputPort) {
+        endDrawingWire(nodeId, inputIndex);
       } else {
         startDrawingWire(nodeId, inputIndex, e.clientX, e.clientY);
       }
@@ -62,7 +57,7 @@ export const Node = ({ node, connections, handleMouseDown, startDrawingWire, end
       {/* Input Ports */}
       {Array.from({ length: node.inputs }).map((_, i) => {
         const pos = neu.getPortPosition(node, true, i);
-        const isConnected = connections.some(
+        const connection = connections.find(
           conn => conn.toNode === node.id && conn.toInput === i
         );
 
@@ -72,8 +67,8 @@ export const Node = ({ node, connections, handleMouseDown, startDrawingWire, end
               cx={pos.x}
               cy={pos.y}
               r={neu.PORT_RADIUS}
-              onMouseDown={(e) => handleConnectionClick(e, true, isConnected, node.id, i)}
-              className={`node-input-port ${isConnected && "connected"}`}
+              onMouseDown={(e) => handleConnectionClick(e, true, connection?.id, node.id, i)}
+              className={`node-input-port ${connection && "connected"}`}
             />
           </g>
         );
@@ -82,12 +77,9 @@ export const Node = ({ node, connections, handleMouseDown, startDrawingWire, end
       {/* Output Ports */}
       {Array.from({ length: node.outputs }).map((_, i) => {
         const pos = neu.getPortPosition(node, false, i);
-        const isConnected = connections.some(
+        const connection = connections.find(
           conn => conn.fromNode === node.id && conn.fromOutput === i
         );
-        // const connection = connections.find(
-        //   conn => conn.toNode === toNodeId && conn.toInput === inputIndex
-        // );
 
         return (
           <circle
@@ -95,8 +87,8 @@ export const Node = ({ node, connections, handleMouseDown, startDrawingWire, end
             cx={pos.x}
             cy={pos.y}
             r={neu.PORT_RADIUS}
-            onMouseDown={(e) => handleConnectionClick(e, false, isConnected, node.id, i)}
-            className={`node-output-port ${isConnected && "connected"}`}
+            onMouseDown={(e) => handleConnectionClick(e, false, connection?.id, node.id, i)}
+            className={`node-output-port ${connection && "connected"}`}
           />
         );
       })}
