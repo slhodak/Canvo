@@ -24,6 +24,10 @@ export const Node = ({ node, connections, handleMouseDown, startDrawingWire, end
   const handleConnectionClick = (e: React.MouseEvent, isInputPort: boolean, connectionId: string | null = null, nodeId: string, inputIndex: number) => {
     if (connectionId) {
       disconnectWire(connectionId);
+      // Immediately start a new connection if the clicked port is an output port
+      if (!isInputPort) {
+        startDrawingWire(nodeId, inputIndex, e.clientX, e.clientY);
+      }
     } else {
       if (isInputPort) {
         endDrawingWire(nodeId, inputIndex);
