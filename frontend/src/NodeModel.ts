@@ -2,6 +2,8 @@ interface NodeProperty {
   type: 'string' | 'number';
   label: string;
   value: string | number;
+  editable: boolean;
+  displayed: boolean;
 }
 
 export class BaseNode {
@@ -20,26 +22,36 @@ export class BaseNode {
         type: 'string',
         label: 'ID',
         value: id,
+        editable: false,
+        displayed: true,
       },
       name: {
         type: 'string',
         label: 'Name',
         value: name,
+        editable: false,
+        displayed: true,
       },
       type: {
         type: 'string',
         label: 'Type',
         value: type,
+        editable: false,
+        displayed: false,
       },
       inputs: {
         type: 'number',
         label: 'Inputs',
         value: inputs,
+        editable: false,
+        displayed: false,
       },
       outputs: {
         type: 'number',
         label: 'Outputs',
         value: outputs,
+        editable: false,
+        displayed: false,
       },
       ...customProperties,
     };
@@ -56,6 +68,8 @@ export class TextNode extends BaseNode {
         type: 'string',
         label: 'Text',
         value: text,
+        editable: true,
+        displayed: true,
       },
     });
   }
@@ -71,6 +85,8 @@ export class PromptNode extends BaseNode {
         type: 'string',
         label: 'Prompt',
         value: prompt,
+        editable: true,
+        displayed: true,
       },
     });
   }

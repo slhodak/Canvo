@@ -13,10 +13,11 @@ const ParametersPane = ({ node }: ParametersPaneProps) => {
       </div>
 
       <div className="parameters-pane-content">
-        {node && Object.values(node.node.properties).map((property) => (
-          <div key={property.label} className="parameters-pane-property">
-            <label>{property.label}</label>
-            <input type={property.type} value={property.value} />
+        {node && Object.values(node.node.properties).filter((property) => property.displayed).map((property) => (
+          <div key={property.label} className="parameters-pane-property-container">
+            <label className="parameters-pane-property-label">{property.label}</label>
+            <input type={property.type} value={property.value} disabled={!property.editable} />
+            <div className="parameters-pane-property-spacer" />
           </div>
         ))}
       </div>
