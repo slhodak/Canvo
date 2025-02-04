@@ -1,0 +1,39 @@
+.node-rectangle {
+  cursor: move;
+  fill: white;
+  stroke: black;
+  stroke-width: 2;
+  rx: 5;
+}
+
+.node-name {
+  font-size: 0.9rem;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.node-input-port {
+  stroke: black;
+  stroke-width: 2;
+  cursor: pointer;
+  fill: #ffffff;
+}
+
+.node-input-port.connected:hover {
+  fill: #ff4444;
+}
+
+.node-output-port:hover {
+  fill: #44ff44;
+}
+
+.node-output-port {
+  stroke: black;
+  stroke-width: 2;
+  cursor: pointer;
+  fill: #ffffff;
+}
+
+.node-output-port.connected:hover {
+  fill: #ff4444;
+}

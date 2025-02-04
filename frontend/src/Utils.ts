@@ -106,9 +106,9 @@ export function compareTransformationPositions(a: TransformationModel, b: Transf
 }
 
 export const NetworkEditorUtils = {
-  NODE_WIDTH: 120,
-  NODE_HEIGHT: 60,
-  PORT_RADIUS: 6,
+  NODE_WIDTH: 100,
+  NODE_HEIGHT: 32,
+  PORT_RADIUS: 5,
   PORT_MARGIN: 25,
 
   getPortPosition(node: NodeModel, isInput: boolean, index: number) {

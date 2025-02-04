@@ -105,30 +105,46 @@ const NetworkEditor = () => {
   };
 
   const startDrawingWire = (nodeId: string, outputIndex: number, startX: number, startY: number) => {
-    setWireState({
-      isDrawing: true,
-      fromNode: nodeId,
-      fromOutput: outputIndex,
-      startX,
-      startY,
-      endX: startX,
-      endY: startY,
-    });
+    if (svgRef.current) {
+      // Get SVG coordinates
+      const svgRect = svgRef.current.getBoundingClientRect();
+      const x = startX - svgRect.left;
+      const y = startY - svgRect.top;
+
+      setWireState({
+        isDrawing: true,
+        fromNode: nodeId,
+        fromOutput: outputIndex,
+        startX: x,
+        startY: y,
+        endX: x,
+        endY: y,
+      });
+    }
+  };
+
+  // TODO: Expect the connection itself instead of the tonodeid and input index
+  const disconnectWire = (toNodeId: string, inputIndex: number) => {
+    const existingConnectionToNode = connections.find(
+      conn => conn.toNode === toNodeId && conn.toInput === inputIndex
+    );
+
+    const existingConnectionFromNode = connections.find(
+      conn => conn.fromNode === toNodeId && conn.fromOutput === inputIndex
+    );
+
+    if (existingConnectionToNode) {
+      setConnections(connections.filter(conn => conn.id !== existingConnectionToNode.id));
+      return;
+    }
+
+    if (existingConnectionFromNode) {
+      setConnections(connections.filter(conn => conn.id !== existingConnectionFromNode.id));
+      return;
+    }
   };
 
   const endDrawingWire = (toNodeId: string, inputIndex: number) => {
-    // If we're not drawing a wire, check if we should delete an existing connection
-    if (!wireState.isDrawing) {
-      const existingConnection = connections.find(
-        conn => conn.toNode === toNodeId && conn.toInput === inputIndex
-      );
-      if (existingConnection) {
-        setConnections(connections.filter(conn => conn.id !== existingConnection.id));
-        return;
-      }
-    }
-
-    // Otherwise create a new connection if we're drawing a wire
     if (wireState.isDrawing && wireState.fromNode && wireState.fromOutput !== null) {
       // Check if there's already a connection to this input
       const existingConnection = connections.find(
@@ -179,7 +195,7 @@ const NetworkEditor = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []); // Empty dependency array since we don't use any dependencies
+  }, []);
 
   return (
     <div className="network-editor-container">
@@ -226,7 +242,13 @@ const NetworkEditor = () => {
 
         {/* Nodes */}
         {nodes.map(node => (
-          <Node key={node.id} node={node} connections={connections} handleMouseDown={handleMouseDown} startDrawingWire={startDrawingWire} endDrawingWire={endDrawingWire} />
+          <Node
+            key={node.id} node={node}
+            connections={connections}
+            handleMouseDown={handleMouseDown}
+            startDrawingWire={startDrawingWire}
+            endDrawingWire={endDrawingWire}
+            disconnectWire={disconnectWire} />
         ))}
       </svg>
     </div>
