@@ -1,11 +1,21 @@
 // import { useEffect } from 'react';
 import './App.css'
 // import { SERVER_URL } from './constants';
-import NetworkEditor from './NetworkEditor';
+import NetworkEditor, { VisualNode } from './NetworkEditor';
 import ParametersPane from './ParametersPane';
 import Menu from './Menu';
+import { useState } from 'react';
+import { TextNode } from './NodeModel';
+import { PromptNode } from './NodeModel';
+import { OutputNode } from './NodeModel';
 
 const App = () => {
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [nodes, setNodes] = useState<VisualNode[]>([
+    { id: '1', node: new TextNode('1'), x: 100, y: 100 },
+    { id: '2', node: new PromptNode('2'), x: 300, y: 100 },
+    { id: '3', node: new OutputNode('3'), x: 500, y: 100 },
+  ]);
   // Fetch the latest group
   // useEffect(() => {
   //   async function fetchLatestGroup() {
@@ -34,7 +44,12 @@ const App = () => {
 
         <div className="right-section-panes">
           <div className="left-pane">
-            <NetworkEditor />
+            <NetworkEditor
+              nodes={nodes}
+              setNodes={setNodes}
+              selectedNodeId={selectedNodeId}
+              setSelectedNodeId={setSelectedNodeId}
+            />
           </div>
 
           <div className="right-pane">

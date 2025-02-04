@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { BaseNode, OutputNode, PromptNode, TextNode } from './NodeModel';
+import { BaseNode } from './NodeModel';
 import { Node } from './Node';
 import './NetworkEditor.css';
 import { NetworkEditorUtils as neu } from './Utils';
@@ -36,14 +36,14 @@ export interface WireState {
   endY: number;
 }
 
-const NetworkEditor = () => {
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [nodes, setNodes] = useState<VisualNode[]>([
-    { id: '1', node: new TextNode('1'), x: 100, y: 100 },
-    { id: '2', node: new PromptNode('2'), x: 300, y: 100 },
-    { id: '3', node: new OutputNode('3'), x: 500, y: 100 },
-  ]);
+interface NetworkEditorProps {
+  nodes: VisualNode[];
+  setNodes: (nodes: VisualNode[]) => void;
+  selectedNodeId: string | null;
+  setSelectedNodeId: (nodeId: string | null) => void;
+}
 
+const NetworkEditor = ({ nodes, setNodes, selectedNodeId, setSelectedNodeId }: NetworkEditorProps) => {
   const [connections, setConnections] = useState<Connection[]>([]);
   const [dragState, setDragState] = useState<DragState>({
     isDragging: false,
