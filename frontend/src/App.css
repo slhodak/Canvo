@@ -44,6 +44,24 @@
   line-height: 1.0;
 }
 
+/* Middle section */
+
+.network-editor-container {
+  height: 100%;
+  width: 100%;
+}
+
+.network-editor-canvas {
+  height: 100%;
+  width: 100%;
+  background-color: darkgray;
+}
+
+.node-rectangle {
+  cursor: move;
+}
+
+
 /* Bottom section */
 
 .group-previews-header-container {
@@ -60,7 +78,7 @@
 
 .add-group-button {
   padding: 5px;
-  border: 1px solid gray; 
+  border: 1px solid gray;
   border-radius: 6px;
   height: 30px;
   width: 30px;

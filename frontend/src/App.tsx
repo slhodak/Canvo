@@ -2,9 +2,8 @@ import { useState, useEffect } from 'react';
 import './App.css'
 import { SERVER_URL } from './constants';
 import { GroupModel } from '@wb/shared-types';
-import Group from './Group';
 import PlusIcon from './assets/PlusIcon';
-
+import NetworkEditor from './NetworkEditor';
 const App = () => {
   const [group, setGroup] = useState<GroupModel | null>(null);
   const [groups, setGroups] = useState<GroupModel[]>([]);
@@ -109,7 +108,7 @@ const App = () => {
       </div>
 
       <div className="middle-section">
-        {group ? <Group group={group} updateGroupLabel={updateGroupLabel} /> : <div>No group selected</div>}
+        <NetworkEditor />
       </div>
 
       <div className="bottom-section">
