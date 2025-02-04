@@ -31,8 +31,6 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
     }
   }
 
-  console.log(node);
-  console.log(node.node.properties.name);
   const nodeId = node.node.properties['id'].value as string;
   const nodeName = node.node.properties['name'].value as string;
   const nodeInputs = node.node.properties['inputs'].value as number;
