@@ -5,6 +5,7 @@ import { VisualNode } from './NetworkEditor';
 
 interface NodeProps {
   node: VisualNode;
+  isSelected: boolean;
   connections: Connection[];
   wireState: WireState;
   handleMouseDown: (e: React.MouseEvent, nodeId: string) => void;
@@ -13,7 +14,7 @@ interface NodeProps {
   disconnectWire: (connectionId: string) => void;
 }
 
-export const Node = ({ node, connections, wireState, handleMouseDown, startDrawingWire, endDrawingWire, disconnectWire }: NodeProps) => {
+export const Node = ({ node, isSelected, connections, wireState, handleMouseDown, startDrawingWire, endDrawingWire, disconnectWire }: NodeProps) => {
   const handleConnectionClick = (e: React.MouseEvent, isInputPort: boolean, connectionId: string | null = null, nodeId: string, inputIndex: number) => {
     if (connectionId) {
       disconnectWire(connectionId);
@@ -39,7 +40,7 @@ export const Node = ({ node, connections, wireState, handleMouseDown, startDrawi
         width={neu.NODE_WIDTH}
         height={neu.NODE_HEIGHT}
         onMouseDown={(e) => handleMouseDown(e, node.node.id)}
-        className="node-rectangle"
+        className={`node-rectangle ${isSelected && "selected"}`}
       />
 
       {/* Node Name */}

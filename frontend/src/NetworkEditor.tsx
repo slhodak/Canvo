@@ -37,6 +37,7 @@ export interface WireState {
 }
 
 const NetworkEditor = () => {
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [nodes, setNodes] = useState<VisualNode[]>([
     { id: '1', node: new TextNode('1'), x: 100, y: 100 },
     { id: '2', node: new PromptNode('2'), x: 300, y: 100 },
@@ -65,6 +66,8 @@ const NetworkEditor = () => {
   const handleMouseDownInNode = (e: React.MouseEvent, nodeId: string) => {
     const node = nodes.find(n => n.id === nodeId);
     if (!node) return;
+
+    setSelectedNodeId(nodeId);
 
     setDragState({
       isDragging: true,
@@ -248,18 +251,23 @@ const NetworkEditor = () => {
         )}
 
         {/* Nodes */}
-        {nodes.map(node => (
-          <Node
-            key={node.id}
-            node={node}
-            connections={connections}
-            wireState={wireState}
-            handleMouseDown={handleMouseDownInNode}
-            startDrawingWire={startDrawingWire}
-            endDrawingWire={endDrawingWire}
-            disconnectWire={disconnectWire}
-          />
-        ))}
+        {nodes.map(node => {
+          const isSelected = selectedNodeId === node.id;
+
+          return (
+            <Node
+              key={node.id}
+              node={node}
+              isSelected={isSelected}
+              connections={connections}
+              wireState={wireState}
+              handleMouseDown={handleMouseDownInNode}
+              startDrawingWire={startDrawingWire}
+              endDrawingWire={endDrawingWire}
+              disconnectWire={disconnectWire}
+            />
+          );
+        })}
       </svg>
     </div>
   );
