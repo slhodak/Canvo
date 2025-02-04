@@ -54,7 +54,7 @@ const NetworkEditor = () => {
 
   const svgRef = useRef<SVGSVGElement>(null);
 
-  const handleMouseDown = (e: React.MouseEvent, nodeId: string) => {
+  const handleMouseDownInNode = (e: React.MouseEvent, nodeId: string) => {
     const node = nodes.find(n => n.id === nodeId);
     if (!node) return;
 
@@ -63,6 +63,35 @@ const NetworkEditor = () => {
       nodeId,
       offsetX: e.clientX - node.x,
       offsetY: e.clientY - node.y,
+    });
+  }
+
+  const handleMouseDownInEditor = () => {
+    if (wireState.isDrawing) {
+      setDragState({
+        isDragging: false,
+        nodeId: null,
+        offsetX: 0,
+        offsetY: 0,
+      });
+      setWireState({
+        isDrawing: false,
+        fromNode: null,
+        fromOutput: null,
+        startX: 0,
+        startY: 0,
+        endX: 0,
+        endY: 0,
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setDragState({
+      isDragging: false,
+      nodeId: null,
+      offsetX: 0,
+      offsetY: 0,
     });
   };
 
@@ -93,15 +122,6 @@ const NetworkEditor = () => {
         endY: y,
       }));
     }
-  };
-
-  const handleMouseUp = () => {
-    setDragState({
-      isDragging: false,
-      nodeId: null,
-      offsetX: 0,
-      offsetY: 0,
-    });
   };
 
   const startDrawingWire = (nodeId: string, outputIndex: number, startX: number, startY: number) => {
@@ -190,6 +210,7 @@ const NetworkEditor = () => {
         ref={svgRef}
         className="network-editor-canvas"
         onMouseMove={handleMouseMove}
+        onMouseDown={handleMouseDownInEditor}
         onMouseUp={handleMouseUp}
       >
         {/* Connections */}
@@ -228,7 +249,7 @@ const NetworkEditor = () => {
           <Node
             key={node.id} node={node}
             connections={connections}
-            handleMouseDown={handleMouseDown}
+            handleMouseDown={handleMouseDownInNode}
             startDrawingWire={startDrawingWire}
             endDrawingWire={endDrawingWire}
             disconnectWire={disconnectWire} />
