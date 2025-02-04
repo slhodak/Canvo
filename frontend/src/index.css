@@ -24,11 +24,16 @@
   -moz-osx-font-smoothing: grayscale;
 
   /* Variables */
-  --background-color: #e4e4e4;
+  --font-color: rgb(232, 232, 232);
+  --background-dark-1: #353535;
+  --background-dark-2: #3f3f3f;
+  --background-dark-3: #606060;
   --textarea-nonediting-background-color: rgba(0, 0, 0, 0.08);
   --textarea-editing-background-color: white;
   --button-background-color: lightblue;
   --container-vertical-spacing: 6px;
+
+  color: var(--font-color);
 }
 
 a {

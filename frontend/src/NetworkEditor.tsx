@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import './NetworkEditor.css';
 
 interface Node {
   id: string;
@@ -206,6 +207,10 @@ const NetworkEditor = () => {
 
   return (
     <div className="network-editor-container">
+      <div className="network-editor-header">
+        <h3>Network Editor</h3>
+      </div>
+
       <svg
         ref={svgRef}
         className="network-editor-canvas"

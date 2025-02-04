@@ -1,0 +1,77 @@
+.menu-items-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  margin: 0px 2px;
+}
+
+.menu-items-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 14px;
+}
+
+.menu-items-header h3 {
+  margin: 8px 0px;
+}
+
+.add-group-button {
+  padding: 5px;
+  border: 1px solid gray;
+  border-radius: 6px;
+  height: 30px;
+  width: 30px;
+  background-color: transparent;
+  box-shadow: 0px 1px 2px 0 rgba(0, 0, 0, 0.6);
+}
+
+.add-group-button:hover {
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+.menu-items-projects {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.group-preview-container {
+  border: 1px solid black;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 150px;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.highlighted-group-preview {
+  background-color: white;
+}
+
+.group-preview-delete-button {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+}
+
+.delete-group-icon {
+  fill: rgb(146, 146, 146);
+  height: 100%;
+  width: 100%;
+}
+
+.delete-group-icon:hover {
+  fill: rgb(227, 1, 1);
+}

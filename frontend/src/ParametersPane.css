@@ -1,0 +1,19 @@
+.parameters-pane-container {
+  width: 100%;
+  height: 100%;
+  background-color: var(--background-dark-2);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+.parameters-pane-header h3 {
+  margin: 0px;
+  padding: 0px;
+}
+
+.parameters-pane-content {
+  width: 100%;
+  height: 100%;
+  background-color: darkgray;
+}
