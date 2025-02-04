@@ -17,3 +17,16 @@
   width: 100%;
   background-color: darkgray;
 }
+
+.network-editor-wire {
+  stroke: black;
+  fill: none;
+  stroke-width: 1;
+}
+
+.network-editor-drawing-wire {
+  stroke: black;
+  fill: none;
+  stroke-width: 1;
+  stroke-dasharray: 3, 3;
+}

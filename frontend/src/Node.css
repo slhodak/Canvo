@@ -2,7 +2,7 @@
   cursor: move;
   fill: white;
   stroke: black;
-  stroke-width: 2;
+  stroke-width: 1;
   rx: 5;
 }
 
@@ -14,9 +14,14 @@
 
 .node-input-port {
   stroke: black;
-  stroke-width: 2;
+  stroke-width: 1;
   cursor: pointer;
   fill: #ffffff;
+  transform: translateY(-5px);
+}
+
+.node-input-port:hover {
+  fill: #44ff44;
 }
 
 .node-input-port.connected:hover {
@@ -29,9 +34,10 @@
 
 .node-output-port {
   stroke: black;
-  stroke-width: 2;
+  stroke-width: 1;
   cursor: pointer;
   fill: #ffffff;
+  transform: translateY(5px);
 }
 
 .node-output-port.connected:hover {

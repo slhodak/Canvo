@@ -226,9 +226,7 @@ const NetworkEditor = () => {
             <path
               key={conn.id}
               d={`M ${start.x} ${start.y} C ${start.x} ${start.y + 50}, ${end.x} ${end.y - 50}, ${end.x} ${end.y}`}
-              stroke="black"
-              fill="none"
-              strokeWidth="2"
+              className="network-editor-wire"
             />
           );
         })}
@@ -237,10 +235,7 @@ const NetworkEditor = () => {
         {wireState.isDrawing && (
           <path
             d={`M ${wireState.startX} ${wireState.startY} C ${wireState.startX} ${wireState.startY + 50}, ${wireState.endX} ${wireState.endY - 50}, ${wireState.endX} ${wireState.endY}`}
-            stroke="black"
-            fill="none"
-            strokeWidth="2"
-            strokeDasharray="5,5"
+            className="network-editor-drawing-wire"
           />
         )}
 
