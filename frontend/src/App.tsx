@@ -10,12 +10,12 @@ import { PromptNode } from './NodeModel';
 import { OutputNode } from './NodeModel';
 
 const App = () => {
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [nodes, setNodes] = useState<VisualNode[]>([
-    { id: '1', node: new TextNode('1'), x: 100, y: 100 },
-    { id: '2', node: new PromptNode('2'), x: 300, y: 100 },
-    { id: '3', node: new OutputNode('3'), x: 500, y: 100 },
-  ]);
+  const [selectedNode, setSelectedNode] = useState<VisualNode | null>(null);
+  const [nodes, setNodes] = useState<Record<string, VisualNode>>({
+    '1': { id: '1', node: new TextNode('1'), x: 100, y: 100 },
+    '2': { id: '2', node: new PromptNode('2'), x: 300, y: 100 },
+    '3': { id: '3', node: new OutputNode('3'), x: 500, y: 100 },
+  });
   // Fetch the latest group
   // useEffect(() => {
   //   async function fetchLatestGroup() {
@@ -47,13 +47,13 @@ const App = () => {
             <NetworkEditor
               nodes={nodes}
               setNodes={setNodes}
-              selectedNodeId={selectedNodeId}
-              setSelectedNodeId={setSelectedNodeId}
+              selectedNode={selectedNode}
+              setSelectedNode={setSelectedNode}
             />
           </div>
 
           <div className="right-pane">
-            <ParametersPane />
+            <ParametersPane node={selectedNode} />
           </div>
         </div>
       </div>

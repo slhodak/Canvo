@@ -37,13 +37,13 @@ export interface WireState {
 }
 
 interface NetworkEditorProps {
-  nodes: VisualNode[];
-  setNodes: (nodes: VisualNode[]) => void;
-  selectedNodeId: string | null;
-  setSelectedNodeId: (nodeId: string | null) => void;
+  nodes: Record<string, VisualNode>;
+  setNodes: (nodes: Record<string, VisualNode>) => void;
+  selectedNode: VisualNode | null;
+  setSelectedNode: (node: VisualNode | null) => void;
 }
 
-const NetworkEditor = ({ nodes, setNodes, selectedNodeId, setSelectedNodeId }: NetworkEditorProps) => {
+const NetworkEditor = ({ nodes, setNodes, selectedNode, setSelectedNode }: NetworkEditorProps) => {
   const [connections, setConnections] = useState<Connection[]>([]);
   const [dragState, setDragState] = useState<DragState>({
     isDragging: false,
@@ -64,10 +64,10 @@ const NetworkEditor = ({ nodes, setNodes, selectedNodeId, setSelectedNodeId }: N
   const svgRef = useRef<SVGSVGElement>(null);
 
   const handleMouseDownInNode = (e: React.MouseEvent, nodeId: string) => {
-    const node = nodes.find(n => n.id === nodeId);
+    const node = nodes[nodeId];
     if (!node) return;
 
-    setSelectedNodeId(nodeId);
+    setSelectedNode(node);
 
     setDragState({
       isDragging: true,
@@ -108,17 +108,14 @@ const NetworkEditor = ({ nodes, setNodes, selectedNodeId, setSelectedNodeId }: N
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (dragState.isDragging && dragState.nodeId) {
-      const newNodes = nodes.map(node => {
-        if (node.id === dragState.nodeId) {
-          return {
-            ...node,
-            x: e.clientX - dragState.offsetX,
-            y: e.clientY - dragState.offsetY,
-          };
-        }
-        return node;
-      });
-      setNodes(newNodes);
+      const draggedNode = nodes[dragState.nodeId];
+      if (!draggedNode) return;
+
+      draggedNode.x = e.clientX - dragState.offsetX;
+      draggedNode.y = e.clientY - dragState.offsetY;
+
+      nodes[dragState.nodeId] = draggedNode;
+      setNodes(nodes);
     }
 
     if (wireState.isDrawing && svgRef.current) {
@@ -226,8 +223,8 @@ const NetworkEditor = ({ nodes, setNodes, selectedNodeId, setSelectedNodeId }: N
       >
         {/* Connections */}
         {connections.map(conn => {
-          const fromNode = nodes.find(n => n.id === conn.fromNode);
-          const toNode = nodes.find(n => n.id === conn.toNode);
+          const fromNode = nodes[conn.fromNode];
+          const toNode = nodes[conn.toNode];
           if (!fromNode || !toNode) return null;
 
           const start = neu.getPortPosition(fromNode, false, conn.fromOutput);
@@ -251,8 +248,8 @@ const NetworkEditor = ({ nodes, setNodes, selectedNodeId, setSelectedNodeId }: N
         )}
 
         {/* Nodes */}
-        {nodes.map(node => {
-          const isSelected = selectedNodeId === node.id;
+        {Object.values(nodes).map(node => {
+          const isSelected = selectedNode?.id === node.id;
 
           return (
             <Node
