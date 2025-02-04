@@ -80,6 +80,6 @@ export class OutputNode extends BaseNode {
   constructor(
     id: string,
   ) {
-    super(id, 'Output', 'output', 0, 1);
+    super(id, 'Output', 'output', 1, 0);
   }
 }
