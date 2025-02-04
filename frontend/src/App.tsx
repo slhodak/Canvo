@@ -4,9 +4,13 @@ import { SERVER_URL } from './constants';
 import { GroupModel } from '@wb/shared-types';
 import PlusIcon from './assets/PlusIcon';
 import NetworkEditor from './NetworkEditor';
+import ParametersPane from './ParametersPane';
+import BurgerMenu from './assets/BurgerMenu';
+
 const App = () => {
   const [group, setGroup] = useState<GroupModel | null>(null);
   const [groups, setGroups] = useState<GroupModel[]>([]);
+  const [collapseLeftSection, setCollapseLeftSection] = useState(false);
 
   //////////////////////////////
   // Functions
@@ -103,28 +107,43 @@ const App = () => {
 
   return (
     <div className="app-container">
-      <div className="top-section">
-        <h2 className="app-title-header">Canvo</h2>
-      </div>
-
-      <div className="middle-section">
-        <NetworkEditor />
-      </div>
-
-      <div className="bottom-section">
-        <div className="group-previews-header-container">
-          <h3 className="group-previews-header">Groups</h3>
-          <button className="add-group-button" onClick={createGroup}>
-            <PlusIcon />
+      <div className={`left-section ${collapseLeftSection ? 'collapsed' : 'expanded'}`}>
+        <div className="left-section-header-container">
+          <button className="collapse-button" onClick={() => setCollapseLeftSection(!collapseLeftSection)}>
+            <BurgerMenu collapseLeftSection={collapseLeftSection} />
           </button>
         </div>
-        <div className="group-previews-container">
-          {groups.map((_group) => {
-            const highlighted = group?._id === _group._id;
-            return (
-              <GroupPreview key={_group._id} highlighted={highlighted} group={_group} deleteGroup={deleteGroup} setGroup={setGroup} />
-            )
-          })}
+        {!collapseLeftSection && (
+          <div className="left-section-container">
+            <div className="group-previews-header-container">
+              <h3 className="group-previews-header">Networks</h3>
+              <button className="add-group-button" onClick={createGroup}>
+                <PlusIcon />
+              </button>
+            </div>
+            <div className="group-previews-container">
+              {groups.map((_group) => {
+                const highlighted = group?._id === _group._id;
+                return (
+                  <GroupPreview key={_group._id} highlighted={highlighted} group={_group} deleteGroup={deleteGroup} setGroup={setGroup} />
+                )
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="right-section">
+        <div className="right-top-section">
+          <h2 className="app-title-header">Canvo</h2>
+        </div>
+
+        <div className="right-middle-section">
+          <NetworkEditor />
+        </div>
+
+        <div className="right-bottom-section">
+          <ParametersPane />
         </div>
       </div>
     </div>

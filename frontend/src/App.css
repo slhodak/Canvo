@@ -8,29 +8,65 @@
 
 .app-container {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   height: 100vh;
 }
 
 /* Sections */
 
-.top-section {
-  height: 10vh;
-  padding: 10px;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.7);
+
+.left-section {
+  border-right: 1px solid rgba(0, 0, 0, 0.7);
 }
 
-.middle-section {
+.left-section.collapsed {
+  transition: width 0.3s ease-in-out;
+  width: 40px;
+}
+
+.left-section.expanded {
+  transition: width 0.3s ease-in-out;
+  width: 200px;
+}
+
+.collapse-button {
+  border: none;
+  background-color: transparent;
+  height: 30px;
+  width: 30px;
+  padding: 0px;
+  outline: none;
+}
+
+.collapse-button:focus {
+  outline: none;
+}
+
+.collapse-button .expanded {
+  transition: transform 0.3s ease-in-out;
+  transform: rotate(0deg);
+}
+
+.collapse-button .collapsed {
+  transition: transform 0.3s ease-in-out;
+  transform: rotate(90deg);
+}
+
+.right-section {
+  width: 100px;
+}
+
+.top-section {
+  height: 10vh;
+}
+
+.left-pane {
   height: 70vh;
   padding: 10px;
   overflow-y: auto;
 }
 
-.bottom-section {
+.right-pane {
   height: 20vh;
   border-top: 1px solid rgba(0, 0, 0, 0.7);
   padding: 10px;
