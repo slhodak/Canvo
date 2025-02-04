@@ -1,4 +1,5 @@
 import { BlockModel, TransformationModel } from "@wb/shared-types";
+import { NodeModel } from "./Node";
 
 export class Position {
   blockId: string;
@@ -102,4 +103,22 @@ export function compareTransformationPositions(a: TransformationModel, b: Transf
     return 1;
   }
   return 0;
+}
+
+export const NetworkEditorUtils = {
+  NODE_WIDTH: 120,
+  NODE_HEIGHT: 60,
+  PORT_RADIUS: 6,
+  PORT_MARGIN: 25,
+
+  getPortPosition(node: NodeModel, isInput: boolean, index: number) {
+    const portCount = isInput ? node.inputs : node.outputs;
+    const totalWidth = (portCount - 1) * NetworkEditorUtils.PORT_MARGIN;
+    const startX = node.x + (NetworkEditorUtils.NODE_WIDTH - totalWidth) / 2;
+    const y = isInput ? node.y : node.y + NetworkEditorUtils.NODE_HEIGHT;
+    return {
+      x: startX + index * NetworkEditorUtils.PORT_MARGIN,
+      y,
+    };
+  }
 }

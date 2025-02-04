@@ -1,16 +1,9 @@
 import React, { useState, useRef } from 'react';
+import { NodeModel, Node } from './Node';
 import './NetworkEditor.css';
+import { NetworkEditorUtils as neu } from './Utils';
 
-interface Node {
-  id: string;
-  name: string;
-  x: number;
-  y: number;
-  inputs: number;
-  outputs: number;
-}
-
-interface Connection {
+export interface Connection {
   id: string;
   fromNode: string;
   fromOutput: number;
@@ -18,7 +11,7 @@ interface Connection {
   toInput: number;
 }
 
-interface DragState {
+export interface DragState {
   isDragging: boolean;
   nodeId: string | null;
   offsetX: number;
@@ -36,7 +29,7 @@ interface WireState {
 }
 
 const NetworkEditor = () => {
-  const [nodes, setNodes] = useState<Node[]>([
+  const [nodes, setNodes] = useState<NodeModel[]>([
     { id: '1', name: 'Input', x: 100, y: 100, inputs: 0, outputs: 1 },
     { id: '2', name: 'Process', x: 300, y: 100, inputs: 2, outputs: 1 },
     { id: '3', name: 'Output', x: 500, y: 100, inputs: 1, outputs: 0 },
@@ -58,25 +51,8 @@ const NetworkEditor = () => {
     endX: 0,
     endY: 0,
   });
-  const [hoveredInput, setHoveredInput] = useState<{ nodeId: string, inputIndex: number } | null>(null);
 
   const svgRef = useRef<SVGSVGElement>(null);
-
-  const NODE_WIDTH = 120;
-  const NODE_HEIGHT = 60;
-  const PORT_RADIUS = 6;
-  const PORT_MARGIN = 25;
-
-  const getPortPosition = (node: Node, isInput: boolean, index: number) => {
-    const portCount = isInput ? node.inputs : node.outputs;
-    const totalWidth = (portCount - 1) * PORT_MARGIN;
-    const startX = node.x + (NODE_WIDTH - totalWidth) / 2;
-    const y = isInput ? node.y : node.y + NODE_HEIGHT;
-    return {
-      x: startX + index * PORT_MARGIN,
-      y,
-    };
-  };
 
   const handleMouseDown = (e: React.MouseEvent, nodeId: string) => {
     const node = nodes.find(n => n.id === nodeId);
@@ -223,8 +199,8 @@ const NetworkEditor = () => {
           const toNode = nodes.find(n => n.id === conn.toNode);
           if (!fromNode || !toNode) return null;
 
-          const start = getPortPosition(fromNode, false, conn.fromOutput);
-          const end = getPortPosition(toNode, true, conn.toInput);
+          const start = neu.getPortPosition(fromNode, false, conn.fromOutput);
+          const end = neu.getPortPosition(toNode, true, conn.toInput);
 
           return (
             <path
@@ -250,76 +226,7 @@ const NetworkEditor = () => {
 
         {/* Nodes */}
         {nodes.map(node => (
-          <g key={node.id}>
-            {/* Node Rectangle */}
-            <rect
-              x={node.x}
-              y={node.y}
-              width={NODE_WIDTH}
-              height={NODE_HEIGHT}
-              fill="white"
-              stroke="black"
-              strokeWidth="2"
-              rx="5"
-              onMouseDown={(e) => handleMouseDown(e, node.id)}
-              className="node-rectangle"
-            />
-
-            {/* Node Name */}
-            <text
-              x={node.x + NODE_WIDTH / 2}
-              y={node.y + NODE_HEIGHT / 2}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              className="select-none"
-            >
-              {node.name}
-            </text>
-
-            {/* Input Ports */}
-            {Array.from({ length: node.inputs }).map((_, i) => {
-              const pos = getPortPosition(node, true, i);
-              const isConnected = connections.some(
-                conn => conn.toNode === node.id && conn.toInput === i
-              );
-              const isHovered = hoveredInput?.nodeId === node.id && hoveredInput?.inputIndex === i;
-
-              return (
-                <g key={`input-${i}`}>
-                  <circle
-                    cx={pos.x}
-                    cy={pos.y}
-                    r={PORT_RADIUS}
-                    fill={isConnected && isHovered ? "#ff4444" : "white"}
-                    stroke="black"
-                    strokeWidth="2"
-                    onMouseUp={() => endDrawingWire(node.id, i)}
-                    onMouseEnter={() => isConnected && setHoveredInput({ nodeId: node.id, inputIndex: i })}
-                    onMouseLeave={() => setHoveredInput(null)}
-                    className="cursor-pointer"
-                  />
-                </g>
-              );
-            })}
-
-            {/* Output Ports */}
-            {Array.from({ length: node.outputs }).map((_, i) => {
-              const pos = getPortPosition(node, false, i);
-              return (
-                <circle
-                  key={`output-${i}`}
-                  cx={pos.x}
-                  cy={pos.y}
-                  r={PORT_RADIUS}
-                  fill="white"
-                  stroke="black"
-                  strokeWidth="2"
-                  onMouseDown={() => startDrawingWire(node.id, i, pos.x, pos.y)}
-                  className="cursor-pointer"
-                />
-              );
-            })}
-          </g>
+          <Node key={node.id} node={node} connections={connections} handleMouseDown={handleMouseDown} startDrawingWire={startDrawingWire} endDrawingWire={endDrawingWire} />
         ))}
       </svg>
     </div>
