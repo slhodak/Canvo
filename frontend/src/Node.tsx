@@ -1,5 +1,5 @@
 import { NetworkEditorUtils as neu } from './Utils';
-import { Connection } from './NetworkEditor';
+import { Connection, WireState } from './NetworkEditor';
 import './Node.css';
 
 export interface NodeModel {
@@ -14,13 +14,14 @@ export interface NodeModel {
 interface NodeProps {
   node: NodeModel;
   connections: Connection[];
+  wireState: WireState;
   handleMouseDown: (e: React.MouseEvent, nodeId: string) => void;
   startDrawingWire: (nodeId: string, outputIndex: number, startX: number, startY: number) => void;
   endDrawingWire: (toNodeId: string, inputIndex: number) => void;
   disconnectWire: (connectionId: string) => void;
 }
 
-export const Node = ({ node, connections, handleMouseDown, startDrawingWire, endDrawingWire, disconnectWire }: NodeProps) => {
+export const Node = ({ node, connections, wireState, handleMouseDown, startDrawingWire, endDrawingWire, disconnectWire }: NodeProps) => {
   const handleConnectionClick = (e: React.MouseEvent, isInputPort: boolean, connectionId: string | null = null, nodeId: string, inputIndex: number) => {
     if (connectionId) {
       disconnectWire(connectionId);
@@ -72,7 +73,7 @@ export const Node = ({ node, connections, handleMouseDown, startDrawingWire, end
               cy={pos.y}
               r={neu.PORT_RADIUS}
               onMouseDown={(e) => handleConnectionClick(e, true, connection?.id, node.id, i)}
-              className={`node-input-port ${connection && "connected"}`}
+              className={`node-input-port ${connection && "connected"} ${wireState.isDrawing && "drawing"}`}
             />
           </g>
         );

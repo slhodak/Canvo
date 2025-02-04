@@ -18,7 +18,7 @@ export interface DragState {
   offsetY: number;
 }
 
-interface WireState {
+export interface WireState {
   isDrawing: boolean;
   fromNode: string | null;
   fromOutput: number | null;
@@ -242,12 +242,15 @@ const NetworkEditor = () => {
         {/* Nodes */}
         {nodes.map(node => (
           <Node
-            key={node.id} node={node}
+            key={node.id}
+            node={node}
             connections={connections}
+            wireState={wireState}
             handleMouseDown={handleMouseDownInNode}
             startDrawingWire={startDrawingWire}
             endDrawingWire={endDrawingWire}
-            disconnectWire={disconnectWire} />
+            disconnectWire={disconnectWire}
+          />
         ))}
       </svg>
     </div>

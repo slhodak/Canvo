@@ -20,7 +20,7 @@
   transform: translateY(-5px);
 }
 
-.node-input-port:hover {
+.node-input-port.drawing:hover {
   fill: #44ff44;
 }
 
