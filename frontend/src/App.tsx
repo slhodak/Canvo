@@ -1,5 +1,6 @@
 import './App.css'
-import NetworkEditor, { VisualNode } from './NetworkEditor';
+import NetworkEditor from './NetworkEditor';
+import { VisualNode } from './NetworkTypes';
 import ParametersPane from './ParametersPane';
 import OutputView from './OutputView';
 import Menu from './Menu';
@@ -28,6 +29,11 @@ const App = () => {
 
   const handleNodePropertyChanged = () => {
     setNodePropertyChanges(nodePropertyChanges + 1);
+    // Let the node know that its properties have changed
+    const node = nodes[selectedNode?.id ?? ''];
+    if (node) {
+      node.node.setDirty();
+    }
   }
 
   const handleMouseMove = useCallback((event: React.MouseEvent) => {

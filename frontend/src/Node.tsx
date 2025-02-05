@@ -1,7 +1,6 @@
 import { NetworkEditorUtils as neu } from './Utils';
-import { Connection, WireState } from './NetworkEditor';
+import { VisualNode, Connection, WireState } from './NetworkTypes';
 import './Node.css';
-import { VisualNode } from './NetworkEditor';
 
 interface NodeProps {
   node: VisualNode;

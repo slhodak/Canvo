@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import './ParametersPane.css';
-import { VisualNode } from './NetworkEditor';
+import { VisualNode } from './NetworkTypes';
 import { NodeProperty } from './NodeModel';
 
 interface ParametersPaneProps {

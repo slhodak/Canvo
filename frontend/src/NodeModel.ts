@@ -7,12 +7,12 @@ export interface NodeProperty {
 }
 
 // For nodes whose functions are synchronous
-interface SyncNode {
+export interface SyncNode {
   run(): void;
 }
 
 // For nodes whose functions are asynchronous
-interface AsyncNode {
+export interface AsyncNode {
   asyncRun(): Promise<void>;
 }
 
@@ -22,6 +22,7 @@ export abstract class BaseNode {
     input: Array<string>(),
     output: Array<string>(),
   }
+  public isDirty = false;
 
   constructor(
     public id: string,
@@ -80,6 +81,14 @@ export abstract class BaseNode {
     }
   }
 
+  public setDirty() {
+    this.isDirty = true;
+  }
+
+  public setClean() {
+    this.isDirty = false;
+  }
+
   public setProperty(key: string, value: string | number) {
     this.properties[key].value = value;
     // TODO: Work out how to change size of input and output arrays
@@ -103,7 +112,16 @@ export class TextNode extends BaseNode implements SyncNode {
   }
 
   run() {
+    if (!this.isDirty) return;
+
     this.state.output[0] = this.text;
+    this.setClean();
+  }
+
+  // Some nodes run automatically when their properties are changed
+  setDirty() {
+    super.setDirty();
+    this.run();
   }
 }
 
