@@ -7,7 +7,7 @@ import Menu from './Menu';
 import { useState, useEffect, useCallback } from 'react';
 import { TextNode, PromptNode, SaveNode, ViewNode, MergeNode } from './NodeModel';
 
-interface DropdownPosition {
+interface Coordinates {
   x: number;
   y: number;
 }
@@ -25,8 +25,8 @@ const App = () => {
   const [connections, setConnections] = useState<VisualConnection[]>([]);
   const [isHoveringEditor, setIsHoveringEditor] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition>({ x: 0, y: 0 });
-  const [mousePosition, setMousePosition] = useState<DropdownPosition>({ x: 0, y: 0 });
+  const [dropdownPosition, setDropdownPosition] = useState<Coordinates>({ x: 0, y: 0 });
+  const [mousePosition, setMousePosition] = useState<Coordinates>({ x: 0, y: 0 });
 
   const handleNodePropertyChanged = () => {
     setNodePropertyChanges(nodePropertyChanges + 1);
