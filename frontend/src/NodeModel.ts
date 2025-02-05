@@ -143,6 +143,7 @@ export class PromptNode extends BaseNode implements AsyncNode {
   }
 
   async asyncRun() {
+    this.state.output[0] = this.state.input[0];
     // TODO: Implement
     // Call the LLM with the prompt and the input text
   }
