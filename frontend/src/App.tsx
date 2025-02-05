@@ -2,7 +2,7 @@ import './App.css'
 import NetworkEditor, { VisualNode } from './NetworkEditor';
 import ParametersPane from './ParametersPane';
 import Menu from './Menu';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TextNode } from './NodeModel';
 import { PromptNode } from './NodeModel';
 import { OutputNode } from './NodeModel';
@@ -19,6 +19,19 @@ const App = () => {
   const handleNodePropertyChanged = () => {
     setNodePropertyChanges(nodePropertyChanges + 1);
   }
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.key === 'Delete' || event.key === 'Backspace') && selectedNode) {
+        const { [selectedNode.id]: _deletedNode, ...remainingNodes } = nodes;
+        setNodes(remainingNodes);
+        setSelectedNode(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedNode, nodes]);
 
   return (
     <div className="app-container">
