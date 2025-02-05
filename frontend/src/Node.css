@@ -16,6 +16,7 @@
 
 .node-name {
   font-size: 0.9rem;
+  font-weight: 425;
   text-anchor: middle;
   dominant-baseline: middle;
   -webkit-user-select: none; /* Safari */        

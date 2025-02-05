@@ -96,10 +96,10 @@ export class PromptNode extends BaseNode {
   }
 }
 
-export class OutputNode extends BaseNode {
+export class SaveNode extends BaseNode {
   constructor(
     id: string,
   ) {
-    super(id, 'Output', 'output', 1, 0);
+    super(id, 'Save', 'save', 1, 0);
   }
 }
