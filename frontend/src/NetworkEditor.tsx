@@ -41,9 +41,10 @@ interface NetworkEditorProps {
   setNodes: (nodes: Record<string, VisualNode>) => void;
   selectedNode: VisualNode | null;
   setSelectedNode: (node: VisualNode | null) => void;
+  setShowDropdown: (show: boolean) => void;
 }
 
-const NetworkEditor = ({ nodes, setNodes, selectedNode, setSelectedNode }: NetworkEditorProps) => {
+const NetworkEditor = ({ nodes, setNodes, selectedNode, setSelectedNode, setShowDropdown }: NetworkEditorProps) => {
   const [connections, setConnections] = useState<Connection[]>([]);
   const [dragState, setDragState] = useState<DragState>({
     isDragging: false,
@@ -78,6 +79,7 @@ const NetworkEditor = ({ nodes, setNodes, selectedNode, setSelectedNode }: Netwo
   }
 
   const handleMouseDownInEditor = () => {
+    setShowDropdown(false);
     if (wireState.isDrawing) {
       setDragState({
         isDragging: false,
@@ -187,7 +189,6 @@ const NetworkEditor = ({ nodes, setNodes, selectedNode, setSelectedNode }: Netwo
     });
   };
 
-  // Add useEffect for escape key handling
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {

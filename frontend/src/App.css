@@ -95,3 +95,28 @@
 .app-title-header {
   line-height: 1.0;
 }
+
+/* Dropdown Menu */
+.node-dropdown {
+  position: absolute;
+  background-color: var(--background-dark-2);
+  border: 1px solid var(--background-dark-1);
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  display: none;
+}
+
+.node-dropdown.visible {
+  display: block;
+}
+
+.node-dropdown-option {
+  padding: 8px 12px;
+  cursor: pointer;
+  color: var(--text-color);
+}
+
+.node-dropdown-option:hover {
+  background-color: var(--background-dark-3);
+}
