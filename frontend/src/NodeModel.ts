@@ -1,4 +1,4 @@
-interface NodeProperty {
+export interface NodeProperty {
   type: 'string' | 'number';
   label: string;
   value: string | number;
@@ -55,6 +55,10 @@ export class BaseNode {
       },
       ...customProperties,
     };
+  }
+
+  public setProperty(key: string, value: string | number) {
+    this.properties[key].value = value;
   }
 }
 
