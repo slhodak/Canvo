@@ -147,13 +147,21 @@ export class MergeNode extends BaseNode implements SyncNode {
   constructor(
     id: string,
   ) {
-    super(id, 'Merge', 'merge', 2, 1);
+    super(id, 'Merge', 'merge', 2, 1, {
+      separator: {
+        type: 'string',
+        label: 'Separator',
+        value: ' ',
+        editable: true,
+        displayed: true,
+      },
+    });
   }
 
   run() {
     // Merge the input texts into a single output text
     const mergedResult = this.state.input.reduce((acc, key) => {
-      return acc + key;
+      return acc + this.properties.separator.value + key;
     }, '');
 
     this.state.output[0] = mergedResult;
