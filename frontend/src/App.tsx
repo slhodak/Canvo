@@ -1,11 +1,11 @@
 import './App.css'
 import NetworkEditor from './NetworkEditor';
-import { VisualNode } from './NetworkTypes';
+import { VisualNode, VisualConnection } from './NetworkTypes';
 import ParametersPane from './ParametersPane';
 import OutputView from './OutputView';
 import Menu from './Menu';
 import { useState, useEffect, useCallback } from 'react';
-import { TextNode, PromptNode, SaveNode, ViewNode, MergeNode } from './NodeModel';
+import { TextNode, PromptNode, SaveNode, ViewNode, MergeNode, Connection } from './NodeModel';
 
 interface DropdownPosition {
   x: number;
@@ -22,6 +22,7 @@ const App = () => {
     '4': { id: '4', node: new ViewNode('4'), x: 200, y: 150 },
     '5': { id: '5', node: new MergeNode('5'), x: 200, y: 200 },
   });
+  const [connections, setConnections] = useState<VisualConnection[]>([]);
   const [isHoveringEditor, setIsHoveringEditor] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition>({ x: 0, y: 0 });
@@ -126,6 +127,8 @@ const App = () => {
                 selectedNode={selectedNode}
                 setSelectedNode={setSelectedNode}
                 setShowDropdown={setShowDropdown}
+                connections={connections}
+                setConnections={setConnections}
               />
               {showDropdown && (
                 <div

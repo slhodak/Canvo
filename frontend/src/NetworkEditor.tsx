@@ -11,10 +11,11 @@ interface NetworkEditorProps {
   selectedNode: VisualNode | null;
   setSelectedNode: (node: VisualNode | null) => void;
   setShowDropdown: (show: boolean) => void;
+  connections: VisualConnection[];
+  setConnections: (connections: VisualConnection[]) => void;
 }
 
-const NetworkEditor = ({ nodes, setNodes, selectedNode, setSelectedNode, setShowDropdown }: NetworkEditorProps) => {
-  const [connections, setConnections] = useState<VisualConnection[]>([]);
+const NetworkEditor = ({ nodes, setNodes, selectedNode, setSelectedNode, setShowDropdown, connections, setConnections }: NetworkEditorProps) => {
   const [dragState, setDragState] = useState<DragState>({
     isDragging: false,
     nodeId: null,
