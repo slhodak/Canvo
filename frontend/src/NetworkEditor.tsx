@@ -1,40 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { BaseNode } from './NodeModel';
-import { Node } from './Node';
 import './NetworkEditor.css';
+import { VisualNode, Connection, DragState, WireState } from './NetworkTypes';
+import { Node } from './Node';
 import { NetworkEditorUtils as neu } from './Utils';
-
-export interface VisualNode {
-  id: string;
-  node: BaseNode;
-  x: number;
-  y: number;
-}
-
-export interface Connection {
-  id: string;
-  fromNode: string;
-  fromOutput: number;
-  toNode: string;
-  toInput: number;
-}
-
-export interface DragState {
-  isDragging: boolean;
-  nodeId: string | null;
-  offsetX: number;
-  offsetY: number;
-}
-
-export interface WireState {
-  isDrawing: boolean;
-  fromNode: string | null;
-  fromOutput: number | null;
-  startX: number;
-  startY: number;
-  endX: number;
-  endY: number;
-}
 
 interface NetworkEditorProps {
   nodes: Record<string, VisualNode>;

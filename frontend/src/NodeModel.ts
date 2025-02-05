@@ -6,8 +6,22 @@ export interface NodeProperty {
   displayed: boolean;
 }
 
-export class BaseNode {
+// For nodes whose functions are synchronous
+interface SyncNode {
+  run(): void;
+}
+
+// For nodes whose functions are asynchronous
+interface AsyncNode {
+  asyncRun(): Promise<void>;
+}
+
+export abstract class BaseNode {
   public properties: Record<string, NodeProperty> = {};
+  public state = {
+    input: Array<string>(),
+    output: Array<string>(),
+  }
 
   constructor(
     public id: string,
@@ -55,14 +69,24 @@ export class BaseNode {
       },
       ...customProperties,
     };
+
+    // Initialize the input and output arrays
+    for (let i = 0; i < this.inputs; i++) {
+      this.state.input.push('');
+    }
+
+    for (let i = 0; i < this.outputs; i++) {
+      this.state.output.push('');
+    }
   }
 
   public setProperty(key: string, value: string | number) {
     this.properties[key].value = value;
+    // TODO: Work out how to change size of input and output arrays
   }
 }
 
-export class TextNode extends BaseNode {
+export class TextNode extends BaseNode implements SyncNode {
   constructor(
     id: string,
     public text: string = ''
@@ -77,9 +101,13 @@ export class TextNode extends BaseNode {
       },
     });
   }
+
+  run() {
+    this.state.output[0] = this.text;
+  }
 }
 
-export class PromptNode extends BaseNode {
+export class PromptNode extends BaseNode implements AsyncNode {
   constructor(
     id: string,
     public prompt: string = ''
@@ -93,13 +121,64 @@ export class PromptNode extends BaseNode {
         displayed: true,
       },
     });
+
+  }
+
+  async asyncRun() {
+    // TODO: Implement
+    // Call the LLM with the prompt and the input text
   }
 }
 
-export class SaveNode extends BaseNode {
+export class SaveNode extends BaseNode implements AsyncNode {
   constructor(
     id: string,
   ) {
     super(id, 'Save', 'save', 1, 0);
+  }
+
+  async asyncRun() {
+    // TODO: Implement
+    // Save the input text to a file
+  }
+}
+
+export class MergeNode extends BaseNode implements SyncNode {
+  constructor(
+    id: string,
+  ) {
+    super(id, 'Merge', 'merge', 2, 1);
+  }
+
+  run() {
+    // Merge the input texts into a single output text
+    const mergedResult = this.state.input.reduce((acc, key) => {
+      return acc + key;
+    }, '');
+
+    this.state.output[0] = mergedResult;
+  }
+}
+
+// There can only be one view node
+// Connect an output port to the view node to display the output in the OutputView
+export class ViewNode extends BaseNode implements SyncNode {
+  constructor(
+    id: string,
+  ) {
+    super(id, 'View', 'view', 1, 0, {
+      content: {
+        type: 'string',
+        label: 'Content',
+        value: '',
+        editable: false,
+        displayed: false,
+      },
+    });
+  }
+
+  run() {
+    // Copy the input to the content
+    this.properties.content.value = this.state.input[0];
   }
 }
