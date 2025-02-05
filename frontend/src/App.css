@@ -100,8 +100,8 @@
 .app-dropdown {
   position: absolute;
   background-color: var(--background-dark-2);
-  border: 1px solid var(--background-dark-1);
-  border-radius: 4px;
+  border: 1px solid var(--background-dark-3);
+  border-radius: 0px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   z-index: 1000;
   display: none;
@@ -112,11 +112,13 @@
 }
 
 .app-dropdown-option {
-  padding: 8px 12px;
+  width: 200px;
+  padding: 6px;
   cursor: pointer;
   color: var(--text-color);
 }
 
 .app-dropdown-option:hover {
-  background-color: var(--background-dark-3);
+  background-color: rgb(40, 20, 142);
+  font-weight: bold;
 }
