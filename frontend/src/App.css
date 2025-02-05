@@ -12,7 +12,7 @@
   height: 100vh;
 }
 
-/* Sections */
+/* Left section */
 
 .left-section {
   background-color: var(--background-dark-2);
@@ -56,6 +56,8 @@
   transform: rotate(90deg);
 }
 
+/* Right section */
+
 .right-section {
   width: 100%;
   padding: 0px 6px;
@@ -64,6 +66,7 @@
 
 .right-section-header {
   height: 6vh;
+  min-height: 2em;
   padding: 6px 4px;
 }
 

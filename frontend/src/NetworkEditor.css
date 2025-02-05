@@ -10,6 +10,7 @@
 .network-editor-header h3 {
   margin: 0px;
   padding: 0px;
+  flex-shrink: 0;
 }
 
 .network-editor-canvas {
