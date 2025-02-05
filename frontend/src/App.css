@@ -97,7 +97,7 @@
 }
 
 /* Dropdown Menu */
-.node-dropdown {
+.app-dropdown {
   position: absolute;
   background-color: var(--background-dark-2);
   border: 1px solid var(--background-dark-1);
@@ -107,16 +107,16 @@
   display: none;
 }
 
-.node-dropdown.visible {
+.app-dropdown.visible {
   display: block;
 }
 
-.node-dropdown-option {
+.app-dropdown-option {
   padding: 8px 12px;
   cursor: pointer;
   color: var(--text-color);
 }
 
-.node-dropdown-option:hover {
+.app-dropdown-option:hover {
   background-color: var(--background-dark-3);
 }

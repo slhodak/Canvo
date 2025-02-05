@@ -107,19 +107,19 @@ const App = () => {
             />
             {showDropdown && (
               <div
-                className={`node-dropdown ${showDropdown ? 'visible' : ''}`}
+                className={`app-dropdown ${showDropdown ? 'visible' : ''}`}
                 style={{
                   left: dropdownPosition.x,
                   top: dropdownPosition.y
                 }}
               >
-                <div className="node-dropdown-option" onClick={() => createNewNode('text')}>
+                <div className="app-dropdown-option" onClick={() => createNewNode('text')}>
                   Text Node
                 </div>
-                <div className="node-dropdown-option" onClick={() => createNewNode('prompt')}>
+                <div className="app-dropdown-option" onClick={() => createNewNode('prompt')}>
                   Prompt Node
                 </div>
-                <div className="node-dropdown-option" onClick={() => createNewNode('output')}>
+                <div className="app-dropdown-option" onClick={() => createNewNode('output')}>
                   Output Node
                 </div>
               </div>
