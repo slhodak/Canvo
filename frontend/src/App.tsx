@@ -74,17 +74,27 @@ const App = () => {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.key === 'Delete' || event.key === 'Backspace') && selectedNode) {
+      // Don't delete the node if the user is editing text
+      const activeElement = document.activeElement;
+      const isEditingText = activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement;
+      if ((event.key === 'Delete' || event.key === 'Backspace') && selectedNode && !isEditingText && isHoveringEditor) {
         const newNodes = { ...nodes };
         delete newNodes[selectedNode.id];
         setNodes(newNodes);
         setSelectedNode(null);
-      } else if (event.key === 'Tab' && isHoveringEditor) {
+        return;
+      }
+
+      if (event.key === 'Tab' && isHoveringEditor) {
         event.preventDefault();
         setDropdownPosition(mousePosition);
         setShowDropdown(true);
-      } else if (event.key === 'Escape') {
+        return;
+      }
+
+      if (event.key === 'Escape') {
         setShowDropdown(false);
+        return;
       }
     };
 

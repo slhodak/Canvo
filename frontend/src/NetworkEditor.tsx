@@ -3,7 +3,6 @@ import './NetworkEditor.css';
 import { VisualNode, Connection, DragState, WireState } from './NetworkTypes';
 import { Node } from './Node';
 import { NetworkEditorUtils as neu } from './Utils';
-import { SyncNode } from './NodeModel';
 
 interface NetworkEditorProps {
   nodes: Record<string, VisualNode>;
