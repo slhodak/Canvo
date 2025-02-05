@@ -37,14 +37,17 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
   const outputsValue = node.node.properties['outputs'].value as number;
 
   return (
-    <g key={nodeId}>
+    <g
+      key={nodeId}
+      onMouseDown={(e) => handleMouseDown(e, nodeId)}
+      className="node-g">
+
       {/* Node Rectangle */}
       <rect
         x={node.x}
         y={node.y}
         width={neu.NODE_WIDTH}
         height={neu.NODE_HEIGHT}
-        onMouseDown={(e) => handleMouseDown(e, nodeId)}
         className={`node-rectangle ${isSelected && "selected"}`}
       />
 

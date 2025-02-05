@@ -1,5 +1,8 @@
+.node-g {
+  cursor: default;
+}
+
 .node-rectangle {
-  cursor: move;
   fill: white;
   stroke: black;
   stroke-width: 1;
@@ -15,6 +18,10 @@
   font-size: 0.9rem;
   text-anchor: middle;
   dominant-baseline: middle;
+  -webkit-user-select: none; /* Safari */        
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+/Edge */
+  user-select: none; /* Standard */
 }
 
 .node-input-port {

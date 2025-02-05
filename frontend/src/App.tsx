@@ -23,8 +23,9 @@ const App = () => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.key === 'Delete' || event.key === 'Backspace') && selectedNode) {
-        const { [selectedNode.id]: _deletedNode, ...remainingNodes } = nodes;
-        setNodes(remainingNodes);
+        const newNodes = { ...nodes };  // Create a shallow copy
+        delete newNodes[selectedNode.id];
+        setNodes(newNodes);
         setSelectedNode(null);
       }
     };
