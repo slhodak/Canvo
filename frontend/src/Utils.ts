@@ -109,15 +109,13 @@ export const NetworkEditorUtils = {
   NODE_WIDTH: 100,
   NODE_HEIGHT: 32,
   PORT_RADIUS: 5,
-  PORT_MARGIN: 25,
 
   getPortPosition(node: VisualNode, isInput: boolean, index: number) {
-    const portCount = isInput ? node.node.inputs : node.node.outputs;
-    const totalWidth = (portCount - 1) * NetworkEditorUtils.PORT_MARGIN;
-    const startX = node.x + (NetworkEditorUtils.NODE_WIDTH - totalWidth) / 2;
+    const portCount = isInput ? node.node.properties['inputs'].value as number : node.node.properties['outputs'].value as number;
+    const spacing = NetworkEditorUtils.NODE_WIDTH / (portCount + 1);
     const y = isInput ? node.y : node.y + NetworkEditorUtils.NODE_HEIGHT;
     return {
-      x: startX + index * NetworkEditorUtils.PORT_MARGIN,
+      x: node.x + spacing * (index + 1),
       y,
     };
   }

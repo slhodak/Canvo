@@ -8,25 +8,19 @@ interface ParametersPaneProps {
   handleNodePropertyChanged: () => void;
 }
 
-const ParametersPane = ({ node, handleNodePropertyChanged }: ParametersPaneProps) => {
-  useEffect(() => {
-    console.log("node changed");
-  }, [node]);
-
-  return (
-    <div className="parameters-pane-container">
-      <div className="parameters-pane-header">
-        <h3>Parameters</h3>
-      </div>
-
-      <div className="parameters-pane-content">
-        {node && Object.entries(node.node.properties).filter(([, property]) => property.displayed).map(([key, property]) => (
-          <PropertyInputContainer key={property.label} propertyKey={key} property={property} node={node} handleNodePropertyChanged={handleNodePropertyChanged} />
-        ))}
-      </div>
+const ParametersPane = ({ node, handleNodePropertyChanged }: ParametersPaneProps) => (
+  <div className="parameters-pane-container">
+    <div className="parameters-pane-header">
+      <h3>Parameters</h3>
     </div>
-  )
-}
+
+    <div className="parameters-pane-content">
+      {node && Object.entries(node.node.properties).filter(([, property]) => property.displayed).map(([key, property]) => (
+        <PropertyInputContainer key={property.label} propertyKey={key} property={property} node={node} handleNodePropertyChanged={handleNodePropertyChanged} />
+      ))}
+    </div>
+  </div>
+)
 
 export default ParametersPane;
 
