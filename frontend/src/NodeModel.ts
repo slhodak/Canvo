@@ -188,9 +188,9 @@ export class MergeNode extends BaseNode implements SyncNode {
 
   run() {
     // Merge the input texts into a single output text
-    const mergedResult = this.state.input.reduce((acc, key) => {
-      return acc + this.properties.separator.value + key;
-    }, '');
+    const mergedResult = Object.values(this.state.input).join(
+      this.properties.separator.value as string
+    );
 
     this.state.output[0] = mergedResult;
   }
