@@ -14,6 +14,7 @@ interface Coordinates {
 
 const App = () => {
   const [nodePropertyChanges, setNodePropertyChanges] = useState<number>(0);
+  const [viewText, setViewText] = useState<string>('');
   const [selectedNode, setSelectedNode] = useState<VisualNode | null>(null);
   const [nodes, setNodes] = useState<Record<string, VisualNode>>({
     '1': { id: '1', node: new TextNode('1'), x: 100, y: 100 },
@@ -72,18 +73,25 @@ const App = () => {
     setNodes(newNodes);
     setShowDropdown(false);
   };
-  
-  const createNewConnection = (fromNode: string, fromOutput: number, toNodeId: string, inputIndex: number) => {
+
+  const createNewConnection = (fromNodeId: string, fromOutput: number, toNodeId: string, inputIndex: number) => {
     const newConnection: VisualConnection = {
-      id: `${fromNode}-${toNodeId}-${Date.now()}`,
+      id: `${fromNodeId}-${toNodeId}-${Date.now()}`,
       connection: new Connection(
-        fromNode,
+        fromNodeId,
         fromOutput,
         toNodeId,
         inputIndex,
       ),
     };
     setConnections([...connections, newConnection]);
+
+    // Copy the output of the fromNode to the input of the toNode
+    const fromNode = nodes[fromNodeId];
+    const toNode = nodes[toNodeId];
+    if (fromNode && toNode) {
+      toNode.node.state.input[inputIndex] = fromNode.node.state.output[fromOutput];
+    }
   }
 
   const deleteConnection = (connectionId: string) => {
@@ -145,9 +153,9 @@ const App = () => {
                 setSelectedNode={setSelectedNode}
                 setShowDropdown={setShowDropdown}
                 connections={connections}
-                setConnections={setConnections}
                 createNewConnection={createNewConnection}
                 deleteConnection={deleteConnection}
+                setViewText={setViewText}
               />
               {showDropdown && (
                 <div
@@ -181,7 +189,7 @@ const App = () => {
           </div>
 
           <div className="right-pane">
-            <OutputView text="Hello, world!" />
+            <OutputView text={viewText} />
           </div>
         </div>
       </div>

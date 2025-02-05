@@ -123,7 +123,7 @@ export class TextNode extends BaseNode implements SyncNode {
   run() {
     if (!this.isDirty) return;
 
-    this.state.output[0] = this.text;
+    this.state.output[0] = this.properties.text.value as string;
     this.setClean();
   }
 

@@ -3,6 +3,7 @@ import './NetworkEditor.css';
 import { VisualNode, VisualConnection, DragState, WireState } from './NetworkTypes';
 import { Node } from './Node';
 import { NetworkEditorUtils as neu } from './Utils';
+import { ViewNode } from './NodeModel';
 
 interface NetworkEditorProps {
   nodes: Record<string, VisualNode>;
@@ -13,9 +14,20 @@ interface NetworkEditorProps {
   connections: VisualConnection[];
   createNewConnection: (fromNode: string, fromOutput: number, toNodeId: string, inputIndex: number) => void;
   deleteConnection: (connectionId: string) => void;
+  setViewText: (text: string) => void;
 }
 
-const NetworkEditor = ({ nodes, setNodes, selectedNode, setSelectedNode, setShowDropdown, connections, createNewConnection, deleteConnection }: NetworkEditorProps) => {
+const NetworkEditor = ({
+  nodes,
+  setNodes,
+  selectedNode,
+  setSelectedNode,
+  setShowDropdown,
+  connections,
+  createNewConnection,
+  deleteConnection,
+  setViewText,
+}: NetworkEditorProps) => {
   const [dragState, setDragState] = useState<DragState>({
     isDragging: false,
     nodeId: null,
@@ -41,6 +53,11 @@ const NetworkEditor = ({ nodes, setNodes, selectedNode, setSelectedNode, setShow
     setSelectedNode(node);
     if ('run' in node.node && typeof node.node.run === 'function') {
       node.node.run();
+      // If the node is a View Node, set the view text
+      if (node.node instanceof ViewNode) {
+        console.log("Setting view text to", node.node.properties['content'].value);
+        setViewText(node.node.properties['content'].value as string);
+      }
     }
     if ('asyncRun' in node.node && typeof node.node.asyncRun === 'function') {
       node.node.asyncRun();
