@@ -1,11 +1,11 @@
 import { NetworkEditorUtils as neu } from './Utils';
-import { VisualNode, Connection, WireState } from './NetworkTypes';
+import { VisualNode, VisualConnection, WireState } from './NetworkTypes';
 import './Node.css';
 
 interface NodeProps {
   node: VisualNode;
   isSelected: boolean;
-  connections: Connection[];
+  connections: VisualConnection[];
   wireState: WireState;
   handleMouseDown: (e: React.MouseEvent, nodeId: string) => void;
   startDrawingWire: (nodeId: string, outputIndex: number, startX: number, startY: number) => void;
@@ -63,7 +63,7 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
       {Array.from({ length: nodeInputs }).map((_, i) => {
         const pos = neu.getPortPosition(node, true, i);
         const connection = connections.find(
-          conn => conn.toNode === nodeId && conn.toInput === i
+          conn => conn.connection.toNode === nodeId && conn.connection.toInput === i
         );
 
         return (
@@ -83,7 +83,7 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
       {Array.from({ length: outputsValue }).map((_, i) => {
         const pos = neu.getPortPosition(node, false, i);
         const connection = connections.find(
-          conn => conn.fromNode === nodeId && conn.fromOutput === i
+          conn => conn.connection.fromNode === nodeId && conn.connection.fromOutput === i
         );
 
         return (

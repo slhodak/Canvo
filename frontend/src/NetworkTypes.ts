@@ -1,4 +1,4 @@
-import { BaseNode } from './NodeModel';
+import { BaseNode, Connection } from './NodeModel';
 
 export interface VisualNode {
   id: string;
@@ -7,12 +7,9 @@ export interface VisualNode {
   y: number;
 }
 
-export interface Connection {
+export interface VisualConnection {
   id: string;
-  fromNode: string;
-  fromOutput: number;
-  toNode: string;
-  toInput: number;
+  connection: Connection;
 }
 
 export interface DragState {

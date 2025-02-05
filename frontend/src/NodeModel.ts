@@ -6,6 +6,14 @@ export interface NodeProperty {
   displayed: boolean;
 }
 
+export class Connection {
+  constructor(
+    public fromNode: string,
+    public fromOutput: number,
+    public toNode: string,
+    public toInput: number,
+  ) {}
+}
 // For nodes whose functions are synchronous
 export interface SyncNode {
   run(): void;

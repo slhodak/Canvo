@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import './NetworkEditor.css';
-import { VisualNode, Connection, DragState, WireState } from './NetworkTypes';
+import { VisualNode, VisualConnection, DragState, WireState } from './NetworkTypes';
 import { Node } from './Node';
 import { NetworkEditorUtils as neu } from './Utils';
+import { Connection } from './NodeModel';
 
 interface NetworkEditorProps {
   nodes: Record<string, VisualNode>;
@@ -13,7 +14,7 @@ interface NetworkEditorProps {
 }
 
 const NetworkEditor = ({ nodes, setNodes, selectedNode, setSelectedNode, setShowDropdown }: NetworkEditorProps) => {
-  const [connections, setConnections] = useState<Connection[]>([]);
+  const [connections, setConnections] = useState<VisualConnection[]>([]);
   const [dragState, setDragState] = useState<DragState>({
     isDragging: false,
     nodeId: null,
@@ -135,7 +136,7 @@ const NetworkEditor = ({ nodes, setNodes, selectedNode, setSelectedNode, setShow
     if (wireState.isDrawing && wireState.fromNode && wireState.fromOutput !== null) {
       // Check if there's already a connection to this input
       const existingConnection = connections.find(
-        conn => conn.toNode === toNodeId && conn.toInput === inputIndex
+        conn => conn.connection.toNode === toNodeId && conn.connection.toInput === inputIndex
       );
 
       // Remove existing connection if there is one
@@ -143,12 +144,14 @@ const NetworkEditor = ({ nodes, setNodes, selectedNode, setSelectedNode, setShow
         ? connections.filter(conn => conn.id !== existingConnection.id)
         : connections;
 
-      const newConnection: Connection = {
+      const newConnection: VisualConnection = {
         id: `${wireState.fromNode}-${toNodeId}-${Date.now()}`,
-        fromNode: wireState.fromNode,
-        fromOutput: wireState.fromOutput,
-        toNode: toNodeId,
-        toInput: inputIndex,
+        connection: new Connection(
+          wireState.fromNode,
+          wireState.fromOutput,
+          toNodeId,
+          inputIndex,
+        ),
       };
       setConnections([...filteredConnections, newConnection]);
     }
@@ -198,12 +201,12 @@ const NetworkEditor = ({ nodes, setNodes, selectedNode, setSelectedNode, setShow
       >
         {/* Connections */}
         {connections.map(conn => {
-          const fromNode = nodes[conn.fromNode];
-          const toNode = nodes[conn.toNode];
+          const fromNode = nodes[conn.connection.fromNode];
+          const toNode = nodes[conn.connection.toNode];
           if (!fromNode || !toNode) return null;
 
-          const start = neu.getPortPosition(fromNode, false, conn.fromOutput);
-          const end = neu.getPortPosition(toNode, true, conn.toInput);
+          const start = neu.getPortPosition(fromNode, false, conn.connection.fromOutput);
+          const end = neu.getPortPosition(toNode, true, conn.connection.toInput);
 
           return (
             <path
