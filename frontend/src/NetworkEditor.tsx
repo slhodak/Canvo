@@ -3,7 +3,6 @@ import './NetworkEditor.css';
 import { VisualNode, VisualConnection, DragState, WireState } from './NetworkTypes';
 import { Node } from './Node';
 import { NetworkEditorUtils as neu } from './Utils';
-import { Connection } from './NodeModel';
 
 interface NetworkEditorProps {
   nodes: Record<string, VisualNode>;
@@ -12,10 +11,11 @@ interface NetworkEditorProps {
   setSelectedNode: (node: VisualNode | null) => void;
   setShowDropdown: (show: boolean) => void;
   connections: VisualConnection[];
-  setConnections: (connections: VisualConnection[]) => void;
+  createNewConnection: (fromNode: string, fromOutput: number, toNodeId: string, inputIndex: number) => void;
+  deleteConnection: (connectionId: string) => void;
 }
 
-const NetworkEditor = ({ nodes, setNodes, selectedNode, setSelectedNode, setShowDropdown, connections, setConnections }: NetworkEditorProps) => {
+const NetworkEditor = ({ nodes, setNodes, selectedNode, setSelectedNode, setShowDropdown, connections, createNewConnection, deleteConnection }: NetworkEditorProps) => {
   const [dragState, setDragState] = useState<DragState>({
     isDragging: false,
     nodeId: null,
@@ -130,7 +130,7 @@ const NetworkEditor = ({ nodes, setNodes, selectedNode, setSelectedNode, setShow
   };
 
   const disconnectWire = (connectionId: string) => {
-    setConnections(connections.filter(conn => conn.id !== connectionId));
+    deleteConnection(connectionId);
   };
 
   const endDrawingWire = (toNodeId: string, inputIndex: number) => {
@@ -141,20 +141,11 @@ const NetworkEditor = ({ nodes, setNodes, selectedNode, setSelectedNode, setShow
       );
 
       // Remove existing connection if there is one
-      const filteredConnections = existingConnection
-        ? connections.filter(conn => conn.id !== existingConnection.id)
-        : connections;
+      if (existingConnection) {
+        deleteConnection(existingConnection.id);
+      }
 
-      const newConnection: VisualConnection = {
-        id: `${wireState.fromNode}-${toNodeId}-${Date.now()}`,
-        connection: new Connection(
-          wireState.fromNode,
-          wireState.fromOutput,
-          toNodeId,
-          inputIndex,
-        ),
-      };
-      setConnections([...filteredConnections, newConnection]);
+      createNewConnection(wireState.fromNode, wireState.fromOutput, toNodeId, inputIndex);
     }
     setWireState({
       isDrawing: false,

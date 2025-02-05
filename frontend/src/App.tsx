@@ -5,7 +5,7 @@ import ParametersPane from './ParametersPane';
 import OutputView from './OutputView';
 import Menu from './Menu';
 import { useState, useEffect, useCallback } from 'react';
-import { TextNode, PromptNode, SaveNode, ViewNode, MergeNode } from './NodeModel';
+import { TextNode, PromptNode, SaveNode, ViewNode, MergeNode, Connection } from './NodeModel';
 
 interface Coordinates {
   x: number;
@@ -72,6 +72,23 @@ const App = () => {
     setNodes(newNodes);
     setShowDropdown(false);
   };
+  
+  const createNewConnection = (fromNode: string, fromOutput: number, toNodeId: string, inputIndex: number) => {
+    const newConnection: VisualConnection = {
+      id: `${fromNode}-${toNodeId}-${Date.now()}`,
+      connection: new Connection(
+        fromNode,
+        fromOutput,
+        toNodeId,
+        inputIndex,
+      ),
+    };
+    setConnections([...connections, newConnection]);
+  }
+
+  const deleteConnection = (connectionId: string) => {
+    setConnections(connections.filter(conn => conn.id !== connectionId));
+  }
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -129,6 +146,8 @@ const App = () => {
                 setShowDropdown={setShowDropdown}
                 connections={connections}
                 setConnections={setConnections}
+                createNewConnection={createNewConnection}
+                deleteConnection={deleteConnection}
               />
               {showDropdown && (
                 <div

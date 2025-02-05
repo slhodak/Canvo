@@ -14,6 +14,7 @@ export class Connection {
     public toInput: number,
   ) {}
 }
+
 // For nodes whose functions are synchronous
 export interface SyncNode {
   run(): void;
