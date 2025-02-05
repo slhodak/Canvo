@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { BaseNode } from './NodeModel';
 import { Node } from './Node';
 import './NetworkEditor.css';
@@ -188,7 +188,7 @@ const NetworkEditor = ({ nodes, setNodes, selectedNode, setSelectedNode }: Netwo
   };
 
   // Add useEffect for escape key handling
-  React.useEffect(() => {
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         // Cancel wire drawing

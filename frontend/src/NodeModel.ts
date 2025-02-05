@@ -23,7 +23,7 @@ export class BaseNode {
         label: 'ID',
         value: id,
         editable: false,
-        displayed: true,
+        displayed: false,
       },
       name: {
         type: 'string',
@@ -50,8 +50,8 @@ export class BaseNode {
         type: 'number',
         label: 'Outputs',
         value: outputs,
-        editable: false,
-        displayed: false,
+        editable: true,
+        displayed: true,
       },
       ...customProperties,
     };

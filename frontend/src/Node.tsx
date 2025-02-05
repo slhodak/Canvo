@@ -34,7 +34,7 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
   const nodeId = node.node.properties['id'].value as string;
   const nodeName = node.node.properties['name'].value as string;
   const nodeInputs = node.node.properties['inputs'].value as number;
-  const nodeOutputs = node.node.properties['outputs'].value as number;
+  const outputsValue = node.node.properties['outputs'].value as number;
 
   return (
     <g key={nodeId}>
@@ -78,7 +78,7 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
       })}
 
       {/* Output Ports */}
-      {Array.from({ length: nodeOutputs }).map((_, i) => {
+      {Array.from({ length: outputsValue }).map((_, i) => {
         const pos = neu.getPortPosition(node, false, i);
         const connection = connections.find(
           conn => conn.fromNode === nodeId && conn.fromOutput === i

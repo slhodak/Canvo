@@ -28,12 +28,23 @@
   --background-dark-1: #353535;
   --background-dark-2: #3f3f3f;
   --background-dark-3: #606060;
-  --textarea-nonediting-background-color: rgba(0, 0, 0, 0.08);
-  --textarea-editing-background-color: white;
+  --input-background-color: rgb(30, 30, 30);
   --button-background-color: lightblue;
   --container-vertical-spacing: 6px;
 
   color: var(--font-color);
+}
+
+textarea {
+  color: var(--font-color);
+  background-color: var(--input-background-color);
+  border-style: inset;
+  border-width: 2px;
+}
+
+input {
+  color: var(--font-color);
+  background-color: var(--input-background-color);
 }
 
 a {
