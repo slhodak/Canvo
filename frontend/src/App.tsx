@@ -5,7 +5,7 @@ import ParametersPane from './ParametersPane';
 import OutputView from './OutputView';
 import Menu from './Menu';
 import { useState, useEffect, useCallback } from 'react';
-import { TextNode, PromptNode, SaveNode, ViewNode, MergeNode, Connection } from './NodeModel';
+import { TextNode, PromptNode, SaveNode, ViewNode, MergeNode } from './NodeModel';
 
 interface DropdownPosition {
   x: number;
