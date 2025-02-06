@@ -5,7 +5,7 @@ import ParametersPane from './ParametersPane';
 import OutputView from './OutputView';
 import Menu from './Menu';
 import { useState, useEffect, useCallback } from 'react';
-import { TextNode, PromptNode, SaveNode, ViewNode, MergeNode, Connection } from './NodeModel';
+import { TextNode, PromptNode, SaveNode, ViewNode, MergeNode, Connection } from '@wc/shared-types';
 
 interface Coordinates {
   x: number;
@@ -277,3 +277,51 @@ const App = () => {
 }
 
 export default App;
+
+
+// TODO: The frontend is responsible for handling cascading,
+// and it only sends requests to the backend to handle prompt querying
+// Use this cascading logic but adapt it to be run by the frontend
+// ... or actually don't because I think the frontend already does descendent node running
+// In any case I wasn't ready to delete this code yet
+
+  // const errors: string[] = [];
+  // let outputs: number = 0;
+  // // Transformation cascading: running a transformation will run all of its (unlocked) child transformations
+  // // This is done iteratively insted of recursively in order to collect errors and the total count of outputs
+  // try {
+  //   const queue = [node];
+  //   while (queue.length > 0) {
+  //     const node = queue.shift();
+  //     if (!node) {
+  //       break;
+  //     }
+
+  //     const block = await db.getBlock(transformation.input_block_id, user._id);
+  //     if (!block) {
+  //       errors.push(`Block not found for transformation: ${transformation.input_block_id}`);
+  //       continue;
+  //     }
+
+  //     if (block.locked || transformation.locked) {
+  //       continue;
+  //     }
+
+  //     // Run the transformation and store the results
+  //     const transformationResult: TransformationResult = await runTransformation(transformation, user._id);
+  //     outputs += transformationResult.outputs;
+  //     errors.push(...transformationResult.errors);
+  //     queue.push(...transformationResult.childTransformations);
+  //   }
+
+  //   await db.updateGroupUpdatedAt(groupId);
+
+  //   return res.json({ status: "success", outputs, errors });
+
+  // } catch (error) {
+  //   if (error instanceof Error) {
+  //     return res.status(500).json({ status: "failed", error: error.message });
+  //   } else {
+  //     return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
+  //   }
+  // }

@@ -11,7 +11,7 @@
     ],
     "module": "ESNext",
     "paths": {
-      "@wb/shared-types": ["../shared/types/dist/types.d.ts"]
+      "@wc/shared-types": ["../shared/types/dist/index.d.ts"]
     },
     "skipLibCheck": true,
     /* Bundler mode */
