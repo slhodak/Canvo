@@ -79,9 +79,18 @@ const App = () => {
 
   const deleteConnection = (connectionId: string) => {
     setConnections(connections.filter(conn => conn.id !== connectionId));
+    // Erase the input that was disconnected from the toNode and rerun the node
+    const toNode = nodes[connections.find(conn => conn.id === connectionId)?.connection.toNode ?? ''];
+    if (toNode) {
+      toNode.node.state.input[connections.find(conn => conn.id === connectionId)?.connection.toInput ?? 0] = '';
+    }
   }
 
-  const runNode = (node: VisualNode) => {
+  //////////////////////////////
+  // Memoized Functions
+  //////////////////////////////
+
+  const runNode = useCallback((node: VisualNode) => {
     if ('run' in node.node && typeof node.node.run === 'function') {
       node.node.run();
       // If the node is a View Node, set the view text
@@ -106,11 +115,7 @@ const App = () => {
       descendent.node.state.input[conn.connection.toInput] = node.node.state.output[conn.connection.fromOutput];
       runNode(descendent);
     });
-  }
-
-  //////////////////////////////
-  // Memoized Functions
-  //////////////////////////////
+  }, [nodes, connections]);
 
   const createNewConnection = useCallback((fromNodeId: string, fromOutput: number, toNodeId: string, inputIndex: number) => {
     // Don't create a redundant connection
@@ -146,8 +151,9 @@ const App = () => {
     const toNode = nodes[toNodeId];
     if (fromNode && toNode) {
       toNode.node.state.input[inputIndex] = fromNode.node.state.output[fromOutput];
+      runNode(toNode);
     }
-  }, [connections, nodes]);
+  }, [connections, nodes, runNode]);
 
   const connectToViewNode = useCallback((node: VisualNode) => {
     if (node.node.outputs < 1) return;
