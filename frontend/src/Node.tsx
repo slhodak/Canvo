@@ -16,9 +16,10 @@ interface NodeProps {
 export const Node = ({ node, isSelected, connections, wireState, handleMouseDown, startDrawingWire, endDrawingWire, disconnectWire }: NodeProps) => {
   const handleConnectionClick = (e: React.MouseEvent, isInputPort: boolean, connectionId: string | null = null, nodeId: string, inputIndex: number) => {
     if (connectionId) {
-      disconnectWire(connectionId);
       // Immediately start a new connection if the clicked port is an output port
-      if (!isInputPort) {
+      if (isInputPort) {
+        disconnectWire(connectionId);
+      } else {
         startDrawingWire(nodeId, inputIndex, e.clientX, e.clientY);
       }
     } else {
@@ -93,7 +94,7 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
             cy={pos.y}
             r={neu.PORT_RADIUS}
             onMouseDown={(e) => handleConnectionClick(e, false, connection?.id, nodeId, i)}
-            className={`node-output-port ${connection && "connected"}`}
+            className="node-output-port"
           />
         );
       })}

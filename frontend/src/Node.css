@@ -52,7 +52,3 @@
   fill: #ffffff;
   transform: translateY(5px);
 }
-
-.node-output-port.connected:hover {
-  fill: #ff4444;
-}
