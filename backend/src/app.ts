@@ -1,15 +1,21 @@
 import express, { Router, Express, Request, Response, NextFunction } from "express";
 import cors from "cors";
-import jwt from "jsonwebtoken";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
-import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import { Database as db } from './db';
-import { UserModel } from '@wb/shared-types';
-import { runTransformation, TransformationResult } from './llm';
+import {
+  TextNode,
+  PromptNode,
+  SaveNode,
+  ViewNode,
+  MergeNode,
+  UserModel
+} from '@wc/shared-types';
+import { runPrompt } from './llm';
 import stytch from 'stytch';
+import { v4 as uuidv4 } from 'uuid';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -159,14 +165,13 @@ router.get('/auth/authenticate', async (req: Request, res: Response) => {
     const sessionExpirationString = response.provider_values.expires_at;
     const email = response.user.emails[0].email;
 
-    // console.debug("Creating a user in the db if they do not exist");
-    // TODO: Create a user in our database if they don't exist
     const user = await db.getUser(email);
     if (!user) {
+      console.debug("User not found in db, creating...");
       await db.insertUser(email);
     }
 
-    // console.debug("Creating a session for this user in the sessions table");
+    console.debug("Creating a session for this user");
     const sessionExpiration = sessionExpirationString ? new Date(sessionExpirationString) : new Date(Date.now() + sixtyMinutesInSeconds * 1000);
     await db.insertSession(sessionToken, email, sessionExpiration);
 
@@ -217,7 +222,7 @@ router.get('/api/get_latest_group', async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Could not find user email from session token" });
     }
 
-    const group = await db.getLatestGroup(user._id);
+    const group = await db.getLatestProject(user._id);
 
     return res.json({
       status: "success",
@@ -231,14 +236,14 @@ router.get('/api/get_latest_group', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/api/get_all_groups', async (req: Request, res: Response) => {
+router.get('/api/get_all_projects', async (req: Request, res: Response) => {
   try {
     const user = await getUserFromSessionToken(req);
     if (!user) {
       return res.status(401).json({ error: "Could not find user email from session token" });
     }
 
-    const results = await db.getAllGroups(user._id);
+    const results = await db.getAllProjects(user._id);
 
     return res.json({
       status: "success",
@@ -253,26 +258,26 @@ router.get('/api/get_all_groups', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/api/new_group', async (req: Request, res: Response) => {
+router.post('/api/new_project', async (req: Request, res: Response) => {
   try {
     const user = await getUserFromSessionToken(req);
     if (!user) {
       return res.status(401).json({ error: "Could not find user email from session token" });
     }
 
-    const groupId = await db.createGroup(user._id, 'untitled');
-    if (!groupId) {
-      return res.status(500).json({ status: "failed", error: "Could not create group" });
+    const projectId = await db.createProject(user._id, 'untitled');
+    if (!projectId) {
+      return res.status(500).json({ status: "failed", error: "Could not create project" });
     }
 
-    const group = await db.getGroup(groupId, user._id);
-    if (!group) {
-      return res.status(500).json({ status: "failed", error: "Could not get group" });
+    const project = await db.getProject(projectId, user._id);
+    if (!project) {
+      return res.status(500).json({ status: "failed", error: "Could not get project" });
     }
 
     return res.json({
       status: "success",
-      group: group
+      project: project
     });
   } catch (error) {
     if (error instanceof Error) {
@@ -282,17 +287,17 @@ router.post('/api/new_group', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/api/update_group_label', async (req: Request, res: Response) => {
-  const { groupId, label } = req.body;
+router.post('/api/update_project_label', async (req: Request, res: Response) => {
+  const { projectId, label } = req.body;
   try {
-    const result = await db.updateGroupLabel(groupId, label);
+    const result = await db.updateProjectLabel(projectId, label);
     if (result.rowCount === 0) {
-      return res.status(404).json({ error: "Group not found" });
+      return res.status(404).json({ error: "Project not found" });
     }
 
     return res.json({
       status: "success",
-      groupId: groupId
+      projectId: projectId
     });
   } catch (error) {
     if (error instanceof Error) {
@@ -302,21 +307,21 @@ router.post('/api/update_group_label', async (req: Request, res: Response) => {
   }
 });
 
-router.delete('/api/delete_group/:group_id', async (req: Request, res: Response) => {
+router.delete('/api/delete_project/:project_id', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
   if (!user) {
     return res.status(401).json({ error: "Could not find user email from session token" });
   }
 
-  const groupId = req.params.group_id;
+  const projectId = req.params.project_id;
 
   try {
-    const result = await db.deleteGroup(groupId, user._id);
+    const result = await db.deleteProject(projectId, user._id);
     if (result.rowCount === 0) {
-      return res.status(404).json({ error: "Block not found" });
+      return res.status(404).json({ error: "Project not found" });
     }
 
-    return res.json({ status: "success", message: "Block deleted successfully" });
+    return res.json({ status: "success", message: "Project deleted successfully" });
   } catch (error) {
     if (error instanceof Error) {
       return res.status(500).json({ error: error.message });
@@ -327,20 +332,20 @@ router.delete('/api/delete_group/:group_id', async (req: Request, res: Response)
 
 // Blocks
 
-router.get('/api/get_block/:block_id', async (req: Request, res: Response) => {
+router.get('/api/get_node/:node_id', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
   if (!user) {
     return res.status(401).json({ error: "Could not find user email from session token" });
   }
 
-  const blockId = req.params.block_id;
-  if (!blockId) {
-    return res.status(400).json({ error: "No block ID provided" });
+  const nodeId = req.params.node_id;
+  if (!nodeId) {
+    return res.status(400).json({ error: "No node ID provided" });
   }
 
   try {
-    const block = await db.getBlock(blockId, user._id);
-    return res.json({ status: "success", block });
+    const node = await db.getNode(nodeId, user._id);
+    return res.json({ status: "success", node });
   } catch (error) {
     if (error instanceof Error) {
       return res.status(500).json({ status: "failed", error: error.message });
@@ -349,19 +354,19 @@ router.get('/api/get_block/:block_id', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/api/get_blocks_for_group/:group_id', async (req: Request, res: Response) => {
-  const groupId = req.params.group_id;
+router.get('/api/get_nodes_for_project/:project_id', async (req: Request, res: Response) => {
+  const projectId = req.params.project_id;
   try {
     const user = await getUserFromSessionToken(req);
     if (!user) {
       return res.status(401).json({ error: "Could not find user email from session token" });
     }
 
-    const blocks = await db.getBlocksForGroup(groupId, user._id);
+    const nodes = await db.getNodesForProject(projectId, user._id);
 
     return res.json({
       status: "success",
-      blocks: blocks
+      nodes: nodes
     });
   } catch (error) {
     if (error instanceof Error) {
@@ -372,10 +377,10 @@ router.get('/api/get_blocks_for_group/:group_id', async (req: Request, res: Resp
   }
 });
 
-router.post('/api/new_block', async (req: Request, res: Response) => {
-  const { group_id, position } = req.body;
-  if (!group_id || !position) {
-    return res.status(400).json({ error: "No group ID or position provided" });
+router.post('/api/new_node', async (req: Request, res: Response) => {
+  const { project_id, type } = req.body;
+  if (!project_id || !type) {
+    return res.status(400).json({ error: "No project ID or type provided" });
   }
 
   try {
@@ -384,16 +389,41 @@ router.post('/api/new_block', async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Could not find user email from session token" });
     }
 
-    const blockId = await db.createBlock(user._id, group_id, '', position);
-    if (!blockId) {
-      return res.status(500).json({ status: "failed", error: "Could not create block" });
+    let node = null;
+    switch (type) {
+      case 'text':
+        node = new TextNode(uuidv4());
+        break;
+      case 'prompt':
+        node = new PromptNode(uuidv4());
+        break;
+      case 'save':
+        node = new SaveNode(uuidv4());
+        break;
+      case 'view':
+        node = new ViewNode(uuidv4());
+        break;
+      case 'merge':
+        node = new MergeNode(uuidv4());
+        break;
+      default:
+        return res.status(400).json({ error: "Invalid node type" });
     }
 
-    await db.updateGroupUpdatedAt(group_id);
+    if (!node) {
+      return res.status(500).json({ status: "failed", error: "Could not create node object" });
+    }
+
+    const nodeId = await db.createNode(user._id, project_id, node.name, node.type, node.inputs, node.outputs, node.runsAutomatically, node.properties);
+    if (!nodeId) {
+      return res.status(500).json({ status: "failed", error: "Could not create node in database" });
+    }
+
+    await db.updateProjectUpdatedAt(project_id);
 
     return res.json({
       status: "success",
-      blockId: blockId
+      nodeId: nodeId
     });
   } catch (error) {
     if (error instanceof Error) {
@@ -403,38 +433,28 @@ router.post('/api/new_block', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/api/update_block', async (req: Request, res: Response) => {
+router.post('/api/update_node', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
   if (!user) {
     return res.status(401).json({ error: "Could not find user email from session token" });
   }
 
-  const { blockId, content, locked, groupId } = req.body;
-  if (!blockId || !groupId) {
-    return res.status(400).json({ error: "No blockId or groupId provided" });
+  const { nodeId, projectId, name, type, inputs, outputs, runsAutomatically, properties } = req.body;
+  if (!nodeId || !projectId) {
+    return res.status(400).json({ error: "No nodeId or projectId provided" });
   }
 
   try {
-    if (typeof content === 'string') {
-      const result = await db.updateBlock(blockId, content, user._id);
-      if (result.rowCount === 0) {
-        return res.status(404).json({ error: "Text ID not found" });
-      }
+    const result = await db.updateNode(nodeId, name, type, inputs, outputs, runsAutomatically, properties, user._id);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Node ID not found" });
     }
 
-    if (locked !== undefined) {
-      if (locked) {
-        await db.lockBlock(blockId, user._id);
-      } else {
-        await db.unlockBlock(blockId, user._id);
-      }
-    }
-
-    await db.updateGroupUpdatedAt(groupId);
+    await db.updateProjectUpdatedAt(projectId);
 
     return res.json({
       status: "success",
-      blockId: blockId
+      nodeId: nodeId
     });
   } catch (error) {
     if (error instanceof Error) {
@@ -444,24 +464,24 @@ router.post('/api/update_block', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/api/delete_block', async (req: Request, res: Response) => {
+router.post('/api/delete_node', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
   if (!user) {
     return res.status(401).json({ error: "Could not find user email from session token" });
   }
 
-  const { blockId, groupId } = req.body;
-  if (!blockId || !groupId) {
-    return res.status(400).json({ error: "No blockId or groupId provided" });
+  const { nodeId, projectId } = req.body;
+  if (!nodeId || !projectId) {
+    return res.status(400).json({ error: "No nodeId or projectId provided" });
   }
 
   try {
-    const result = await db.deleteBlock(blockId, user._id);
+    const result = await db.deleteNode(nodeId, user._id);
     if (result.rowCount === 0) {
-      return res.status(404).json({ error: "Block not found" });
+      return res.status(404).json({ error: "Node not found" });
     }
 
-    await db.updateGroupUpdatedAt(groupId);
+    await db.updateProjectUpdatedAt(projectId);
 
     return res.json({ status: "success" });
   } catch (error) {
@@ -473,137 +493,68 @@ router.post('/api/delete_block', async (req: Request, res: Response) => {
 });
 
 ////////////////////////////////////////////////////////////
-// Transformations
+// Connections
 ////////////////////////////////////////////////////////////
 
-router.get('/api/get_transformations_for_group/:group_id', async (req: Request, res: Response) => {
-  const user = await getUserFromSessionToken(req);
-  if (!user) {
-    return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
-  }
-
-  const groupId = req.params.group_id;
-
+router.get('/api/get_connections_for_project/:project_id', async (req: Request, res: Response) => {
+  const projectId = req.params.project_id;
   try {
-    const transformations = await db.getTransformationsForGroup(groupId, user._id);
-    return res.json({ status: "success", transformations });
+    const user = await getUserFromSessionToken(req);
+    if (!user) {
+      return res.status(401).json({ error: "Could not find user email from session token" });
+    }
+
+    const connections = await db.getConnectionsForProject(projectId, user._id);
+    return res.json({ status: "success", connections });
   } catch (error) {
     if (error instanceof Error) {
-      res.status(500).json({ status: "failed", error: error.message });
-    } else {
-      res.status(500).json({ status: "failed", error: "An unknown error occurred" });
+      return res.status(500).json({ status: "failed", error: error.message });
     }
+    return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
   }
 });
 
-router.post('/api/new_transformation', async (req: Request, res: Response) => {
-  const { groupId, blockId, position } = req.body;
-  if (!groupId || !blockId || !position) {
-    return res.status(400).json({ status: "failed", error: "Could not add transformation: No group or block id or position provided" });
+router.post('/api/create_connection', async (req: Request, res: Response) => {
+  const { nodeId, outputNodeId, outputIndex } = req.body;
+  if (!nodeId || !outputNodeId || !outputIndex) {
+    return res.status(400).json({ error: "No nodeId or outputNodeId or outputIndex provided" });
   }
 
   try {
     const user = await getUserFromSessionToken(req);
     if (!user) {
-      return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
+      return res.status(401).json({ error: "Could not find user email from session token" });
     }
 
-    const transformationId = await db.createTransformation(user._id, groupId, blockId, '', 1, position);
-    if (!transformationId) {
-      return res.status(500).json({ status: "failed", error: "Could not create transformation" });
-    }
-
-    await db.updateGroupUpdatedAt(groupId);
-
-    return res.json({ status: "success", transformationId: transformationId });
+    const connectionId = await db.createConnection(user._id, nodeId, outputNodeId, outputIndex);
+    return res.json({ status: "success", connectionId });
   } catch (error) {
     if (error instanceof Error) {
       return res.status(500).json({ status: "failed", error: error.message });
-    } else {
-      return res.status(500).json({ status: "failed", error: "An unknown error occurred" })
     }
+    return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
   }
 });
 
-router.post('/api/update_transformation', async (req: Request, res: Response) => {
-  const user = await getUserFromSessionToken(req);
-  if (!user) {
-    return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
-  }
-
+router.delete('/api/delete_connection/:connection_id', async (req: Request, res: Response) => {
+  const connectionId = req.params.connection_id;
   try {
-    const { groupId, transformationId, prompt, outputs, locked } = req.body;
-    if (prompt) {
-      await db.updateTransformationPrompt(transformationId, prompt, user._id);
+    const user = await getUserFromSessionToken(req);
+    if (!user) {
+      return res.status(401).json({ error: "Could not find user email from session token" });
     }
-    if (outputs) {
-      await db.updateTransformationOutputs(transformationId, outputs, user._id);
-    }
-    if (locked) {
-      await db.updateTransformationLocked(transformationId, locked, user._id);
-    }
-    await db.updateGroupUpdatedAt(groupId);
-    return res.json({ status: "success" });
-  } catch (error) {
-    if (error instanceof Error) {
-      return res.status(500).json({ status: "failed", error: error.message });
-    } else {
-      return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
-    }
-  }
-});
 
-router.post('/api/delete_transformation', async (req: Request, res: Response) => {
-  const user = await getUserFromSessionToken(req);
-  if (!user) {
-    return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
-  }
-
-  const { groupId, transformationId } = req.body;
-  if (!groupId || !transformationId) {
-    return res.status(400).json({ status: "failed", error: "No groupId or transformationId provided" });
-  }
-
-  try {
-    const result = await db.deleteTransformation(transformationId, user._id);
+    const result = await db.deleteConnection(connectionId, user._id);
     if (result.rowCount === 0) {
-      return res.status(404).json({ status: "failed", error: "Transformation not found" });
+      return res.status(404).json({ error: "Connection not found" });
     }
-
-    await db.updateGroupUpdatedAt(groupId);
 
     return res.json({ status: "success" });
   } catch (error) {
     if (error instanceof Error) {
       return res.status(500).json({ status: "failed", error: error.message });
-    } else {
-      return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
     }
-  }
-});
-
-////////////////////////////////////////////////////////////
-// Transformation Outputs
-////////////////////////////////////////////////////////////
-
-router.post('/api/query_transformation_outputs', async (req: Request, res: Response) => {
-  const blockIds = req.body.blockIds;
-  if (!blockIds) {
-    return res.status(400).json({ status: "failed", error: "Could not fetch transformation outputs: no block ids specified" })
-  }
-
-  try {
-    const transformationOutputs = await db.getTransformationOutputs(blockIds)
-    if (!transformationOutputs) {
-      return res.status(500).json({ status: "failed", error: "Could not get transformation outputs" })
-    }
-    return res.json({ status: "success", transformationOutputs })
-  } catch (error) {
-    if (error instanceof Error) {
-      return res.status(500).json({ status: "failed", error: error.message })
-    } else {
-      return res.status(500).json({ status: "failed", error: "An unknown error occurred" })
-    }
+    return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
   }
 });
 
@@ -611,67 +562,21 @@ router.post('/api/query_transformation_outputs', async (req: Request, res: Respo
 // AI Functions
 ////////////////////////////////////////////////////////////
 
-router.post('/api/run_transformation', async (req: Request, res: Response) => {
+router.post('/api/run_prompt', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
   if (!user) {
     return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
   }
 
-  const { groupId, transformationId } = req.body;
-  if (!groupId || !transformationId) {
-    return res.status(400).json({ status: "failed", error: "No groupId or transformationId provided" });
+  // TODO: The prompt node could have multiple inputs?
+  // Should we just get the prompt node info from the backend assuming it was already synced, or expect it in the request?
+  const { projectId, nodeId, prompt, input } = req.body;
+  if (!projectId || !nodeId || !prompt || !input) {
+    return res.status(400).json({ status: "failed", error: "No projectId or nodeId or prompt provided" });
   }
 
-  const transformation = await db.getTransformation(transformationId, user._id);
-  if (!transformation) {
-    return res.status(404).json({ status: "failed", error: "Transformation not found" });
-  }
-
-  if (transformation.locked) {
-    return res.status(400).json({ status: "failed", error: "Transformation is locked" });
-  }
-
-  const errors: string[] = [];
-  let outputs: number = 0;
-
-  // Transformation cascading: running a transformation will run all of its (unlocked) child transformations
-  // This is done iteratively insted of recursively in order to collect errors and the total count of outputs
-  try {
-    const queue = [transformation];
-    while (queue.length > 0) {
-      const transformation = queue.shift();
-      if (!transformation) {
-        break;
-      }
-
-      const block = await db.getBlock(transformation.input_block_id, user._id);
-      if (!block) {
-        errors.push(`Block not found for transformation: ${transformation.input_block_id}`);
-        continue;
-      }
-
-      if (block.locked || transformation.locked) {
-        continue;
-      }
-
-      // Run the transformation and store the results
-      const transformationResult: TransformationResult = await runTransformation(transformation, user._id);
-      outputs += transformationResult.outputs;
-      errors.push(...transformationResult.errors);
-      queue.push(...transformationResult.childTransformations);
-    }
-
-    await db.updateGroupUpdatedAt(groupId);
-
-    return res.json({ status: "success", outputs, errors });
-
-  } catch (error) {
-    if (error instanceof Error) {
-      return res.status(500).json({ status: "failed", error: error.message });
-    } else {
-      return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
-    }
-  }
+  const result = await runPrompt(prompt, input);
+  return res.json({ status: "success", result });
 });
 
 ////////////////////////////////////////////////////////////

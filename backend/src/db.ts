@@ -4,11 +4,10 @@ import dotenv from 'dotenv';
 import {
   UserModel,
   SessionModel,
-  GroupModel,
-  BlockModel,
-  TransformationModel,
-  TransformationOutputModel,
-} from '@wb/shared-types';
+  ProjectModel,
+  BaseNode,
+  Connection,
+} from '@wc/shared-types';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -55,204 +54,132 @@ export namespace Database {
     await db.none('INSERT INTO sessions (session_token, user_email, session_expiration) VALUES ($1, $2, $3)', values);
   }
 
-  // Invites
-
-  export async function getInvite(code: string) {
-    const invite = await db.oneOrNone('SELECT id, invite_code, user_email FROM invites WHERE invite_code = $1', [code]);
-    return invite;
-  }
-
   // Groups
 
-  export async function getGroup(groupId: string, userId: string): Promise<GroupModel | null> {
-    const values = [groupId, userId];
-    const group = await db.oneOrNone('SELECT id, _id, author_id, label, updated_at, created_at FROM groups WHERE _id = $1 and author_id = $2', values);
-    return group;
+  export async function getProject(projectId: string, userId: string): Promise<ProjectModel | null> {
+    const values = [projectId, userId];
+    const project = await db.oneOrNone('SELECT id, _id, author_id, label, updated_at, created_at FROM projects WHERE _id = $1 and author_id = $2', values);
+    return project;
   }
 
-  export async function getLatestGroup(userId: string): Promise<GroupModel | null> {
-    const group = await db.oneOrNone(`
+  export async function getLatestProject(userId: string): Promise<ProjectModel | null> {
+    const project = await db.oneOrNone(`
       SELECT id, _id, author_id, label, updated_at, created_at
-      FROM groups
+      FROM projects
       WHERE author_id = $1
       ORDER BY updated_at DESC
       LIMIT 1
     `, [userId]);
-    return group;
+    return project;
   }
 
-  export async function getAllGroups(userId: string): Promise<GroupModel[]> {
-    const groups = await db.any('SELECT id, _id, author_id, label, updated_at, created_at FROM groups WHERE author_id = $1', [userId]);
-    return groups;
+  export async function getAllProjects(userId: string): Promise<ProjectModel[]> {
+    const projects = await db.any('SELECT id, _id, author_id, label, updated_at, created_at FROM projects WHERE author_id = $1', [userId]);
+    return projects;
   }
 
-  export async function createGroup(userId: string, label: string) {
-    const groupId = uuidv4();
-    await db.none('INSERT INTO groups (_id, author_id, label) VALUES ($1, $2, $3)', [groupId, userId, label]);
-    return groupId;
+  export async function createProject(userId: string, label: string) {
+    const projectId = uuidv4();
+    await db.none('INSERT INTO projects (_id, author_id, label) VALUES ($1, $2, $3)', [projectId, userId, label]);
+    return projectId;
   }
 
-  export async function updateGroupLabel(groupId: string, label: string) {
-    const result = await db.result('UPDATE groups SET label = $1, updated_at = CURRENT_TIMESTAMP WHERE _id = $2', [label, groupId]);
+  export async function updateProjectLabel(projectId: string, label: string) {
+    const result = await db.result('UPDATE projects SET label = $1, updated_at = CURRENT_TIMESTAMP WHERE _id = $2', [label, projectId]);
     return result;
   }
 
-  export async function updateGroupUpdatedAt(groupId: string) {
-    const result = await db.result('UPDATE groups SET updated_at = CURRENT_TIMESTAMP WHERE _id = $1', [groupId]);
+  export async function updateProjectUpdatedAt(projectId: string) {
+    const result = await db.result('UPDATE projects SET updated_at = CURRENT_TIMESTAMP WHERE _id = $1', [projectId]);
     return result;
   }
 
-  export async function deleteGroup(groupId: string, userId: string) {
-    const result = await db.result('DELETE FROM groups WHERE _id = $1 AND author_id = $2', [groupId, userId]);
+  export async function deleteProject(projectId: string, userId: string) {
+    const result = await db.result('DELETE FROM projects WHERE _id = $1 AND author_id = $2', [projectId, userId]);
     return result;
   }
 
-  // Blocks
+  // Nodes
 
-  export async function getBlock(blockId: string, userId: string): Promise<BlockModel | null> {
-    const values = [blockId, userId];
-    const block = await db.oneOrNone(`
-      SELECT id, _id, group_id, author_id, position, content, locked
-      FROM blocks
+  export async function getNode(nodeId: string, userId: string): Promise<BaseNode | null> {
+    const values = [nodeId, userId];
+    const node = await db.oneOrNone(`
+      SELECT id, _id, project_id, name, type, inputs, outputs, runs_automatically, properties, is_dirty
+      FROM nodes
       WHERE _id = $1 AND author_id = $2
     `, values);
-    return block;
+    return node;
   }
 
-  export async function getBlockAtPosition(group_id: string, position: string, userId: string): Promise<BlockModel | null> {
-    const block = await db.oneOrNone(`
-      SELECT id, _id, group_id, author_id, position, content, locked
-      FROM blocks
-      WHERE group_id = $1 AND position = $2 AND author_id = $3
-    `, [group_id, position, userId]);
-    return block;
+  export async function getNodesForProject(projectId: string, userId: string): Promise<BaseNode[]> {
+    const nodes = await db.any(`
+      SELECT n._id, n.name, n.type, n.inputs, n.outputs, n.runs_automatically, n.properties, n.is_dirty
+      FROM nodes n
+      WHERE n.project_id = $1 AND n.author_id = $2
+    `, [projectId, userId]);
+    return nodes;
   }
 
-  export async function getBlocksForGroup(groupId: string, userId: string): Promise<BlockModel[]> {
-    const blocks = await db.any(`
-      SELECT b._id, b.content, b.position, b.locked, b.group_id
-      FROM blocks b
-      WHERE b.group_id = $1 AND b.author_id = $2
-    `, [groupId, userId]);
-    return blocks;
+  export async function getOutputNodes(nodeId: string, userId: string): Promise<BaseNode[]> {
+    const nodes = await db.any(`
+      SELECT n._id, n.name, n.type, n.inputs, n.outputs, n.runs_automatically, n.properties, n.is_dirty
+      FROM nodes n
+      LEFT JOIN node_outputs r ON n._id = r.output_node_id
+      WHERE r.node_id = $1 AND n.author_id = $2
+    `, [nodeId, userId]);
+    return nodes;
   }
 
-  export async function getOutputBlocks(transformationId: string, userId: string): Promise<BlockModel[]> {
-    const blocks = await db.any(`
-      SELECT b._id, b.content, b.position, b.locked
-      FROM blocks b
-      LEFT JOIN transformation_outputs r ON b._id = r.output_block_id
-      WHERE r.transformation_id = $1 AND b.author_id = $2
-    `, [transformationId, userId]);
-    return blocks;
+  export async function createNode(userId: string, projectId: string, name: string, type: string, inputs: number, outputs: number, runs_automatically: boolean, properties: Record<string, any>): Promise<string | null> {
+    const nodeId = uuidv4();
+    const values = [nodeId, userId, projectId, name, type, inputs, outputs, runs_automatically, properties];
+    await db.none('INSERT INTO nodes (_id, author_id, project_id, name, type, inputs, outputs, runs_automatically, properties) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)', values);
+    return nodeId;
   }
 
-  export async function createBlock(userId: string, groupId: string, content: string, position: string): Promise<string | null> {
-    const blockId = uuidv4();
-    const values = [blockId, userId, groupId, content, position];
-    await db.none('INSERT INTO blocks (_id, author_id, group_id, content, position) VALUES ($1, $2, $3, $4, $5)', values);
-    return blockId;
-  }
-
-  export async function updateBlock(blockId: string, text: string, userId: string) {
-    const values = [text, blockId, userId];
-    const result = await db.result(`UPDATE blocks SET content = $1, updated_at = CURRENT_TIMESTAMP WHERE _id = $2 AND author_id = $3`, values);
+  export async function updateNode(nodeId: string, name: string, type: string, inputs: number, outputs: number, runs_automatically: boolean, properties: Record<string, any>, userId: string) {
+    const values = [name, type, inputs, outputs, runs_automatically, properties, nodeId, userId];
+    const result = await db.result(`UPDATE nodes SET name = $1, type = $2, inputs = $3, outputs = $4, runs_automatically = $5, properties = $6, updated_at = CURRENT_TIMESTAMP WHERE _id = $7 AND author_id = $8`, values);
     return result;
   }
 
-  export async function lockBlock(blockId: string, userId: string) {
-    const values = [blockId, userId];
-    await db.none('UPDATE blocks SET locked = TRUE WHERE _id = $1 AND author_id = $2', values);
-  }
-
-  export async function unlockBlock(blockId: string, userId: string) {
-    const values = [blockId, userId];
-    await db.none('UPDATE blocks SET locked = FALSE WHERE _id = $1 AND author_id = $2', values);
-  }
-
-  export async function deleteBlock(blockId: string, userId: string) {
-    const result = await db.result('DELETE FROM blocks WHERE _id = $1 AND author_id = $2', [blockId, userId]);
+  export async function deleteNode(nodeId: string, userId: string) {
+    const result = await db.result('DELETE FROM nodes WHERE _id = $1 AND author_id = $2', [nodeId, userId]);
     return result;
   }
 
-  // Transformations
+  // Connections
 
-  export async function getTransformation(transformationId: string, userId: string): Promise<TransformationModel | null> {
-    const transformation = await db.oneOrNone(`
-      SELECT id, _id, group_id, input_block_id, prompt, outputs, position, locked
-      FROM transformations
+  export async function getConnection(connectionId: string, userId: string): Promise<Connection | null> {
+    const connection = await db.oneOrNone(`
+      SELECT id, _id, node_id, output_node_id, output_index
+      FROM connections
       WHERE _id = $1 and author_id = $2
-    `, [transformationId, userId]);
-    return transformation;
+    `, [connectionId, userId]);
+    return connection;
   }
 
-  export async function getTransformationsForGroup(groupId: string, userId: string): Promise<TransformationModel[]> {
-    const transformations = await db.any(`
-      SELECT id, _id, group_id, input_block_id, prompt, outputs, position, locked
-      FROM transformations
-      WHERE group_id = $1 AND author_id = $2
-    `, [groupId, userId]);
-    return transformations;
+  export async function getConnectionsForProject(projectId: string, userId: string): Promise<Connection[]> {
+    const connections = await db.any(`
+      SELECT id, _id, node_id, output_node_id, output_index
+      FROM connections
+      WHERE project_id = $1 AND author_id = $2
+    `, [projectId, userId]);
+    return connections;
   }
 
-  export async function getTransformationsByInputBlockId(blockId: string, userId: string): Promise<TransformationModel[]> {
-    const transformations = await db.any(`
-      SELECT id, _id, group_id, input_block_id, prompt, outputs, position, locked
-      FROM transformations
-      WHERE input_block_id = $1 AND author_id = $2
-    `, [blockId, userId]);
-    return transformations;
-  }
-
-  export async function createTransformation(userId: string, groupId: string, blockId: string, prompt: string, outputs: number, position: string): Promise<string | null> {
-    const transformationId = uuidv4();
-    const values = [transformationId, userId, groupId, blockId, prompt, outputs, position];
+  export async function createConnection(userId: string, nodeId: string, outputNodeId: string, outputIndex: number): Promise<string | null> {
+    const connectionId = uuidv4();
+    const values = [connectionId, userId, nodeId, outputNodeId, outputIndex];
     await db.none(`
-      INSERT INTO transformations (_id, author_id, group_id, input_block_id, prompt, outputs, position)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      INSERT INTO connections (_id, author_id, node_id, output_node_id, output_index)
+      VALUES ($1, $2, $3, $4, $5)
     `, values);
-    return transformationId;
+    return connectionId;
   }
 
-  export async function updateTransformationPrompt(transformationId: string, prompt: string, userId: string) {
-    const values = [prompt, transformationId, userId];
-    const result = await db.result('UPDATE transformations SET prompt = $1, updated_at = CURRENT_TIMESTAMP WHERE _id = $2 AND author_id = $3', values);
+  export async function deleteConnection(connectionId: string, userId: string) {
+    const result = await db.result('DELETE FROM connections WHERE _id = $1 AND author_id = $2', [connectionId, userId]);
     return result;
-  }
-
-  export async function updateTransformationOutputs(transformationId: string, outputs: number, userId: string) {
-    const values = [outputs, transformationId, userId];
-    const result = await db.result('UPDATE transformations SET outputs = $1, updated_at = CURRENT_TIMESTAMP WHERE _id = $2 AND author_id = $3', values);
-    return result;
-  }
-
-  export async function updateTransformationLocked(transformationId: string, locked: boolean, userId: string) {
-    const values = [locked, transformationId, userId];
-    const result = await db.result('UPDATE transformations SET locked = $1, updated_at = CURRENT_TIMESTAMP WHERE _id = $2 AND author_id = $3', values);
-    return result;
-  }
-
-  export async function deleteTransformation(transformationId: string, userId: string) {
-    const result = await db.result('DELETE FROM transformations WHERE _id = $1 AND author_id = $2', [transformationId, userId]);
-    return result;
-  }
-
-  // Transformation outputs
-
-  export async function getTransformationOutputs(blockIds: string[]): Promise<TransformationOutputModel[] | null> {
-    if (blockIds.length === 0) {
-      return [];
-    }
-
-    const results = await db.any(`
-      SELECT id, transformation_id, output_block_id
-      FROM transformation_outputs
-      WHERE output_block_id IN ($1:csv)
-    `, [blockIds]);
-    return results;
-  }
-
-  export async function createTransformationOutput(transformationId: string, outputBlockId: string) {
-    await db.none('INSERT INTO transformation_outputs (transformation_id, output_block_id) VALUES ($1, $2)', [transformationId, outputBlockId]);
   }
 }

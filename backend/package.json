@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@types/node": "^22.10.5",
+    "@wc/shared-types": "file:../shared/types",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
