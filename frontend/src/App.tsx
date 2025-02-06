@@ -141,7 +141,7 @@ const App = () => {
   const connectToViewNode = useCallback((node: VisualNode) => {
     if (node.node.outputs < 1) return;
 
-    const viewNode = Object.values(nodes).find(n => n.node instanceof ViewNode);
+    const viewNode = Object.values(nodes).find(n => n.node.type === 'view');
     if (viewNode) {
       createNewConnection(node.id, 0, viewNode.id, 0);
     }
