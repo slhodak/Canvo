@@ -26,6 +26,12 @@ export interface AsyncNode {
 }
 
 export abstract class BaseNode {
+  public id: string;
+  public name: string;
+  public type: string;
+  public inputs: number;
+  public outputs: number;
+  public runsAutomatically: boolean;
   public properties: Record<string, NodeProperty> = {};
   public state = {
     input: Array<string>(),
@@ -34,53 +40,21 @@ export abstract class BaseNode {
   public isDirty = false;
 
   constructor(
-    public id: string,
-    public name: string,
-    public type: string,
-    public inputs: number,
-    public outputs: number,
-    public runsAutomatically: boolean,
-    public customProperties: Record<string, NodeProperty> = {}
+    id: string,
+    name: string,
+    type: string,
+    inputs: number,
+    outputs: number,
+    runsAutomatically: boolean,
+    properties: Record<string, NodeProperty> = {}
   ) {
-    this.properties = {
-      id: {
-        type: 'string',
-        label: 'ID',
-        value: id,
-        editable: false,
-        displayed: false,
-      },
-      name: {
-        type: 'string',
-        label: 'Name',
-        value: name,
-        editable: false,
-        displayed: true,
-      },
-      type: {
-        type: 'string',
-        label: 'Type',
-        value: type,
-        editable: false,
-        displayed: false,
-      },
-      inputs: {
-        type: 'number',
-        label: 'Inputs',
-        value: inputs,
-        editable: false,
-        displayed: false,
-      },
-      outputs: {
-        type: 'number',
-        label: 'Outputs',
-        value: outputs,
-        editable: true,
-        displayed: true,
-      },
-      ...customProperties,
-    };
-
+    this.id = id;
+    this.name = name;
+    this.type = type;
+    this.inputs = inputs;
+    this.outputs = outputs;
+    this.runsAutomatically = runsAutomatically;
+    this.properties = properties;
     // Initialize the input and output arrays
     for (let i = 0; i < this.inputs; i++) {
       this.state.input.push('');

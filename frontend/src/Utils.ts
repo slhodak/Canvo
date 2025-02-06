@@ -1,5 +1,5 @@
 import { BlockModel, TransformationModel } from "@wb/shared-types";
-import { VisualNode } from "./NetworkEditor";
+import { VisualNode } from "./NetworkTypes";
 
 export class Position {
   blockId: string;
@@ -111,7 +111,7 @@ export const NetworkEditorUtils = {
   PORT_RADIUS: 5,
 
   getPortPosition(node: VisualNode, isInput: boolean, index: number) {
-    const portCount = isInput ? node.node.properties['inputs'].value as number : node.node.properties['outputs'].value as number;
+    const portCount = isInput ? node.node.inputs : node.node.outputs;
     const spacing = NetworkEditorUtils.NODE_WIDTH / (portCount + 1);
     const y = isInput ? node.y : node.y + NetworkEditorUtils.NODE_HEIGHT;
     return {
