@@ -38,12 +38,12 @@ const App = () => {
     }
   }
 
-  const handleMouseMove = useCallback((event: React.MouseEvent) => {
+  const handleMouseMove = (event: React.MouseEvent) => {
     setMousePosition({
       x: event.clientX,
       y: event.clientY,
     });
-  }, []);
+  }
 
   const createNewNode = (type: 'text' | 'prompt' | 'save' | 'view' | 'merge') => {
     const newId = String(Date.now());
@@ -74,7 +74,21 @@ const App = () => {
     setShowDropdown(false);
   };
 
-  const createNewConnection = (fromNodeId: string, fromOutput: number, toNodeId: string, inputIndex: number) => {
+  const deleteConnection = (connectionId: string) => {
+    setConnections(connections.filter(conn => conn.id !== connectionId));
+  }
+
+  //////////////////////////////
+  // Memoized Functions
+  //////////////////////////////
+
+  const createNewConnection = useCallback((fromNodeId: string, fromOutput: number, toNodeId: string, inputIndex: number) => {
+    // Don't create a new connection if one already exists
+    const existingConnection = connections.find(conn => conn.connection.fromNode === fromNodeId && conn.connection.toNode === toNodeId);
+    if (existingConnection) {
+      return;
+    }
+
     const newConnection: VisualConnection = {
       id: `${fromNodeId}-${toNodeId}-${Date.now()}`,
       connection: new Connection(
@@ -92,11 +106,20 @@ const App = () => {
     if (fromNode && toNode) {
       toNode.node.state.input[inputIndex] = fromNode.node.state.output[fromOutput];
     }
-  }
+  }, [connections, nodes]);
 
-  const deleteConnection = (connectionId: string) => {
-    setConnections(connections.filter(conn => conn.id !== connectionId));
-  }
+  const connectToViewNode = useCallback((node: VisualNode) => {
+    if (node.node.outputs < 1) return;
+
+    const viewNode = Object.values(nodes).find(n => n.node instanceof ViewNode);
+    if (viewNode) {
+      createNewConnection(node.id, 0, viewNode.id, 0);
+    }
+  }, [nodes, createNewConnection]);
+
+  //////////////////////////////
+  // React Hooks
+  //////////////////////////////
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -122,11 +145,20 @@ const App = () => {
         setShowDropdown(false);
         return;
       }
+
+      if (event.key === 't' && isHoveringEditor && selectedNode) {
+        connectToViewNode(selectedNode);
+        return;
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedNode, nodes, isHoveringEditor, mousePosition]);
+  }, [selectedNode, nodes, isHoveringEditor, mousePosition, connectToViewNode]);
+
+  //////////////////////////////
+  // UI Rendering
+  //////////////////////////////
 
   return (
     <div className="app-container">
