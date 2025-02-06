@@ -114,7 +114,11 @@ const App = () => {
 
   const createNewConnection = useCallback((fromNodeId: string, fromOutput: number, toNodeId: string, inputIndex: number) => {
     // Don't create a redundant connection
-    const existingConnection = connections.find(conn => conn.connection.fromNode === fromNodeId && conn.connection.toNode === toNodeId);
+    const existingConnection = connections.find(conn => (
+      conn.connection.fromNode === fromNodeId &&
+      conn.connection.toNode === toNodeId &&
+      conn.connection.toInput === inputIndex
+    ));
     if (existingConnection) {
       return;
     }
