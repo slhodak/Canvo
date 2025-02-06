@@ -14,7 +14,7 @@ interface NetworkEditorProps {
   connections: VisualConnection[];
   createNewConnection: (fromNode: string, fromOutput: number, toNodeId: string, inputIndex: number) => void;
   deleteConnection: (connectionId: string) => void;
-  setViewText: (text: string) => void;
+  runNode: (node: VisualNode) => void;
 }
 
 const NetworkEditor = ({
@@ -26,7 +26,7 @@ const NetworkEditor = ({
   connections,
   createNewConnection,
   deleteConnection,
-  setViewText,
+  runNode,
 }: NetworkEditorProps) => {
   const [dragState, setDragState] = useState<DragState>({
     isDragging: false,
@@ -51,17 +51,7 @@ const NetworkEditor = ({
     if (!node) return;
 
     setSelectedNode(node);
-    if ('run' in node.node && typeof node.node.run === 'function') {
-      node.node.run();
-      // If the node is a View Node, set the view text
-      if (node.node instanceof ViewNode) {
-        console.log("Setting view text to", node.node.properties['content'].value);
-        setViewText(node.node.properties['content'].value as string);
-      }
-    }
-    if ('asyncRun' in node.node && typeof node.node.asyncRun === 'function') {
-      node.node.asyncRun();
-    }
+    runNode(node);
 
     setDragState({
       isDragging: true,

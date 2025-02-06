@@ -12,7 +12,7 @@ export class Connection {
     public fromOutput: number,
     public toNode: string,
     public toInput: number,
-  ) {}
+  ) { }
 }
 
 // For nodes whose functions are synchronous
@@ -39,6 +39,7 @@ export abstract class BaseNode {
     public type: string,
     public inputs: number,
     public outputs: number,
+    public runsAutomatically: boolean,
     public customProperties: Record<string, NodeProperty> = {}
   ) {
     this.properties = {
@@ -109,7 +110,7 @@ export class TextNode extends BaseNode implements SyncNode {
     id: string,
     public text: string = ''
   ) {
-    super(id, 'Text', 'text', 0, 1, {
+    super(id, 'Text', 'text', 0, 1, true, {
       text: {
         type: 'string',
         label: 'Text',
@@ -126,12 +127,6 @@ export class TextNode extends BaseNode implements SyncNode {
     this.state.output[0] = this.properties.text.value as string;
     this.setClean();
   }
-
-  // Some nodes run automatically when their properties are changed
-  setDirty() {
-    super.setDirty();
-    this.run();
-  }
 }
 
 export class PromptNode extends BaseNode implements AsyncNode {
@@ -139,7 +134,7 @@ export class PromptNode extends BaseNode implements AsyncNode {
     id: string,
     public prompt: string = ''
   ) {
-    super(id, 'Prompt', 'prompt', 1, 1, {
+    super(id, 'Prompt', 'prompt', 1, 1, false, {
       prompt: {
         type: 'string',
         label: 'Prompt',
@@ -162,7 +157,7 @@ export class SaveNode extends BaseNode implements AsyncNode {
   constructor(
     id: string,
   ) {
-    super(id, 'Save', 'save', 1, 0);
+    super(id, 'Save', 'save', 1, 0, false);
   }
 
   async asyncRun() {
@@ -175,7 +170,7 @@ export class MergeNode extends BaseNode implements SyncNode {
   constructor(
     id: string,
   ) {
-    super(id, 'Merge', 'merge', 2, 1, {
+    super(id, 'Merge', 'merge', 2, 1, true, {
       separator: {
         type: 'string',
         label: 'Separator',
@@ -202,7 +197,7 @@ export class ViewNode extends BaseNode implements SyncNode {
   constructor(
     id: string,
   ) {
-    super(id, 'View', 'view', 1, 0, {
+    super(id, 'View', 'view', 1, 0, true, {
       content: {
         type: 'string',
         label: 'Content',

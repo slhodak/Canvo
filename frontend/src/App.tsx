@@ -35,6 +35,9 @@ const App = () => {
     const node = nodes[selectedNode?.id ?? ''];
     if (node) {
       node.node.setDirty();
+      if (node.node.runsAutomatically) {
+        runNode(node);
+      }
     }
   }
 
@@ -76,6 +79,33 @@ const App = () => {
 
   const deleteConnection = (connectionId: string) => {
     setConnections(connections.filter(conn => conn.id !== connectionId));
+  }
+
+  const runNode = (node: VisualNode) => {
+    if ('run' in node.node && typeof node.node.run === 'function') {
+      node.node.run();
+      // If the node is a View Node, set the view text
+      if (node.node.type === 'view') {
+        setViewText(node.node.properties['content'].value as string);
+      }
+    }
+    if ('asyncRun' in node.node && typeof node.node.asyncRun === 'function') {
+      node.node.asyncRun();
+    }
+
+    // Find this node's connections via it output ports
+    const outputConnections = connections.filter(conn => conn.connection.fromNode === node.id);
+    outputConnections.forEach(conn => {
+      const descendent = nodes[conn.connection.toNode];
+      if (!descendent) return;
+
+      // Copy the output of the node to the input of the descendent
+      // TODO: Do this more efficiently,
+      // maybe have the descendent just read the output of the parent when it runs,
+      // instead of keeping a copy of that output in its own state
+      descendent.node.state.input[conn.connection.toInput] = node.node.state.output[conn.connection.fromOutput];
+      runNode(descendent);
+    });
   }
 
   //////////////////////////////
@@ -187,7 +217,7 @@ const App = () => {
                 connections={connections}
                 createNewConnection={createNewConnection}
                 deleteConnection={deleteConnection}
-                setViewText={setViewText}
+                runNode={runNode}
               />
               {showDropdown && (
                 <div
