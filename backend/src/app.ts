@@ -159,14 +159,13 @@ router.get('/auth/authenticate', async (req: Request, res: Response) => {
     const sessionExpirationString = response.provider_values.expires_at;
     const email = response.user.emails[0].email;
 
-    // console.debug("Creating a user in the db if they do not exist");
-    // TODO: Create a user in our database if they don't exist
     const user = await db.getUser(email);
     if (!user) {
+      console.debug("User not found in db, creating...");
       await db.insertUser(email);
     }
 
-    // console.debug("Creating a session for this user in the sessions table");
+    console.debug("Creating a session for this user");
     const sessionExpiration = sessionExpirationString ? new Date(sessionExpirationString) : new Date(Date.now() + sixtyMinutesInSeconds * 1000);
     await db.insertSession(sessionToken, email, sessionExpiration);
 
