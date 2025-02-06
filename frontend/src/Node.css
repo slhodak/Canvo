@@ -41,6 +41,10 @@
   fill: #ff4444;
 }
 
+.node-input-port.connected.drawing:hover {
+  fill: #4444ff;
+}
+
 .node-output-port:hover {
   fill: #44ff44;
 }

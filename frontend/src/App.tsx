@@ -113,10 +113,17 @@ const App = () => {
   //////////////////////////////
 
   const createNewConnection = useCallback((fromNodeId: string, fromOutput: number, toNodeId: string, inputIndex: number) => {
-    // Don't create a new connection if one already exists
+    // Don't create a redundant connection
     const existingConnection = connections.find(conn => conn.connection.fromNode === fromNodeId && conn.connection.toNode === toNodeId);
     if (existingConnection) {
       return;
+    }
+
+    let newConnections = connections;
+    // If there is already a connection from any node to this node's inputIndex, remove it
+    const connectionToInput = connections.find(conn => conn.connection.toNode === toNodeId && conn.connection.toInput === inputIndex);
+    if (connectionToInput) {
+      newConnections = connections.filter(conn => conn.id !== connectionToInput.id);
     }
 
     const newConnection: VisualConnection = {
@@ -128,7 +135,7 @@ const App = () => {
         inputIndex,
       ),
     };
-    setConnections([...connections, newConnection]);
+    setConnections([...newConnections, newConnection]);
 
     // Copy the output of the fromNode to the input of the toNode
     const fromNode = nodes[fromNodeId];

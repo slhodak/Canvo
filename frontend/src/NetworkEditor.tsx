@@ -3,7 +3,6 @@ import './NetworkEditor.css';
 import { VisualNode, VisualConnection, DragState, WireState } from './NetworkTypes';
 import { Node } from './Node';
 import { NetworkEditorUtils as neu } from './Utils';
-import { ViewNode } from './NodeModel';
 
 interface NetworkEditorProps {
   nodes: Record<string, VisualNode>;
@@ -142,16 +141,6 @@ const NetworkEditor = ({
 
   const endDrawingWire = (toNodeId: string, inputIndex: number) => {
     if (wireState.isDrawing && wireState.fromNode && wireState.fromOutput !== null) {
-      // Check if there's already a connection to this input
-      const existingConnection = connections.find(
-        conn => conn.connection.toNode === toNodeId && conn.connection.toInput === inputIndex
-      );
-
-      // Remove existing connection if there is one
-      if (existingConnection) {
-        deleteConnection(existingConnection.id);
-      }
-
       createNewConnection(wireState.fromNode, wireState.fromOutput, toNodeId, inputIndex);
     }
     setWireState({

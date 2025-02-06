@@ -18,7 +18,11 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
     if (connectionId) {
       // Immediately start a new connection if the clicked port is an output port
       if (isInputPort) {
-        disconnectWire(connectionId);
+        if (wireState.isDrawing) {
+          endDrawingWire(nodeId, inputIndex);
+        } else {
+          disconnectWire(connectionId);
+        }
       } else {
         startDrawingWire(nodeId, inputIndex, e.clientX, e.clientY);
       }
