@@ -1,4 +1,4 @@
-import { BaseNode, Connection } from '@wc/shared-types';
+import { BaseNode, Connection } from '../../shared/types/src/models/node';
 
 export interface VisualNode {
   id: string;

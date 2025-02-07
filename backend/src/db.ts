@@ -1,13 +1,13 @@
 import pgPromise from 'pg-promise';
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
+import { UserModel, SessionModel } from '../../shared/types/src/models/user';
+import { ProjectModel } from '../../shared/types/src/models/project';
 import {
-  UserModel,
-  SessionModel,
-  ProjectModel,
   BaseNode,
   Connection,
-} from '@wc/shared-types';
+} from '../../shared/types/src/models/node';
+
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 

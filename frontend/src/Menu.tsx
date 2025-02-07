@@ -2,7 +2,6 @@ import {
   // useEffect,
   useState } from "react";
 import BurgerMenu from "./assets/BurgerMenu";
-// import { GroupModel } from "@wc/shared-types";
 // import PlusIcon from "./assets/PlusIcon";
 // import { SERVER_URL } from "./constants";
 import './Menu.css';

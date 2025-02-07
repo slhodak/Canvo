@@ -203,6 +203,8 @@ export class ViewNode extends BaseNode implements SyncNode {
     // Copy the input to the content
     if (this.state.input[0].stringValue) {
       this.properties.content.value = this.state.input[0].stringValue;
+    } else {
+      this.properties.content.value = '';
     }
   }
 }

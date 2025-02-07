@@ -5,14 +5,14 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import path from 'path';
 import { Database as db } from './db';
+import { UserModel } from '../../shared/types/src/models/user';
 import {
   TextNode,
   PromptNode,
   SaveNode,
   ViewNode,
   MergeNode,
-  UserModel
-} from '@wc/shared-types';
+} from '../../shared/types/src/models/node';
 import { runPrompt } from './llm';
 import stytch from 'stytch';
 import { v4 as uuidv4 } from 'uuid';
