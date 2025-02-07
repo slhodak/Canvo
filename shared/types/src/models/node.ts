@@ -25,6 +25,11 @@ export interface AsyncNode {
   asyncRun(): Promise<void>;
 }
 
+export interface IOState {
+  stringValue: string | null;
+  numberValue: number | null;
+}
+
 export abstract class BaseNode {
   public id: string;
   public name: string;
@@ -34,8 +39,8 @@ export abstract class BaseNode {
   public runsAutomatically: boolean;
   public properties: Record<string, NodeProperty> = {};
   public state = {
-    input: Array<string>(),
-    output: Array<string>(),
+    input: Array<IOState>(),
+    output: Array<IOState>(),
   }
   public isDirty = false;
 
@@ -57,11 +62,17 @@ export abstract class BaseNode {
     this.properties = properties;
     // Initialize the input and output arrays
     for (let i = 0; i < this.inputs; i++) {
-      this.state.input.push('');
+      this.state.input.push({
+        stringValue: null,
+        numberValue: null,
+      });
     }
 
     for (let i = 0; i < this.outputs; i++) {
-      this.state.output.push('');
+      this.state.output.push({
+        stringValue: null,
+        numberValue: null,
+      });
     }
   }
 
@@ -98,7 +109,10 @@ export class TextNode extends BaseNode implements SyncNode {
   run() {
     if (!this.isDirty) return;
 
-    this.state.output[0] = this.properties.text.value as string;
+    this.state.output[0] = {
+      stringValue: this.properties.text.value as string,
+      numberValue: null,
+    };
     this.setClean();
   }
 }
@@ -161,7 +175,10 @@ export class MergeNode extends BaseNode implements SyncNode {
       this.properties.separator.value as string
     );
 
-    this.state.output[0] = mergedResult;
+    this.state.output[0] = {
+      stringValue: mergedResult,
+      numberValue: null,
+    };
   }
 }
 
@@ -184,6 +201,8 @@ export class ViewNode extends BaseNode implements SyncNode {
 
   run() {
     // Copy the input to the content
-    this.properties.content.value = this.state.input[0];
+    if (this.state.input[0].stringValue) {
+      this.properties.content.value = this.state.input[0].stringValue;
+    }
   }
 }

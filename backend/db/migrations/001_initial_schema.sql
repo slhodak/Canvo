@@ -43,9 +43,25 @@ CREATE TABLE IF NOT EXISTS connections (
 
     FOREIGN KEY (from_node) REFERENCES nodes(_id) ON DELETE CASCADE,
     FOREIGN KEY (to_node) REFERENCES nodes(_id) ON DELETE CASCADE
+
+    CONSTRAINT valid_output_number CHECK (from_output >= 0),
+    CONSTRAINT valid_input_number CHECK (to_input >= 0),
 );
 
 -- Nodes table
+CREATE TYPE node_type AS ENUM (
+    'text',
+    'prompt',
+    'merge',
+    'save',
+    'view'
+);
+
+CREATE TYPE state_value AS (
+    string_value TEXT,
+    number_value NUMERIC
+);
+
 CREATE TABLE IF NOT EXISTS nodes (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -54,10 +70,17 @@ CREATE TABLE IF NOT EXISTS nodes (
     project_id INTEGER NOT NULL,
     _id TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
-    type TEXT NOT NULL,
+    type node_type NOT NULL,
     inputs INTEGER NOT NULL,
     outputs INTEGER NOT NULL,
     runs_automatically BOOLEAN NOT NULL,
     properties JSONB NOT NULL,
-    is_dirty BOOLEAN NOT NULL DEFAULT FALSE
+    input_state state_value[] NOT NULL DEFAULT '{}',
+    output_state state_value[] NOT NULL DEFAULT '{}',
+    is_dirty BOOLEAN NOT NULL DEFAULT FALSE,
+
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+
+    CONSTRAINT valid_input_number CHECK (inputs >= 0),
+    CONSTRAINT valid_output_number CHECK (outputs >= 0),
 );
