@@ -1,9 +1,8 @@
-import { NodeType } from "../../shared/types/src/types";
 import './Project.css';
 import { useState, useEffect, useCallback } from 'react';
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { VisualNode, VisualConnection } from './NetworkTypes';
-import { BaseNode, Connection, Coordinates, MergeNode, SaveNode, PromptNode, TextNode, ViewNode } from '../../shared/types/src/models/node';
+import { NodeType, BaseNode, Connection, Coordinates, MergeNode, SaveNode, PromptNode, TextNode, ViewNode } from '../../shared/types/src/models/node';
 import NetworkEditor from './NetworkEditor';
 import ParametersPane from './ParametersPane';
 import OutputView from "./OutputView";

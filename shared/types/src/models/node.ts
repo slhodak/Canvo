@@ -1,3 +1,11 @@
+export enum NodeType {
+  Text = 'text',
+  Prompt = 'prompt',
+  Save = 'save',
+  View = 'view',
+  Merge = 'merge',
+}
+
 export interface NodeProperty {
   type: 'string' | 'number';
   label: string;
@@ -142,7 +150,6 @@ export class PromptNode extends BaseNode implements AsyncNode {
         displayed: true,
       },
     });
-
   }
 
   async asyncRun() {
