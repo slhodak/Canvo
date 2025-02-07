@@ -96,7 +96,17 @@ const App = () => {
     setProjects(data.projects);
   }
 
-  const updateProjectTitle = async (title: string) => {
+  const handleProjectTitleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!project) return;
+
+    const newTitle = event.target.value;
+    setProject({ ...project, title: newTitle });
+    await updateProjectTitle(project.title, newTitle);
+  }
+
+  const updateProjectTitle = async (originalTitle: string, newTitle: string) => {
+    if (!project) return;
+
     try {
       const response = await fetch(`${SERVER_URL}/api/update_project_title`, {
         method: 'POST',
@@ -104,16 +114,18 @@ const App = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ projectId: project?._id, title: title }),
+        body: JSON.stringify({ projectId: project._id, title: newTitle }),
       });
       const data = await response.json();
       if (data.status == 'success') {
         await fetchAllProjects();
       } else {
         console.error('Error updating project title:', data.error);
+        setProject({ ...project, title: originalTitle });
       }
     } catch (error) {
       console.error('Error updating project title:', error);
+      setProject({ ...project, title: originalTitle });
     }
   }
 
@@ -248,7 +260,7 @@ const App = () => {
 
       <div className="right-section">
         <div className="right-section-header">
-          <input type="text" className="project-title-input" value={project?.title} onChange={(e) => updateProjectTitle(e.target.value)} />
+          <input type="text" className="project-title-input" value={project?.title} onChange={handleProjectTitleChange} />
           <h2 className="app-title-header">Canvo</h2>
         </div>
 
