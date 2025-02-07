@@ -226,6 +226,38 @@ const Project = ({ project, handleProjectTitleChange }: ProjectProps) => {
     }
   }, [nodes, createNewConnection]);
 
+  const deleteNode = useCallback(async (node: VisualNode) => {
+    const originalNodes = { ...nodes };
+    const newNodes = { ...nodes };
+    delete newNodes[node.id];
+    setNodes(newNodes);
+    setSelectedNode(null);
+
+    try {
+      const response = await fetch(`${SERVER_URL}/api/delete_node`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          node_id: node.node._id,
+          project_id: project._id,
+        }),
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        fetchNodesForProject();
+      } else {
+        console.error('Error deleting node:', data.error);
+        setNodes(originalNodes);
+      }
+    } catch (error) {
+      console.error('Error deleting node:', error);
+      setNodes(originalNodes);
+    }
+  }, [nodes, fetchNodesForProject, project._id]);
+
   //////////////////////////////
   // React Hooks
   //////////////////////////////
@@ -236,10 +268,7 @@ const Project = ({ project, handleProjectTitleChange }: ProjectProps) => {
       const activeElement = document.activeElement;
       const isEditingText = activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement;
       if ((event.key === 'Delete' || event.key === 'Backspace') && selectedNode && !isEditingText && isHoveringEditor) {
-        const newNodes = { ...nodes };
-        delete newNodes[selectedNode.id];
-        setNodes(newNodes);
-        setSelectedNode(null);
+        deleteNode(selectedNode);
         return;
       }
 
@@ -263,7 +292,7 @@ const Project = ({ project, handleProjectTitleChange }: ProjectProps) => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedNode, nodes, isHoveringEditor, mousePosition, connectToViewNode]);
+  }, [selectedNode, nodes, isHoveringEditor, mousePosition, connectToViewNode, deleteNode]);
 
   useEffect(() => {
     fetchNodesForProject();

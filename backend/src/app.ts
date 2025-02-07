@@ -471,18 +471,18 @@ router.post('/api/delete_node', async (req: Request, res: Response) => {
     return res.status(401).json({ error: "Could not find user email from session token" });
   }
 
-  const { nodeId, projectId } = req.body;
-  if (!nodeId || !projectId) {
-    return res.status(400).json({ error: "No nodeId or projectId provided" });
+  const { node_id, project_id } = req.body;
+  if (!node_id || !project_id) {
+    return res.status(400).json({ error: "No node_id or project_id provided" });
   }
 
   try {
-    const result = await db.deleteNode(nodeId, user._id);
+    const result = await db.deleteNode(node_id, user._id);
     if (result.rowCount === 0) {
       return res.status(404).json({ error: "Node not found" });
     }
 
-    await db.updateProjectUpdatedAt(projectId);
+    await db.updateProjectUpdatedAt(project_id);
 
     return res.json({ status: "success" });
   } catch (error) {
