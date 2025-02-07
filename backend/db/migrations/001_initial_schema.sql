@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS projects (
 -- Nodes table
 CREATE TYPE state_value AS (
     string_value TEXT,
-    number_value NUMERIC
+    number_value DOUBLE PRECISION
 );
 
 CREATE TABLE IF NOT EXISTS nodes (

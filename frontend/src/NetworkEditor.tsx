@@ -60,12 +60,14 @@ const NetworkEditor = ({
   const createNewNode = (type: NodeType, position: Coordinates): BaseNode | null => {
     const nodeId = crypto.randomUUID();
     const newNodes = { ...nodes };
-    const newNode = nu.newNode(type, position);
+    const newNode = nu.newNode(type, project._id, position);
     if (!newNode) {
       console.error('Could not create new node');
       return null;
     }
 
+    console.log(`${nodeId}: ${position.x}, ${position.y}`);
+    console.log(`${nodeId}: ${newNode.coordinates.x}, ${newNode.coordinates.y}`);
     newNodes[nodeId] = {
       id: nodeId,
       node: newNode,
@@ -87,13 +89,7 @@ const NetworkEditor = ({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          project_id: project?._id,
-          node_id: newNode._id,
-          type: newNode.type,
-          coordinates: {
-            x: dropdownPosition.x,
-            y: dropdownPosition.y,
-          },
+          node: newNode,
         }),
       });
       const data = await response.json();

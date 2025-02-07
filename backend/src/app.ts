@@ -6,16 +6,9 @@ import dotenv from "dotenv";
 import path from 'path';
 import { Database as db } from './db';
 import { UserModel } from '../../shared/types/src/models/user';
-import {
-  TextNode,
-  PromptNode,
-  SaveNode,
-  ViewNode,
-  MergeNode,
-} from '../../shared/types/src/models/node';
 import { runPrompt } from './llm';
 import stytch from 'stytch';
-import { v4 as uuidv4 } from 'uuid';
+import { checkAnyNullOrUndefined } from './util';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -213,7 +206,9 @@ router.get('/auth/check', async (req: Request, res: Response) => {
 // Middleware to guard the /api/* routes
 app.use('/api', authenticate);
 
+////////////////////////////////////////////////////////////
 // Projects
+////////////////////////////////////////////////////////////
 
 router.get('/api/get_latest_project', async (req: Request, res: Response) => {
   try {
@@ -330,7 +325,9 @@ router.delete('/api/delete_project/:project_id', async (req: Request, res: Respo
   }
 });
 
-// Blocks
+////////////////////////////////////////////////////////////
+// Nodes
+////////////////////////////////////////////////////////////
 
 router.get('/api/get_node/:node_id', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
@@ -378,10 +375,19 @@ router.get('/api/get_nodes_for_project/:project_id', async (req: Request, res: R
 });
 
 router.post('/api/new_node', async (req: Request, res: Response) => {
-  const { project_id, node_id, type, coordinates } = req.body;
-  if (!project_id || !type || !coordinates) {
-    console.error("No project ID or type or coordinates provided", req.body);
-    return res.status(400).json({ error: "No project ID or type or coordinates provided" });
+  const { node } = req.body;
+  if (!node) {
+    console.error("No node provided", req.body);
+    return res.status(400).json({ error: "No node provided" });
+  }
+
+  console.log("Received node", node);
+  const { _id, projectId, name, type, inputs, outputs, coordinates, runsAutomatically, properties, state, isDirty } = node;
+  try {
+    checkAnyNullOrUndefined({ _id, projectId, name, type, inputs, outputs, coordinates, runsAutomatically, properties, state, isDirty });
+  } catch (error) {
+    console.error(`A required field is missing from the node: ${error}`);
+    return res.status(400).json({ error: "Some required fields are missing from the node" });
   }
 
   try {
@@ -390,42 +396,9 @@ router.post('/api/new_node', async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Could not find user email from session token" });
     }
 
-    let node = null;
-    switch (type) {
-      case 'text':
-        node = new TextNode(node_id, coordinates);
-        break;
-      case 'prompt':
-        node = new PromptNode(node_id, coordinates);
-        break;
-      case 'save':
-        node = new SaveNode(node_id, coordinates);
-        break;
-      case 'view':
-        node = new ViewNode(node_id, coordinates);
-        break;
-      case 'merge':
-        node = new MergeNode(node_id, coordinates);
-        break;
-      default:
-        return res.status(400).json({ error: "Invalid node type" });
-    }
-
-    if (!node) {
-      return res.status(500).json({ status: "failed", error: "Could not create node object" });
-    }
-
-    const nodeId = await db.createNode(user._id, project_id, node.name, node.type, node.inputs, node.outputs, node.coordinates, node.runsAutomatically, node.properties);
-    if (!nodeId) {
-      return res.status(500).json({ status: "failed", error: "Could not create node in database" });
-    }
-
-    await db.updateProjectUpdatedAt(project_id);
-
-    return res.json({
-      status: "success",
-      nodeId: nodeId
-    });
+    await db.createNode(_id, user._id, projectId, name, type, inputs, outputs, coordinates, runsAutomatically, properties, state.input, state.output, isDirty);
+    await db.updateProjectUpdatedAt(projectId);
+    return res.json({ status: "success" });
   } catch (error) {
     if (error instanceof Error) {
       return res.status(500).json({ status: "failed", error: error.message });
@@ -440,13 +413,13 @@ router.post('/api/update_node', async (req: Request, res: Response) => {
     return res.status(401).json({ error: "Could not find user email from session token" });
   }
 
-  const { nodeId, projectId, name, type, inputs, outputs, runsAutomatically, properties } = req.body;
+  const { nodeId, projectId, name, type, inputs, outputs, runsAutomatically, properties, inputState, outputState, isDirty } = req.body;
   if (!nodeId || !projectId) {
     return res.status(400).json({ error: "No nodeId or projectId provided" });
   }
 
   try {
-    const result = await db.updateNode(nodeId, name, type, inputs, outputs, runsAutomatically, properties, user._id);
+    const result = await db.updateNode(nodeId, name, type, inputs, outputs, runsAutomatically, properties, inputState, outputState, isDirty, user._id);
     if (result.rowCount === 0) {
       return res.status(404).json({ error: "Node ID not found" });
     }

@@ -79,6 +79,7 @@ const Project = ({ project, handleProjectTitleChange }: ProjectProps) => {
           const node = nu.fromObject(nodeJson);
           if (!node) return;
 
+          console.log(`${node._id}: ${node.coordinates.x}, ${node.coordinates.y}`);
           visualNodes[node._id] = {
             id: node._id,
             node: node,
