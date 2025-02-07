@@ -49,6 +49,8 @@ if [ "$ENVIRONMENT" == "prod" ]; then
 
   # Revoke connect on the database from the public role
   PGPASSWORD=$DB_ADMIN_PASSWORD psql -U postgres -c "REVOKE CONNECT ON DATABASE $DB_NAME FROM PUBLIC;"
+  # Grant connect on the database to the app user
+  PGPASSWORD=$DB_ADMIN_PASSWORD psql -U postgres -c "GRANT CONNECT ON DATABASE $DB_NAME TO $DB_USER;"
   # Grant usage on the schema to the app user
   PGPASSWORD=$DB_ADMIN_PASSWORD psql -U postgres -d $DB_NAME -c "GRANT USAGE ON SCHEMA public TO $DB_USER;"
   PGPASSWORD=$DB_ADMIN_PASSWORD psql -U postgres -d $DB_NAME -c "GRANT CREATE ON SCHEMA public TO $DB_USER;"
@@ -89,6 +91,8 @@ elif [ "$ENVIRONMENT" == "dev" ]; then
 
   # Revoke connect on the database from the public role
   psql $DB_NAME -c "REVOKE CONNECT ON DATABASE $DB_NAME FROM PUBLIC;"
+  # Grant connect on the database to the app user
+  psql $DB_NAME -c "GRANT CONNECT ON DATABASE $DB_NAME TO $DB_USER;"
   # Grant usage on the schema to the app user
   psql $DB_NAME -c "GRANT USAGE ON SCHEMA public TO $DB_USER;"
   psql $DB_NAME -c "GRANT CREATE ON SCHEMA public TO $DB_USER;"

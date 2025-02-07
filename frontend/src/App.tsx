@@ -76,7 +76,10 @@ const App = () => {
     // Erase the input that was disconnected from the toNode and rerun the node
     const toNode = nodes[connections.find(conn => conn.id === connectionId)?.connection.toNode ?? ''];
     if (toNode) {
-      toNode.node.state.input[connections.find(conn => conn.id === connectionId)?.connection.toInput ?? 0] = '';
+      toNode.node.state.input[connections.find(conn => conn.id === connectionId)?.connection.toInput ?? 0] = {
+        stringValue: null,
+        numberValue: null,
+      };
     }
   }
 
