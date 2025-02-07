@@ -52,8 +52,8 @@ const Menu = ({ project, setProject, projects, fetchAllProjects }: MenuProps) =>
   }
 
   return (
-    <div className={`left-section ${isCollapsed ? 'collapsed' : 'expanded'}`}>
-      <div className="left-section-header-container">
+    <div className={`menu-container ${isCollapsed ? 'collapsed' : 'expanded'}`}>
+      <div className="menu-header-container">
         <button className="collapse-button" onClick={() => setIsCollapsed(!isCollapsed)}>
           <BurgerMenu isCollapsed={isCollapsed} strokeColor={"var(--font-color)"} />
         </button>
@@ -67,10 +67,10 @@ const Menu = ({ project, setProject, projects, fetchAllProjects }: MenuProps) =>
             </button>
           </div>
           <div className="menu-items-projects">
-            {projects.map((project) => {
-              const highlighted = project?._id === project?._id;
+            {projects.map((_project) => {
+              const highlighted = _project._id === project?._id;
               return (
-                <ProjectPreview key={project._id} highlighted={highlighted} project={project} deleteProject={deleteProject} setProject={setProject} />
+                <ProjectPreview key={_project._id} highlighted={highlighted} project={_project} deleteProject={deleteProject} setProject={setProject} />
               )
             })}
           </div>

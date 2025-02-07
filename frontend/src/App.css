@@ -12,49 +12,7 @@
   height: 100vh;
 }
 
-/* Left section */
 
-.left-section {
-  background-color: var(--background-dark-2);
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-}
-
-.left-section.collapsed {
-  transition: width 0.3s ease-in-out;
-  width: 50px;
-}
-
-.left-section.expanded {
-  transition: width 0.3s ease-in-out;
-  width: 200px;
-}
-
-.collapse-button {
-  border: none;
-  background-color: transparent;
-  height: 30px;
-  width: 30px;
-  padding: 0px;
-  margin-top: 6px;
-  outline: none;
-}
-
-.collapse-button:focus {
-  outline: none;
-}
-
-.collapse-button .expanded {
-  transition: transform 0.3s ease-in-out;
-  transform: rotate(0deg);
-}
-
-.collapse-button .collapsed {
-  transition: transform 0.3s ease-in-out;
-  transform: rotate(90deg);
-}
 
 /* Right section */
 
