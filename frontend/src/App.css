@@ -68,6 +68,15 @@
   height: 6vh;
   min-height: 2em;
   padding: 6px 4px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.project-title-input {
+  background-color: var(--background-dark-1);
+  border: none;
 }
 
 .right-section-header h2 {

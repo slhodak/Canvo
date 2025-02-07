@@ -54,17 +54,17 @@ export namespace Database {
     await db.none('INSERT INTO sessions (session_token, user_email, session_expiration) VALUES ($1, $2, $3)', values);
   }
 
-  // Groups
+  // Projects
 
   export async function getProject(projectId: string, userId: string): Promise<ProjectModel | null> {
     const values = [projectId, userId];
-    const project = await db.oneOrNone('SELECT id, _id, author_id, label, updated_at, created_at FROM projects WHERE _id = $1 and author_id = $2', values);
+    const project = await db.oneOrNone('SELECT id, _id, author_id, title, updated_at, created_at FROM projects WHERE _id = $1 and author_id = $2', values);
     return project;
   }
 
   export async function getLatestProject(userId: string): Promise<ProjectModel | null> {
     const project = await db.oneOrNone(`
-      SELECT id, _id, author_id, label, updated_at, created_at
+      SELECT id, _id, author_id, title, updated_at, created_at
       FROM projects
       WHERE author_id = $1
       ORDER BY updated_at DESC
@@ -74,18 +74,18 @@ export namespace Database {
   }
 
   export async function getAllProjects(userId: string): Promise<ProjectModel[]> {
-    const projects = await db.any('SELECT id, _id, author_id, label, updated_at, created_at FROM projects WHERE author_id = $1', [userId]);
+    const projects = await db.any('SELECT id, _id, author_id, title, updated_at, created_at FROM projects WHERE author_id = $1', [userId]);
     return projects;
   }
 
-  export async function createProject(userId: string, label: string) {
+  export async function createProject(userId: string, title: string) {
     const projectId = uuidv4();
-    await db.none('INSERT INTO projects (_id, author_id, label) VALUES ($1, $2, $3)', [projectId, userId, label]);
+    await db.none('INSERT INTO projects (_id, author_id, title) VALUES ($1, $2, $3)', [projectId, userId, title]);
     return projectId;
   }
 
-  export async function updateProjectLabel(projectId: string, label: string) {
-    const result = await db.result('UPDATE projects SET label = $1, updated_at = CURRENT_TIMESTAMP WHERE _id = $2', [label, projectId]);
+  export async function updateProjectTitle(projectId: string, title: string) {
+    const result = await db.result('UPDATE projects SET title = $1, updated_at = CURRENT_TIMESTAMP WHERE _id = $2', [title, projectId]);
     return result;
   }
 

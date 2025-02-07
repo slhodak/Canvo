@@ -27,7 +27,11 @@ CREATE TABLE IF NOT EXISTS projects (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    _id TEXT UNIQUE NOT NULL
+    _id TEXT UNIQUE NOT NULL,
+    author_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+
+    FOREIGN KEY (author_id) REFERENCES users(_id) ON DELETE CASCADE
 );
 
 -- Nodes table
@@ -41,6 +45,7 @@ CREATE TABLE IF NOT EXISTS nodes (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
+    author_id TEXT NOT NULL,
     project_id INTEGER NOT NULL,
     _id TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
@@ -53,6 +58,7 @@ CREATE TABLE IF NOT EXISTS nodes (
     output_state state_value[] NOT NULL DEFAULT '{}',
     is_dirty BOOLEAN NOT NULL DEFAULT FALSE,
 
+    FOREIGN KEY (author_id) REFERENCES users(_id) ON DELETE CASCADE,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
 
     CONSTRAINT valid_input_number CHECK (inputs >= 0),
@@ -65,11 +71,15 @@ CREATE TABLE IF NOT EXISTS connections (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
+    author_id TEXT NOT NULL,
+    project_id INTEGER NOT NULL,
     from_node TEXT NOT NULL,
     from_output INTEGER NOT NULL,
     to_node TEXT NOT NULL,
     to_input INTEGER NOT NULL,
 
+    FOREIGN KEY (author_id) REFERENCES users(_id) ON DELETE CASCADE,
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
     FOREIGN KEY (from_node) REFERENCES nodes(_id) ON DELETE CASCADE,
     FOREIGN KEY (to_node) REFERENCES nodes(_id) ON DELETE CASCADE,
 

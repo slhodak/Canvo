@@ -18,7 +18,7 @@
   margin: 8px 0px;
 }
 
-.add-group-button {
+.add-project-button {
   padding: 5px;
   border: 1px solid gray;
   border-radius: 6px;
@@ -28,7 +28,7 @@
   box-shadow: 0px 1px 2px 0 rgba(0, 0, 0, 0.6);
 }
 
-.add-group-button:hover {
+.add-project-button:hover {
   background-color: rgba(255, 255, 255, 0.4);
 }
 
@@ -39,7 +39,7 @@
   gap: 10px;
 }
 
-.group-preview-container {
+.project-preview-container {
   border: 1px solid black;
   display: flex;
   flex-direction: row;
@@ -51,11 +51,12 @@
   border-radius: 8px;
 }
 
-.highlighted-group-preview {
+.highlighted-project-preview {
   background-color: white;
+  color: black;
 }
 
-.group-preview-delete-button {
+.project-preview-delete-button {
   width: 20px;
   height: 20px;
   display: flex;
@@ -64,14 +65,4 @@
   padding: 0;
   border: none;
   background-color: transparent;
-}
-
-.delete-group-icon {
-  fill: rgb(146, 146, 146);
-  height: 100%;
-  width: 100%;
-}
-
-.delete-group-icon:hover {
-  fill: rgb(227, 1, 1);
 }

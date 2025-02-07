@@ -213,20 +213,20 @@ router.get('/auth/check', async (req: Request, res: Response) => {
 // Middleware to guard the /api/* routes
 app.use('/api', authenticate);
 
-// Groups
+// Projects
 
-router.get('/api/get_latest_group', async (req: Request, res: Response) => {
+router.get('/api/get_latest_project', async (req: Request, res: Response) => {
   try {
     const user = await getUserFromSessionToken(req);
     if (!user) {
       return res.status(401).json({ error: "Could not find user email from session token" });
     }
 
-    const group = await db.getLatestProject(user._id);
+    const project = await db.getLatestProject(user._id);
 
     return res.json({
       status: "success",
-      group: group
+      project: project
     });
   } catch (error) {
     if (error instanceof Error) {
@@ -247,7 +247,7 @@ router.get('/api/get_all_projects', async (req: Request, res: Response) => {
 
     return res.json({
       status: "success",
-      groups: results,
+      projects: results,
     });
   } catch (error) {
     if (error instanceof Error) {
@@ -287,10 +287,10 @@ router.post('/api/new_project', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/api/update_project_label', async (req: Request, res: Response) => {
-  const { projectId, label } = req.body;
+router.post('/api/update_project_title', async (req: Request, res: Response) => {
+  const { projectId, title } = req.body;
   try {
-    const result = await db.updateProjectLabel(projectId, label);
+    const result = await db.updateProjectTitle(projectId, title);
     if (result.rowCount === 0) {
       return res.status(404).json({ error: "Project not found" });
     }

@@ -7,6 +7,8 @@ import Menu from './Menu';
 import { useState, useEffect, useCallback } from 'react';
 import { TextNode, PromptNode, SaveNode, ViewNode, MergeNode, Connection } from '../../shared/types/src/models/node';
 import { NodeType } from '../../shared/types/src/types';
+import { ProjectModel } from '../../shared/types/src/models/project';
+import { SERVER_URL } from './constants';
 
 interface Coordinates {
   x: number;
@@ -14,11 +16,13 @@ interface Coordinates {
 }
 
 const App = () => {
-  const [nodePropertyChanges, setNodePropertyChanges] = useState<number>(0);
-  const [viewText, setViewText] = useState<string>('');
-  const [selectedNode, setSelectedNode] = useState<VisualNode | null>(null);
+  const [project, setProject] = useState<ProjectModel | null>(null);
+  const [projects, setProjects] = useState<ProjectModel[]>([]);
   const [nodes, setNodes] = useState<Record<string, VisualNode>>({});
   const [connections, setConnections] = useState<VisualConnection[]>([]);
+  const [selectedNode, setSelectedNode] = useState<VisualNode | null>(null);
+  const [nodePropertyChanges, setNodePropertyChanges] = useState<number>(0);
+  const [viewText, setViewText] = useState<string>('');
   const [isHoveringEditor, setIsHoveringEditor] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<Coordinates>({ x: 0, y: 0 });
@@ -81,6 +85,35 @@ const App = () => {
         stringValue: null,
         numberValue: null,
       };
+    }
+  }
+
+  const fetchAllProjects = async () => {
+    const response = await fetch(`${SERVER_URL}/api/get_all_projects`, {
+      credentials: 'include',
+    });
+    const data = await response.json();
+    setProjects(data.projects);
+  }
+
+  const updateProjectTitle = async (title: string) => {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/update_project_title`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ projectId: project?._id, title: title }),
+      });
+      const data = await response.json();
+      if (data.status == 'success') {
+        await fetchAllProjects();
+      } else {
+        console.error('Error updating project title:', data.error);
+      }
+    } catch (error) {
+      console.error('Error updating project title:', error);
     }
   }
 
@@ -201,16 +234,21 @@ const App = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedNode, nodes, isHoveringEditor, mousePosition, connectToViewNode]);
 
+  useEffect(() => {
+    fetchAllProjects();
+  }, []);
+
   //////////////////////////////
   // UI Rendering
   //////////////////////////////
 
   return (
     <div className="app-container">
-      <Menu />
+      <Menu project={project} setProject={setProject} projects={projects} fetchAllProjects={fetchAllProjects} />
 
       <div className="right-section">
         <div className="right-section-header">
+          <input type="text" className="project-title-input" value={project?.title} onChange={(e) => updateProjectTitle(e.target.value)} />
           <h2 className="app-title-header">Canvo</h2>
         </div>
 

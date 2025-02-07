@@ -1,0 +1,9 @@
+.trash-icon {
+  fill: rgb(146, 146, 146);
+  height: 100%;
+  width: 100%;
+}
+
+.trash-icon:hover {
+  fill: rgb(227, 1, 1);
+}
