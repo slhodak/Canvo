@@ -3,7 +3,7 @@ import './Project.css';
 import { useState, useEffect, useCallback } from 'react';
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { VisualNode, VisualConnection } from './NetworkTypes';
-import { BaseNode, Connection, Coordinates } from '../../shared/types/src/models/node';
+import { BaseNode, Connection, Coordinates, MergeNode, SaveNode, PromptNode, TextNode, ViewNode } from '../../shared/types/src/models/node';
 import NetworkEditor from './NetworkEditor';
 import ParametersPane from './ParametersPane';
 import OutputView from "./OutputView";
@@ -44,36 +44,43 @@ const Project = ({ project, handleProjectTitleChange }: ProjectProps) => {
     });
   }
 
-  const createNewNode = async (type: NodeType) => {
+  const handleNewNodeClick = async (nodeType: NodeType) => {
+    const currentNodes = nodes;
+    const newNode = createNewNode(nodeType);
+    await syncNewNode(currentNodes, newNode);
+  }
+
+  const createNewNode = (type: NodeType) => {
     const nodeId = crypto.randomUUID();
-    // const newNodes = { ...nodes };
-    // const newNode = (() => {
-    //   switch (type) {
-    //     case NodeType.Text:
-    //       return new TextNode(newId);
-    //     case NodeType.Prompt:
-    //       return new PromptNode(newId);
-    //     case NodeType.Save:
-    //       return new SaveNode(newId);
-    //     case NodeType.View:
-    //       return new ViewNode(newId);
-    //     case NodeType.Merge:
-    //       return new MergeNode(newId);
-    //   }
-    // })();
+    const newNodes = { ...nodes };
+    const newNode = (() => {
+      switch (type) {
+        case NodeType.Text:
+          return new TextNode(nodeId, mousePosition);
+        case NodeType.Prompt:
+          return new PromptNode(nodeId, mousePosition);
+        case NodeType.Save:
+          return new SaveNode(nodeId, mousePosition);
+        case NodeType.View:
+          return new ViewNode(nodeId, mousePosition);
+        case NodeType.Merge:
+          return new MergeNode(nodeId, mousePosition);
+      }
+    })();
 
-    // newNodes[newId] = {
-    //   id: newId,
-    //   node: newNode,
-    //   x: mousePosition.x,
-    //   y: mousePosition.y,
-    // };
+    newNodes[nodeId] = {
+      id: nodeId,
+      node: newNode,
+      x: mousePosition.x,
+      y: mousePosition.y,
+    };
 
-    // setNodes(newNodes);
+    setNodes(newNodes);
     setShowDropdown(false);
-    // Post the node to the server
+    return newNode;
+  }
 
-    // TODO: Move this outside this function. Undo it on the frontend if the post fails
+  const syncNewNode = async (currentNodes: Record<string, VisualNode>, newNode: BaseNode) => {
     try {
       const response = await fetch(`${SERVER_URL}/api/new_node`, {
         method: 'POST',
@@ -83,8 +90,8 @@ const Project = ({ project, handleProjectTitleChange }: ProjectProps) => {
         },
         body: JSON.stringify({
           project_id: project?._id,
-          node_id: nodeId,
-          type: type as string,
+          node_id: newNode._id,
+          type: newNode.type,
           coordinates: {
             x: dropdownPosition.x,
             y: dropdownPosition.y,
@@ -95,10 +102,12 @@ const Project = ({ project, handleProjectTitleChange }: ProjectProps) => {
       if (data.status === 'success') {
         fetchNodesForProject();
       } else {
-        console.error('Error creating node:', data.error);
+        console.error('Server error while creating node:', data.error);
+        setNodes(currentNodes);
       }
     } catch (error) {
-      console.error('Error creating node:', error);
+      console.error('Could not sync new node:', error);
+      setNodes(currentNodes);
     }
   };
 
@@ -294,19 +303,19 @@ const Project = ({ project, handleProjectTitleChange }: ProjectProps) => {
                   top: dropdownPosition.y
                 }}
               >
-                <div className="app-dropdown-option" onClick={() => createNewNode(NodeType.Text)}>
+                <div className="app-dropdown-option" onClick={() => handleNewNodeClick(NodeType.Text)}>
                   Text Node
                 </div>
-                <div className="app-dropdown-option" onClick={() => createNewNode(NodeType.Prompt)}>
+                <div className="app-dropdown-option" onClick={() => handleNewNodeClick(NodeType.Prompt)}>
                   Prompt Node
                 </div>
-                <div className="app-dropdown-option" onClick={() => createNewNode(NodeType.Save)}>
+                <div className="app-dropdown-option" onClick={() => handleNewNodeClick(NodeType.Save)}>
                   Save Node
                 </div>
-                <div className="app-dropdown-option" onClick={() => createNewNode(NodeType.View)}>
+                <div className="app-dropdown-option" onClick={() => handleNewNodeClick(NodeType.View)}>
                   View Node
                 </div>
-                <div className="app-dropdown-option" onClick={() => createNewNode(NodeType.Merge)}>
+                <div className="app-dropdown-option" onClick={() => handleNewNodeClick(NodeType.Merge)}>
                   Merge Node
                 </div>
               </div>
