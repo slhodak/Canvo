@@ -37,8 +37,8 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
 
   return (
     <g
-      key={node.node.id}
-      onMouseDown={(e) => handleMouseDown(e, node.node.id)}
+      key={node.node._id}
+      onMouseDown={(e) => handleMouseDown(e, node.node._id)}
       className="node-g">
 
       {/* Node Rectangle */}
@@ -63,7 +63,7 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
       {Array.from({ length: node.node.inputs }).map((_, i) => {
         const pos = neu.getPortPosition(node, true, i);
         const connection = connections.find(
-          conn => conn.connection.toNode === node.node.id && conn.connection.toInput === i
+          conn => conn.connection.toNode === node.node._id && conn.connection.toInput === i
         );
 
         return (
@@ -72,7 +72,7 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
               cx={pos.x}
               cy={pos.y}
               r={neu.PORT_RADIUS}
-              onMouseDown={(e) => handleConnectionClick(e, true, connection?.id, node.node.id, i)}
+              onMouseDown={(e) => handleConnectionClick(e, true, connection?.id, node.node._id, i)}
               className={`node-input-port ${connection && "connected"} ${wireState.isDrawing && "drawing"}`}
             />
           </g>
@@ -83,7 +83,7 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
       {Array.from({ length: node.node.outputs }).map((_, i) => {
         const pos = neu.getPortPosition(node, false, i);
         const connection = connections.find(
-          conn => conn.connection.fromNode === node.node.id && conn.connection.fromOutput === i
+          conn => conn.connection.fromNode === node.node._id && conn.connection.fromOutput === i
         );
 
         return (
@@ -92,7 +92,7 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
             cx={pos.x}
             cy={pos.y}
             r={neu.PORT_RADIUS}
-            onMouseDown={(e) => handleConnectionClick(e, false, connection?.id, node.node.id, i)}
+            onMouseDown={(e) => handleConnectionClick(e, false, connection?.id, node.node._id, i)}
             className="node-output-port"
           />
         );

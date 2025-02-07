@@ -6,8 +6,14 @@ export interface NodeProperty {
   displayed: boolean;
 }
 
+export interface Coordinates {
+  x: number;
+  y: number;
+}
+
 export class Connection {
   constructor(
+    public _id: string,
     public fromNode: string,
     public fromOutput: number,
     public toNode: string,
@@ -31,11 +37,12 @@ export interface IOState {
 }
 
 export abstract class BaseNode {
-  public id: string;
+  public _id: string;
   public name: string;
   public type: string;
   public inputs: number;
   public outputs: number;
+  public coordinates: Coordinates;
   public runsAutomatically: boolean;
   public properties: Record<string, NodeProperty> = {};
   public state = {
@@ -45,19 +52,21 @@ export abstract class BaseNode {
   public isDirty = false;
 
   constructor(
-    id: string,
+    _id: string,
     name: string,
     type: string,
     inputs: number,
     outputs: number,
+    coordinates: Coordinates,
     runsAutomatically: boolean,
-    properties: Record<string, NodeProperty> = {}
+    properties: Record<string, NodeProperty> = {},
   ) {
-    this.id = id;
+    this._id = _id;
     this.name = name;
     this.type = type;
     this.inputs = inputs;
     this.outputs = outputs;
+    this.coordinates = coordinates;
     this.runsAutomatically = runsAutomatically;
     this.properties = properties;
     // Initialize the input and output arrays
@@ -93,9 +102,10 @@ export abstract class BaseNode {
 export class TextNode extends BaseNode implements SyncNode {
   constructor(
     id: string,
-    public text: string = ''
+    coordinates: Coordinates,
+    public text: string = '',
   ) {
-    super(id, 'Text', 'text', 0, 1, true, {
+    super(id, 'Text', 'text', 0, 1, coordinates, true, {
       text: {
         type: 'string',
         label: 'Text',
@@ -120,9 +130,10 @@ export class TextNode extends BaseNode implements SyncNode {
 export class PromptNode extends BaseNode implements AsyncNode {
   constructor(
     id: string,
-    public prompt: string = ''
+    coordinates: Coordinates,
+    public prompt: string = '',
   ) {
-    super(id, 'Prompt', 'prompt', 1, 1, false, {
+    super(id, 'Prompt', 'prompt', 1, 1, coordinates, false, {
       prompt: {
         type: 'string',
         label: 'Prompt',
@@ -144,8 +155,9 @@ export class PromptNode extends BaseNode implements AsyncNode {
 export class SaveNode extends BaseNode implements AsyncNode {
   constructor(
     id: string,
+    coordinates: Coordinates,
   ) {
-    super(id, 'Save', 'save', 1, 0, false);
+    super(id, 'Save', 'save', 1, 0, coordinates, false);
   }
 
   async asyncRun() {
@@ -157,8 +169,9 @@ export class SaveNode extends BaseNode implements AsyncNode {
 export class MergeNode extends BaseNode implements SyncNode {
   constructor(
     id: string,
+    coordinates: Coordinates,
   ) {
-    super(id, 'Merge', 'merge', 2, 1, true, {
+    super(id, 'Merge', 'merge', 2, 1, coordinates, true, {
       separator: {
         type: 'string',
         label: 'Separator',
@@ -187,8 +200,9 @@ export class MergeNode extends BaseNode implements SyncNode {
 export class ViewNode extends BaseNode implements SyncNode {
   constructor(
     id: string,
+    coordinates: Coordinates,
   ) {
-    super(id, 'View', 'view', 1, 0, true, {
+    super(id, 'View', 'view', 1, 0, coordinates, true, {
       content: {
         type: 'string',
         label: 'Content',

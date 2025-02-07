@@ -40,13 +40,19 @@ CREATE TYPE state_value AS (
     number_value NUMERIC
 );
 
+CREATE TYPE xy_coords AS (
+    x INTEGER,
+    y INTEGER
+);
+
 CREATE TABLE IF NOT EXISTS nodes (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
+    coordinates xy_coords NOT NULL,
     author_id TEXT NOT NULL,
-    project_id INTEGER NOT NULL,
+    project_id TEXT NOT NULL,
     _id TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
     type TEXT NOT NULL,
@@ -59,7 +65,7 @@ CREATE TABLE IF NOT EXISTS nodes (
     is_dirty BOOLEAN NOT NULL DEFAULT FALSE,
 
     FOREIGN KEY (author_id) REFERENCES users(_id) ON DELETE CASCADE,
-    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    FOREIGN KEY (project_id) REFERENCES projects(_id) ON DELETE CASCADE,
 
     CONSTRAINT valid_input_number CHECK (inputs >= 0),
     CONSTRAINT valid_output_number CHECK (outputs >= 0)

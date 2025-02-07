@@ -5,15 +5,12 @@ import ParametersPane from './ParametersPane';
 import OutputView from './OutputView';
 import Menu from './Menu';
 import { useState, useEffect, useCallback } from 'react';
-import { TextNode, PromptNode, SaveNode, ViewNode, MergeNode, Connection } from '../../shared/types/src/models/node';
+import {
+  // TextNode, PromptNode, SaveNode, ViewNode, MergeNode,
+  Connection, BaseNode, Coordinates } from '../../shared/types/src/models/node';
 import { NodeType } from '../../shared/types/src/types';
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { SERVER_URL } from './constants';
-
-interface Coordinates {
-  x: number;
-  y: number;
-}
 
 const App = () => {
   const [project, setProject] = useState<ProjectModel | null>(null);
@@ -47,33 +44,62 @@ const App = () => {
     });
   }
 
-  const createNewNode = (type: NodeType) => {
-    const newId = crypto.randomUUID();
-    const newNodes = { ...nodes };
-    const newNode = (() => {
-      switch (type) {
-        case NodeType.Text:
-          return new TextNode(newId);
-        case NodeType.Prompt:
-          return new PromptNode(newId);
-        case NodeType.Save:
-          return new SaveNode(newId);
-        case NodeType.View:
-          return new ViewNode(newId);
-        case NodeType.Merge:
-          return new MergeNode(newId);
-      }
-    })();
+  const createNewNode = async (type: NodeType) => {
+    const nodeId = crypto.randomUUID();
+    // const newNodes = { ...nodes };
+    // const newNode = (() => {
+    //   switch (type) {
+    //     case NodeType.Text:
+    //       return new TextNode(newId);
+    //     case NodeType.Prompt:
+    //       return new PromptNode(newId);
+    //     case NodeType.Save:
+    //       return new SaveNode(newId);
+    //     case NodeType.View:
+    //       return new ViewNode(newId);
+    //     case NodeType.Merge:
+    //       return new MergeNode(newId);
+    //   }
+    // })();
 
-    newNodes[newId] = {
-      id: newId,
-      node: newNode,
-      x: mousePosition.x,
-      y: mousePosition.y,
-    };
+    // newNodes[newId] = {
+    //   id: newId,
+    //   node: newNode,
+    //   x: mousePosition.x,
+    //   y: mousePosition.y,
+    // };
 
-    setNodes(newNodes);
+    // setNodes(newNodes);
     setShowDropdown(false);
+    // Post the node to the server
+
+    // TODO: Move this outside this function. Undo it on the frontend if the post fails
+    try {
+      const response = await fetch(`${SERVER_URL}/api/new_node`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          project_id: project?._id,
+          node_id: nodeId,
+          type: type as string,
+          coordinates: {
+            x: dropdownPosition.x,
+            y: dropdownPosition.y,
+          },
+        }),
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        fetchNodesForProject();
+      } else {
+        console.error('Error creating node:', data.error);
+      }
+    } catch (error) {
+      console.error('Error creating node:', error);
+    }
   };
 
   const deleteConnection = (connectionId: string) => {
@@ -133,6 +159,30 @@ const App = () => {
   // Memoized Functions
   //////////////////////////////
 
+  const fetchNodesForProject = useCallback(async () => {
+    if (!project) return;
+
+    try {
+      const response = await fetch(`${SERVER_URL}/api/get_nodes_for_project/${project._id}`, {
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        const visualNodes = data.nodes.map((node: BaseNode) => ({
+          id: node._id,
+          node: node,
+          x: node.coordinates.x,
+          y: node.coordinates.y,
+        }));
+        setNodes(visualNodes);
+      } else {
+        console.error('Error fetching nodes for project:', data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching nodes for project:', error);
+    }
+  }, [project]);
+
   const runNode = useCallback((node: VisualNode) => {
     if ('run' in node.node && typeof node.node.run === 'function') {
       node.node.run();
@@ -181,6 +231,7 @@ const App = () => {
     const newConnection: VisualConnection = {
       id: `${fromNodeId}-${toNodeId}-${Date.now()}`,
       connection: new Connection(
+        crypto.randomUUID(),
         fromNodeId,
         fromOutput,
         toNodeId,
@@ -249,6 +300,10 @@ const App = () => {
   useEffect(() => {
     fetchAllProjects();
   }, []);
+
+  useEffect(() => {
+    fetchNodesForProject();
+  }, [fetchNodesForProject]);
 
   //////////////////////////////
   // UI Rendering

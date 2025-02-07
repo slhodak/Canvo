@@ -378,9 +378,10 @@ router.get('/api/get_nodes_for_project/:project_id', async (req: Request, res: R
 });
 
 router.post('/api/new_node', async (req: Request, res: Response) => {
-  const { project_id, type } = req.body;
-  if (!project_id || !type) {
-    return res.status(400).json({ error: "No project ID or type provided" });
+  const { project_id, node_id, type, coordinates } = req.body;
+  if (!project_id || !type || !coordinates) {
+    console.error("No project ID or type or coordinates provided", req.body);
+    return res.status(400).json({ error: "No project ID or type or coordinates provided" });
   }
 
   try {
@@ -392,19 +393,19 @@ router.post('/api/new_node', async (req: Request, res: Response) => {
     let node = null;
     switch (type) {
       case 'text':
-        node = new TextNode(uuidv4());
+        node = new TextNode(node_id, coordinates);
         break;
       case 'prompt':
-        node = new PromptNode(uuidv4());
+        node = new PromptNode(node_id, coordinates);
         break;
       case 'save':
-        node = new SaveNode(uuidv4());
+        node = new SaveNode(node_id, coordinates);
         break;
       case 'view':
-        node = new ViewNode(uuidv4());
+        node = new ViewNode(node_id, coordinates);
         break;
       case 'merge':
-        node = new MergeNode(uuidv4());
+        node = new MergeNode(node_id, coordinates);
         break;
       default:
         return res.status(400).json({ error: "Invalid node type" });
@@ -414,7 +415,7 @@ router.post('/api/new_node', async (req: Request, res: Response) => {
       return res.status(500).json({ status: "failed", error: "Could not create node object" });
     }
 
-    const nodeId = await db.createNode(user._id, project_id, node.name, node.type, node.inputs, node.outputs, node.runsAutomatically, node.properties);
+    const nodeId = await db.createNode(user._id, project_id, node.name, node.type, node.inputs, node.outputs, node.coordinates, node.runsAutomatically, node.properties);
     if (!nodeId) {
       return res.status(500).json({ status: "failed", error: "Could not create node in database" });
     }

@@ -6,6 +6,7 @@ import { ProjectModel } from '../../shared/types/src/models/project';
 import {
   BaseNode,
   Connection,
+  Coordinates,
 } from '../../shared/types/src/models/node';
 
 
@@ -113,7 +114,7 @@ export namespace Database {
 
   export async function getNodesForProject(projectId: string, userId: string): Promise<BaseNode[]> {
     const nodes = await db.any(`
-      SELECT n._id, n.name, n.type, n.inputs, n.outputs, n.runs_automatically, n.properties, n.is_dirty
+      SELECT n._id, n.name, n.type, n.inputs, n.outputs, n.coordinates, n.runs_automatically, n.properties, n.is_dirty
       FROM nodes n
       WHERE n.project_id = $1 AND n.author_id = $2
     `, [projectId, userId]);
@@ -130,10 +131,13 @@ export namespace Database {
     return nodes;
   }
 
-  export async function createNode(userId: string, projectId: string, name: string, type: string, inputs: number, outputs: number, runs_automatically: boolean, properties: Record<string, any>): Promise<string | null> {
+  export async function createNode(userId: string, projectId: string, name: string, type: string, inputs: number, outputs: number, coordinates: Coordinates, runs_automatically: boolean, properties: Record<string, any>): Promise<string | null> {
     const nodeId = uuidv4();
-    const values = [nodeId, userId, projectId, name, type, inputs, outputs, runs_automatically, properties];
-    await db.none('INSERT INTO nodes (_id, author_id, project_id, name, type, inputs, outputs, runs_automatically, properties) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)', values);
+    const values = [nodeId, userId, projectId, name, type, inputs, outputs, coordinates.x, coordinates.y, runs_automatically, properties];
+    await db.none(`
+      INSERT INTO nodes (_id, author_id, project_id, name, type, inputs, outputs, coordinates, runs_automatically, properties)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, ($8, $9), $10, $11)
+    `, values);
     return nodeId;
   }
 
