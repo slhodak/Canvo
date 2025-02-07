@@ -14,7 +14,7 @@ interface MenuProps {
 }
 
 const Menu = ({ project, setProject, projects, fetchAllProjects }: MenuProps) => {
-  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const createProject = async () => {
     try {
@@ -57,6 +57,7 @@ const Menu = ({ project, setProject, projects, fetchAllProjects }: MenuProps) =>
         <button className="collapse-button" onClick={() => setIsCollapsed(!isCollapsed)}>
           <BurgerMenu isCollapsed={isCollapsed} strokeColor={"var(--font-color)"} />
         </button>
+        <h2 className="app-title-header">{isCollapsed ? 'C' : 'Canvo'}</h2>
       </div>
       {!isCollapsed && (
         <div className="menu-items-container">

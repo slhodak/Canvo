@@ -11,12 +11,26 @@
 
 .menu-container.collapsed {
   transition: width 0.3s ease-in-out;
-  width: 50px;
+  width: 62px;
 }
 
 .menu-container.expanded {
   transition: width 0.3s ease-in-out;
   width: 200px;
+}
+
+.menu-header-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  margin-bottom: 12px;
+}
+
+.menu-header-container h2 {
+  margin: 0px;
+  padding: 0px;
 }
 
 .collapse-button {
@@ -46,7 +60,6 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 20px;
   margin: 0px 2px;
 }
 
@@ -55,7 +68,7 @@
   flex-direction: row;
   align-items: center;
   gap: 20px;
-  margin-bottom: 14px;
+  padding-bottom: 12px;
 }
 
 .menu-items-header h3 {
@@ -84,7 +97,7 @@
 }
 
 .project-preview-container {
-  border: 1px solid black;
+  border: 1px solid rgb(155, 155, 155);
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -92,7 +105,7 @@
   width: 150px;
   padding: 8px;
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: 2px;
 }
 
 .highlighted-project-preview {
