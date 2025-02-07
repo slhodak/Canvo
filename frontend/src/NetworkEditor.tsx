@@ -359,6 +359,16 @@ const NetworkEditor = ({
 
       if (event.key === 'Escape') {
         setShowDropdown(false);
+        // Cancel wire drawing
+        setWireState({
+          isDrawing: false,
+          fromNode: null,
+          fromOutput: null,
+          startX: 0,
+          startY: 0,
+          endX: 0,
+          endY: 0,
+        });
         return;
       }
 
@@ -371,27 +381,6 @@ const NetworkEditor = ({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedNode, nodes, isHoveringEditor, mousePosition, connectToViewNode, deleteNode]);
-
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        // Cancel wire drawing
-        setWireState({
-          isDrawing: false,
-          fromNode: null,
-          fromOutput: null,
-          startX: 0,
-          startY: 0,
-          endX: 0,
-          endY: 0,
-        });
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
 
   return (
     <div className="network-editor-container">
