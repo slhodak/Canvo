@@ -57,12 +57,10 @@ const NetworkEditor = ({
   // Regular Functions
   //////////////////////////////
 
-  const createNewNode = (type: NodeType): BaseNode | null => {
+  const createNewNode = (type: NodeType, position: Coordinates): BaseNode | null => {
     const nodeId = crypto.randomUUID();
     const newNodes = { ...nodes };
-    // Convert global mousePosition to mousePosition inside the network editor
-    console.log(mousePosition);
-    const newNode = nu.newNode(type, mousePosition);
+    const newNode = nu.newNode(type, position);
     if (!newNode) {
       console.error('Could not create new node');
       return null;
@@ -71,8 +69,8 @@ const NetworkEditor = ({
     newNodes[nodeId] = {
       id: nodeId,
       node: newNode,
-      x: mousePosition.x,
-      y: mousePosition.y,
+      x: position.x,
+      y: position.y,
     };
 
     setNodes(newNodes);
@@ -129,7 +127,18 @@ const NetworkEditor = ({
 
   const handleNewNodeClick = async (nodeType: NodeType) => {
     const currentNodes = nodes;
-    const newNode = createNewNode(nodeType);
+    const svgRect = svgRef.current?.getBoundingClientRect();
+    if (!svgRect) {
+      console.error('Cannot make new node: no SVG element available to find mouse position');
+      return;
+    }
+
+    const offsetMousePosition = {
+      x: mousePosition.x - svgRect.left,
+      y: mousePosition.y - svgRect.top,
+    }
+
+    const newNode = createNewNode(nodeType, offsetMousePosition);
     if (!newNode) return;
 
     await syncNewNode(currentNodes, newNode);
@@ -192,26 +201,23 @@ const NetworkEditor = ({
       setNodes(nodes);
     }
 
-    if (svgRef.current) {
-      const svgRect = svgRef.current.getBoundingClientRect();
-      console.log(`${Date.now()}: ${svgRect.left}, ${svgRect.top}`);
-      setMousePosition({
-        x: e.clientX,
-        y: e.clientY,
-      });
+    const svgRect = svgRef.current?.getBoundingClientRect();
+    if (svgRect && wireState.isDrawing) {
+      // Get SVG coordinates
+      const x = e.clientX - svgRect.left;
+      const y = e.clientY - svgRect.top;
 
-      if (wireState.isDrawing) {
-        // Get SVG coordinates
-        const x = e.clientX - svgRect.left;
-        const y = e.clientY - svgRect.top;
-
-        setWireState(prev => ({
-          ...prev,
-          endX: x,
-          endY: y,
-        }));
-      }
+      setWireState(prev => ({
+        ...prev,
+        endX: x,
+        endY: y,
+      }));
     }
+
+    setMousePosition({
+      x: e.clientX,
+      y: e.clientY,
+    });
   }
 
   const startDrawingWire = (nodeId: string, outputIndex: number, startX: number, startY: number) => {
