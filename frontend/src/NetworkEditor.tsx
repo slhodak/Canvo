@@ -1,32 +1,40 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import './NetworkEditor.css';
 import { VisualNode, VisualConnection, DragState, WireState } from './NetworkTypes';
 import { Node } from './Node';
 import { NetworkEditorUtils as neu } from './Utils';
+import { BaseNode, Connection, Coordinates, NodeType } from '../../shared/types/src/models/node';
+import { SERVER_URL } from './constants';
+import { NodeUtils as nu } from './Utils';
+import { ProjectModel } from '../../shared/types/src/models/project';
 
 interface NetworkEditorProps {
+  project: ProjectModel;
+  fetchNodesForProject: () => void;
   nodes: Record<string, VisualNode>;
   setNodes: (nodes: Record<string, VisualNode>) => void;
   selectedNode: VisualNode | null;
   setSelectedNode: (node: VisualNode | null) => void;
-  setShowDropdown: (show: boolean) => void;
   connections: VisualConnection[];
-  createNewConnection: (fromNode: string, fromOutput: number, toNodeId: string, inputIndex: number) => void;
-  deleteConnection: (connectionId: string) => void;
+  setConnections: (connections: VisualConnection[]) => void;
   runNode: (node: VisualNode) => void;
 }
 
 const NetworkEditor = ({
+  project,
+  fetchNodesForProject,
   nodes,
   setNodes,
   selectedNode,
   setSelectedNode,
-  setShowDropdown,
   connections,
-  createNewConnection,
-  deleteConnection,
+  setConnections,
   runNode,
 }: NetworkEditorProps) => {
+  const [mousePosition, setMousePosition] = useState<Coordinates>({ x: 0, y: 0 });
+  const [isHoveringEditor, setIsHoveringEditor] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState<Coordinates>({ x: 0, y: 0 });
   const [dragState, setDragState] = useState<DragState>({
     isDragging: false,
     nodeId: null,
@@ -44,6 +52,88 @@ const NetworkEditor = ({
   });
 
   const svgRef = useRef<SVGSVGElement>(null);
+
+  //////////////////////////////
+  // Regular Functions
+  //////////////////////////////
+
+  const createNewNode = (type: NodeType): BaseNode | null => {
+    const nodeId = crypto.randomUUID();
+    const newNodes = { ...nodes };
+    // Convert global mousePosition to mousePosition inside the network editor
+    console.log(mousePosition);
+    const newNode = nu.newNode(type, mousePosition);
+    if (!newNode) {
+      console.error('Could not create new node');
+      return null;
+    }
+
+    newNodes[nodeId] = {
+      id: nodeId,
+      node: newNode,
+      x: mousePosition.x,
+      y: mousePosition.y,
+    };
+
+    setNodes(newNodes);
+    setShowDropdown(false);
+    return newNode;
+  }
+
+  const syncNewNode = async (currentNodes: Record<string, VisualNode>, newNode: BaseNode) => {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/new_node`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          project_id: project?._id,
+          node_id: newNode._id,
+          type: newNode.type,
+          coordinates: {
+            x: dropdownPosition.x,
+            y: dropdownPosition.y,
+          },
+        }),
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        fetchNodesForProject();
+      } else {
+        console.error('Server error while creating node:', data.error);
+        setNodes(currentNodes);
+      }
+    } catch (error) {
+      console.error('Could not sync new node:', error);
+      setNodes(currentNodes);
+    }
+  };
+
+  const deleteConnection = (connectionId: string) => {
+    setConnections(connections.filter(conn => conn.id !== connectionId));
+    // Erase the input that was disconnected from the toNode and rerun the node
+    const toNode = nodes[connections.find(conn => conn.id === connectionId)?.connection.toNode ?? ''];
+    if (toNode) {
+      toNode.node.state.input[connections.find(conn => conn.id === connectionId)?.connection.toInput ?? 0] = {
+        stringValue: null,
+        numberValue: null,
+      };
+    }
+  }
+
+  //////////////////////////////
+  // Event Handlers
+  //////////////////////////////
+
+  const handleNewNodeClick = async (nodeType: NodeType) => {
+    const currentNodes = nodes;
+    const newNode = createNewNode(nodeType);
+    if (!newNode) return;
+
+    await syncNewNode(currentNodes, newNode);
+  }
 
   const handleMouseDownInNode = (e: React.MouseEvent, nodeId: string) => {
     const node = nodes[nodeId];
@@ -102,19 +192,27 @@ const NetworkEditor = ({
       setNodes(nodes);
     }
 
-    if (wireState.isDrawing && svgRef.current) {
-      // Get SVG coordinates
+    if (svgRef.current) {
       const svgRect = svgRef.current.getBoundingClientRect();
-      const x = e.clientX - svgRect.left;
-      const y = e.clientY - svgRect.top;
+      console.log(`${Date.now()}: ${svgRect.left}, ${svgRect.top}`);
+      setMousePosition({
+        x: e.clientX,
+        y: e.clientY,
+      });
 
-      setWireState(prev => ({
-        ...prev,
-        endX: x,
-        endY: y,
-      }));
+      if (wireState.isDrawing) {
+        // Get SVG coordinates
+        const x = e.clientX - svgRect.left;
+        const y = e.clientY - svgRect.top;
+
+        setWireState(prev => ({
+          ...prev,
+          endX: x,
+          endY: y,
+        }));
+      }
     }
-  };
+  }
 
   const startDrawingWire = (nodeId: string, outputIndex: number, startX: number, startY: number) => {
     if (svgRef.current) {
@@ -154,6 +252,127 @@ const NetworkEditor = ({
     });
   };
 
+  //////////////////////////////
+  // Memoized Functions
+  //////////////////////////////
+
+  const createNewConnection = useCallback((fromNodeId: string, fromOutput: number, toNodeId: string, inputIndex: number) => {
+    // Don't create a redundant connection
+    const existingConnection = connections.find(conn => (
+      conn.connection.fromNode === fromNodeId &&
+      conn.connection.toNode === toNodeId &&
+      conn.connection.toInput === inputIndex
+    ));
+    if (existingConnection) {
+      return;
+    }
+
+    let newConnections = connections;
+    // If there is already a connection from any node to this node's inputIndex, remove it
+    const connectionToInput = connections.find(conn => conn.connection.toNode === toNodeId && conn.connection.toInput === inputIndex);
+    if (connectionToInput) {
+      newConnections = connections.filter(conn => conn.id !== connectionToInput.id);
+    }
+
+    const newConnection: VisualConnection = {
+      id: `${fromNodeId}-${toNodeId}-${Date.now()}`,
+      connection: new Connection(
+        crypto.randomUUID(),
+        fromNodeId,
+        fromOutput,
+        toNodeId,
+        inputIndex,
+      ),
+    };
+    setConnections([...newConnections, newConnection]);
+
+    // Copy the output of the fromNode to the input of the toNode
+    const fromNode = nodes[fromNodeId];
+    const toNode = nodes[toNodeId];
+    if (fromNode && toNode) {
+      toNode.node.state.input[inputIndex] = fromNode.node.state.output[fromOutput];
+      runNode(toNode);
+    }
+  }, [connections, nodes, runNode, setConnections]);
+
+  const deleteNode = useCallback(async (node: VisualNode) => {
+    const originalNodes = { ...nodes };
+    const newNodes = { ...nodes };
+    delete newNodes[node.id];
+    setNodes(newNodes);
+    setSelectedNode(null);
+
+    try {
+      const response = await fetch(`${SERVER_URL}/api/delete_node`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          node_id: node.node._id,
+          project_id: project._id,
+        }),
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        fetchNodesForProject();
+      } else {
+        console.error('Error deleting node:', data.error);
+        setNodes(originalNodes);
+      }
+    } catch (error) {
+      console.error('Error deleting node:', error);
+      setNodes(originalNodes);
+    }
+  }, [nodes, fetchNodesForProject, project._id, setNodes, setSelectedNode]);
+
+  const connectToViewNode = useCallback((node: VisualNode) => {
+    if (node.node.outputs < 1) return;
+
+    const viewNode = Object.values(nodes).find(n => n.node.type === 'view');
+    if (viewNode) {
+      createNewConnection(node.id, 0, viewNode.id, 0);
+    }
+  }, [nodes, createNewConnection]);
+
+  //////////////////////////////
+  // React Hooks
+  //////////////////////////////
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Don't delete the node if the user is editing text
+      const activeElement = document.activeElement;
+      const isEditingText = activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement;
+      if ((event.key === 'Delete' || event.key === 'Backspace') && selectedNode && !isEditingText && isHoveringEditor) {
+        deleteNode(selectedNode);
+        return;
+      }
+
+      if (event.key === 'Tab' && isHoveringEditor) {
+        event.preventDefault();
+        setDropdownPosition(mousePosition);
+        setShowDropdown(true);
+        return;
+      }
+
+      if (event.key === 'Escape') {
+        setShowDropdown(false);
+        return;
+      }
+
+      if (event.key === 't' && isHoveringEditor && selectedNode) {
+        connectToViewNode(selectedNode);
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedNode, nodes, isHoveringEditor, mousePosition, connectToViewNode, deleteNode]);
+
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -183,6 +402,8 @@ const NetworkEditor = ({
       <svg
         ref={svgRef}
         className="network-editor-canvas"
+        onMouseEnter={() => setIsHoveringEditor(true)}
+        onMouseLeave={() => setIsHoveringEditor(false)}
         onMouseMove={handleMouseMove}
         onMouseDown={handleMouseDownInEditor}
         onMouseUp={handleMouseUp}
@@ -232,6 +453,32 @@ const NetworkEditor = ({
           );
         })}
       </svg>
+      {showDropdown && (
+        <div
+          className={`app-dropdown ${showDropdown ? 'visible' : ''}`}
+          style={{
+            left: dropdownPosition.x,
+            top: dropdownPosition.y
+          }}
+        >
+          <div className="app-dropdown-option" onClick={() => handleNewNodeClick(NodeType.Text)}>
+            Text Node
+          </div>
+          <div className="app-dropdown-option" onClick={() => handleNewNodeClick(NodeType.Prompt)}>
+            Prompt Node
+          </div>
+          <div className="app-dropdown-option" onClick={() => handleNewNodeClick(NodeType.Save)}>
+            Save Node
+          </div>
+          <div className="app-dropdown-option" onClick={() => handleNewNodeClick(NodeType.View)}>
+            View Node
+          </div>
+          <div className="app-dropdown-option" onClick={() => handleNewNodeClick(NodeType.Merge)}>
+            Merge Node
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
