@@ -146,8 +146,8 @@ export namespace Database {
       node.coordinates.y,
       node.runsAutomatically,
       node.properties,
-      node.state.input,
-      node.state.output,
+      JSON.stringify(node.state.input),
+      JSON.stringify(node.state.output),
       node.isDirty
     ];
 
@@ -160,7 +160,7 @@ export namespace Database {
       VALUES (
           $1, $2, $3, $4, $5, $6, $7, 
           point($8, $9), $10, $11, 
-          $12, $13, $14
+          $12::jsonb, $13::jsonb, $14
       )
   `, values);
   }
