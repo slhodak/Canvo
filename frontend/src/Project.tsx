@@ -8,13 +8,15 @@ import NetworkEditor from './NetworkEditor';
 import ParametersPane from './ParametersPane';
 import OutputView from "./OutputView";
 import { SERVER_URL } from './constants';
+import { UserModel } from '../../shared/types/src/models/user';
 
 interface ProjectProps {
+  user: UserModel;
   project: ProjectModel;
   handleProjectTitleChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-const Project = ({ project, handleProjectTitleChange }: ProjectProps) => {
+const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   const [nodes, setNodes] = useState<Record<string, VisualNode>>({});
   const [connections, setConnections] = useState<VisualConnection[]>([]);
   const [selectedNode, setSelectedNode] = useState<VisualNode | null>(null);
@@ -30,6 +32,45 @@ const Project = ({ project, handleProjectTitleChange }: ProjectProps) => {
       if (node.node.runsAutomatically) {
         runNode(node);
       }
+    }
+  }
+
+  const updateNode = async (node: BaseNode) => {
+    const currentNodes = nodes;
+    const visualNode = {
+      id: node._id,
+      node: node,
+      x: node.coordinates.x,
+      y: node.coordinates.y,
+    };
+    const updatedNodes = { ...currentNodes, [node._id]: visualNode };
+    setNodes(updatedNodes);
+    await syncNodeUpdate(currentNodes, node);
+  }
+
+  // Exists on this component because node can be updated from NetworkEditor or ParametersPane
+  const syncNodeUpdate = async (currentNodes: Record<string, VisualNode>, updatedNode: BaseNode) => {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/update_node`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          node: updatedNode,
+        }),
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        fetchNodesForProject();
+      } else {
+        console.error('Server error while updating node:', data.error);
+        setNodes(currentNodes);
+      }
+    } catch (error) {
+      console.error('Could not update node:', error);
+      setNodes(currentNodes);
     }
   }
 
@@ -114,6 +155,7 @@ const Project = ({ project, handleProjectTitleChange }: ProjectProps) => {
         <div className="left-pane">
           <div className="left-pane-top">
             <NetworkEditor
+              user={user}
               project={project}
               fetchNodesForProject={fetchNodesForProject}
               nodes={nodes}
@@ -123,6 +165,7 @@ const Project = ({ project, handleProjectTitleChange }: ProjectProps) => {
               connections={connections}
               setConnections={setConnections}
               runNode={runNode}
+              updateNode={updateNode}
             />
           </div>
           <div className="left-pane-bottom">

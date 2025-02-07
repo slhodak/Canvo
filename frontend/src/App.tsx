@@ -4,8 +4,13 @@ import { useState, useEffect } from 'react';
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { SERVER_URL } from './constants';
 import Project from './Project';
+import { UserModel } from '../../shared/types/src/models/user';
 
-const App = () => {
+interface AppProps {  
+  user: UserModel;
+}
+
+const App = ({ user }: AppProps) => {
   const [project, setProject] = useState<ProjectModel | null>(null);
   const [projects, setProjects] = useState<ProjectModel[]>([]);
 
@@ -65,11 +70,11 @@ const App = () => {
   return (
     <div className="app-container">
       <div className="left-section">
-        <Menu project={project} setProject={setProject} projects={projects} fetchAllProjects={fetchAllProjects} />
+        <Menu user={user} project={project} setProject={setProject} projects={projects} fetchAllProjects={fetchAllProjects} />
       </div>
       <div className="right-section">
         {project
-          ? <Project project={project} handleProjectTitleChange={handleProjectTitleChange} />
+          ? <Project user={user} project={project} handleProjectTitleChange={handleProjectTitleChange} />
           : <div>No project selected</div>}
       </div>
     </div>

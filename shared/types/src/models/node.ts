@@ -47,6 +47,7 @@ export interface IOState {
 export abstract class BaseNode {
   public _id: string;
   public projectId: string;
+  public authorId: string;
   public name: string;
   public type: string;
   public inputs: number;
@@ -62,6 +63,7 @@ export abstract class BaseNode {
 
   constructor(
     _id: string,
+    authorId: string,
     projectId: string,
     name: string,
     type: string,
@@ -72,6 +74,7 @@ export abstract class BaseNode {
     properties: Record<string, NodeProperty> = {},
   ) {
     this._id = _id;
+    this.authorId = authorId;
     this.projectId = projectId;
     this.name = name;
     this.type = type;
@@ -117,11 +120,12 @@ export abstract class BaseNode {
 export class TextNode extends BaseNode implements SyncNode {
   constructor(
     id: string,
+    authorId: string,
     projectId: string,
     coordinates: Coordinates,
     public text: string = '',
   ) {
-    super(id, projectId, 'Text', 'text', 0, 1, coordinates, true, {
+    super(id, authorId, projectId, 'Text', 'text', 0, 1, coordinates, true, {
       text: {
         type: 'string',
         label: 'Text',
@@ -133,7 +137,7 @@ export class TextNode extends BaseNode implements SyncNode {
   }
 
   public static fromObject(object: BaseNode): BaseNode {
-    return new TextNode(object._id, object.projectId, object.coordinates, object.properties.text.value as string);
+    return new TextNode(object._id, object.authorId, object.projectId, object.coordinates, object.properties.text.value as string);
   }
 
   run() {
@@ -150,11 +154,12 @@ export class TextNode extends BaseNode implements SyncNode {
 export class PromptNode extends BaseNode implements AsyncNode {
   constructor(
     id: string,
+    authorId: string,
     projectId: string,
     coordinates: Coordinates,
     public prompt: string = '',
   ) {
-    super(id, projectId, 'Prompt', 'prompt', 1, 1, coordinates, false, {
+    super(id, authorId, projectId, 'Prompt', 'prompt', 1, 1, coordinates, false, {
       prompt: {
         type: 'string',
         label: 'Prompt',
@@ -166,7 +171,7 @@ export class PromptNode extends BaseNode implements AsyncNode {
   }
 
   public static fromObject(object: BaseNode): BaseNode {
-    return new PromptNode(object._id, object.projectId, object.coordinates, object.properties.prompt.value as string);
+    return new PromptNode(object._id, object.authorId, object.projectId, object.coordinates, object.properties.prompt.value as string);
   }
 
   async asyncRun() {
@@ -179,14 +184,15 @@ export class PromptNode extends BaseNode implements AsyncNode {
 export class SaveNode extends BaseNode implements AsyncNode {
   constructor(
     id: string,
+    authorId: string,
     projectId: string,
     coordinates: Coordinates,
   ) {
-    super(id, projectId, 'Save', 'save', 1, 0, coordinates, false);
+    super(id, authorId, projectId, 'Save', 'save', 1, 0, coordinates, false);
   }
 
   public static fromObject(object: BaseNode): BaseNode {
-    return new SaveNode(object._id, object.projectId, object.coordinates);
+    return new SaveNode(object._id, object.authorId, object.projectId, object.coordinates);
   }
 
   async asyncRun() {
@@ -198,10 +204,11 @@ export class SaveNode extends BaseNode implements AsyncNode {
 export class MergeNode extends BaseNode implements SyncNode {
   constructor(
     id: string,
+    authorId: string,
     projectId: string,
     coordinates: Coordinates,
   ) {
-    super(id, projectId, 'Merge', 'merge', 2, 1, coordinates, true, {
+    super(id, authorId, projectId, 'Merge', 'merge', 2, 1, coordinates, true, {
       separator: {
         type: 'string',
         label: 'Separator',
@@ -213,7 +220,7 @@ export class MergeNode extends BaseNode implements SyncNode {
   }
 
   public static fromObject(object: BaseNode): BaseNode {
-    return new MergeNode(object._id, object.projectId, object.coordinates);
+    return new MergeNode(object._id, object.authorId, object.projectId, object.coordinates);
   }
 
   run() {
@@ -234,10 +241,11 @@ export class MergeNode extends BaseNode implements SyncNode {
 export class ViewNode extends BaseNode implements SyncNode {
   constructor(
     id: string,
+    authorId: string,
     projectId: string,
     coordinates: Coordinates,
   ) {
-    super(id, projectId, 'View', 'view', 1, 0, coordinates, true, {
+    super(id, authorId, projectId, 'View', 'view', 1, 0, coordinates, true, {
       content: {
         type: 'string',
         label: 'Content',
@@ -249,7 +257,7 @@ export class ViewNode extends BaseNode implements SyncNode {
   }
 
   public static fromObject(object: BaseNode): BaseNode {
-    return new ViewNode(object._id, object.projectId, object.coordinates);
+    return new ViewNode(object._id, object.authorId, object.projectId, object.coordinates);
   }
 
   run() {

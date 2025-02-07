@@ -8,7 +8,7 @@ import { Database as db } from './db';
 import { UserModel } from '../../shared/types/src/models/user';
 import { runPrompt } from './llm';
 import stytch from 'stytch';
-import { checkAnyNullOrUndefined } from './util';
+import { checkAnyNullOrUndefined, validateNode } from './util';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -206,6 +206,15 @@ router.get('/auth/check', async (req: Request, res: Response) => {
 // Middleware to guard the /api/* routes
 app.use('/api', authenticate);
 
+router.get('/api/get_user', async (req: Request, res: Response) => {
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ error: "Could not find user email from session token" });
+  }
+
+  return res.json({ status: 'success', user });
+});
+
 ////////////////////////////////////////////////////////////
 // Projects
 ////////////////////////////////////////////////////////////
@@ -381,13 +390,8 @@ router.post('/api/new_node', async (req: Request, res: Response) => {
     return res.status(400).json({ error: "No node provided" });
   }
 
-  console.log("Received node", node);
-  const { _id, projectId, name, type, inputs, outputs, coordinates, runsAutomatically, properties, state, isDirty } = node;
-  try {
-    checkAnyNullOrUndefined({ _id, projectId, name, type, inputs, outputs, coordinates, runsAutomatically, properties, state, isDirty });
-  } catch (error) {
-    console.error(`A required field is missing from the node: ${error}`);
-    return res.status(400).json({ error: "Some required fields are missing from the node" });
+  if (!validateNode(node)) {
+    return res.status(400).json({ error: "Invalid node" });
   }
 
   try {
@@ -396,8 +400,8 @@ router.post('/api/new_node', async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Could not find user email from session token" });
     }
 
-    await db.createNode(_id, user._id, projectId, name, type, inputs, outputs, coordinates, runsAutomatically, properties, state.input, state.output, isDirty);
-    await db.updateProjectUpdatedAt(projectId);
+    await db.createNode(node);
+    await db.updateProjectUpdatedAt(node.projectId);
     return res.json({ status: "success" });
   } catch (error) {
     if (error instanceof Error) {
@@ -408,28 +412,25 @@ router.post('/api/new_node', async (req: Request, res: Response) => {
 });
 
 router.post('/api/update_node', async (req: Request, res: Response) => {
+  const { node } = req.body;
+  if (!node) {
+    return res.status(400).json({ error: "No node provided" });
+  }
+
   const user = await getUserFromSessionToken(req);
   if (!user) {
     return res.status(401).json({ error: "Could not find user email from session token" });
   }
-
-  const { nodeId, projectId, name, type, inputs, outputs, runsAutomatically, properties, inputState, outputState, isDirty } = req.body;
-  if (!nodeId || !projectId) {
-    return res.status(400).json({ error: "No nodeId or projectId provided" });
+  
+  if (!validateNode(node)) {
+    return res.status(400).json({ error: "Invalid node" });
   }
 
   try {
-    const result = await db.updateNode(nodeId, name, type, inputs, outputs, runsAutomatically, properties, inputState, outputState, isDirty, user._id);
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: "Node ID not found" });
-    }
+    await db.updateNode(node);
+    await db.updateProjectUpdatedAt(node.projectId);
 
-    await db.updateProjectUpdatedAt(projectId);
-
-    return res.json({
-      status: "success",
-      nodeId: nodeId
-    });
+    return res.json({ status: "success" });
   } catch (error) {
     if (error instanceof Error) {
       return res.status(500).json({ error: error.message });

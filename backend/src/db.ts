@@ -133,36 +133,22 @@ export namespace Database {
     return nodes;
   }
 
-  export async function createNode(
-    nodeId: string,
-    userId: string,
-    projectId: string,
-    name: string,
-    type: string,
-    inputs: number,
-    outputs: number,
-    coordinates: Coordinates,
-    runs_automatically: boolean,
-    properties: Record<string, any>,
-    inputState: IOState,
-    outputState: IOState,
-    isDirty: boolean
-  ) {
+  export async function createNode(node: BaseNode) {
     const values = [
-      nodeId,
-      userId,
-      projectId,
-      name,
-      type,
-      inputs,
-      outputs,
-      coordinates.x,
-      coordinates.y,
-      runs_automatically,
-      properties,
-      formatStateArray(inputState),
-      formatStateArray(outputState),
-      isDirty
+      node._id,
+      node.authorId,
+      node.projectId,
+      node.name,
+      node.type,
+      node.inputs,
+      node.outputs,
+      node.coordinates.x,
+      node.coordinates.y,
+      node.runsAutomatically,
+      node.properties,
+      node.state.input,
+      node.state.output,
+      node.isDirty
     ];
 
     await db.none(`
@@ -174,15 +160,30 @@ export namespace Database {
       VALUES (
           $1, $2, $3, $4, $5, $6, $7, 
           point($8, $9), $10, $11, 
-          $12::state_value[], $13::state_value[], $14
+          $12, $13, $14
       )
   `, values);
   }
 
-  export async function updateNode(nodeId: string, name: string, type: string, inputs: number, outputs: number, runs_automatically: boolean, properties: Record<string, any>, inputState: IOState, outputState: IOState, isDirty: boolean, userId: string) {
-    const values = [name, type, inputs, outputs, runs_automatically, properties, formatStateArray(inputState), formatStateArray(outputState), isDirty, nodeId, userId];
-    const result = await db.result(`UPDATE nodes SET name = $1, type = $2, inputs = $3, outputs = $4, runs_automatically = $5, properties = $6, input_state = $7, output_state = $8, is_dirty = $9, updated_at = CURRENT_TIMESTAMP WHERE _id = $10 AND author_id = $11`, values);
-    return result;
+  export async function updateNode(node: BaseNode) {
+    const values = [
+      node.name,
+      node.type,
+      node.inputs,
+      node.outputs,
+      node.runsAutomatically,
+      node.properties,
+      node.state.input,
+      node.state.output,
+      node.isDirty,
+      node._id,
+      node.authorId
+    ];
+    await db.none(`
+      UPDATE nodes SET name = $1, type = $2, inputs = $3, outputs = $4, runs_automatically = $5,
+      properties = $6, input_state = $7, output_state = $8, is_dirty = $9,
+      updated_at = CURRENT_TIMESTAMP WHERE _id = $10 AND author_id = $11`,
+      values);
   }
 
   export async function deleteNode(nodeId: string, userId: string) {

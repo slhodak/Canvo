@@ -1,4 +1,4 @@
-import { IOState } from "../../shared/types/src/models/node";
+import { BaseNode, IOState } from "../../shared/types/src/models/node";
 
 // Check if a value is null or undefined
 export function isNullOrUndefined(value: any): boolean {
@@ -19,3 +19,15 @@ export const formatStateArray = (state: IOState) => {
   const { stringValue, numberValue } = state;
   return `{${stringValue ?? null}, ${numberValue ?? null}}`;
 };
+
+
+export const validateNode = (node: BaseNode): boolean => {
+  const { _id, projectId, name, type, inputs, outputs, coordinates, runsAutomatically, properties, state, isDirty } = node;
+  try {
+    checkAnyNullOrUndefined({ _id, projectId, name, type, inputs, outputs, coordinates, runsAutomatically, properties, state, isDirty });
+  } catch (error) {
+    console.error(`A required field is missing from the node: ${error}`);
+    return false;
+  }
+  return true;
+}

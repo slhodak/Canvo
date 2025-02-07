@@ -7,8 +7,10 @@ import { BaseNode, Connection, Coordinates, NodeType } from '../../shared/types/
 import { SERVER_URL } from './constants';
 import { NodeUtils as nu } from './Utils';
 import { ProjectModel } from '../../shared/types/src/models/project';
+import { UserModel } from '../../shared/types/src/models/user';
 
 interface NetworkEditorProps {
+  user: UserModel;
   project: ProjectModel;
   fetchNodesForProject: () => void;
   nodes: Record<string, VisualNode>;
@@ -18,9 +20,11 @@ interface NetworkEditorProps {
   connections: VisualConnection[];
   setConnections: (connections: VisualConnection[]) => void;
   runNode: (node: VisualNode) => void;
+  updateNode: (node: BaseNode) => void;
 }
 
 const NetworkEditor = ({
+  user,
   project,
   fetchNodesForProject,
   nodes,
@@ -30,6 +34,7 @@ const NetworkEditor = ({
   connections,
   setConnections,
   runNode,
+  updateNode,
 }: NetworkEditorProps) => {
   const [mousePosition, setMousePosition] = useState<Coordinates>({ x: 0, y: 0 });
   const [isHoveringEditor, setIsHoveringEditor] = useState(false);
@@ -60,13 +65,13 @@ const NetworkEditor = ({
   const createNewNode = (type: NodeType, position: Coordinates): BaseNode | null => {
     const nodeId = crypto.randomUUID();
     const newNodes = { ...nodes };
-    const newNode = nu.newNode(type, project._id, position);
+    const newNode = nu.newNode(type, user._id, project._id, position);
     if (!newNode) {
       console.error('Could not create new node');
       return null;
     }
 
-    console.log(`${nodeId}: ${position.x}, ${position.y}`);
+    console.log(`${nodeId}: ${JSON.stringify(newNode)}`);
     console.log(`${nodeId}: ${newNode.coordinates.x}, ${newNode.coordinates.y}`);
     newNodes[nodeId] = {
       id: nodeId,
@@ -195,6 +200,7 @@ const NetworkEditor = ({
 
       nodes[dragState.nodeId] = draggedNode;
       setNodes(nodes);
+      updateNode(draggedNode.node);
     }
 
     const svgRect = svgRef.current?.getBoundingClientRect();

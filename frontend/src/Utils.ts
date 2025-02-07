@@ -19,19 +19,19 @@ export const NetworkEditorUtils = {
 
 // I do not like that we have two of the same switch statement here, but for now... c'est la vie
 export const NodeUtils = {
-  newNode(type: NodeType, projectId: string, coordinates: Coordinates): BaseNode | null {
+  newNode(type: NodeType, authorId: string, projectId: string, coordinates: Coordinates): BaseNode | null {
     const nodeId = crypto.randomUUID();
     switch (type) {
       case NodeType.Text:
-        return new TextNode(nodeId, projectId, coordinates);
+        return new TextNode(nodeId, authorId, projectId, coordinates);
       case NodeType.Prompt:
-        return new PromptNode(nodeId, projectId, coordinates);
+        return new PromptNode(nodeId, authorId, projectId, coordinates);
       case NodeType.Save:
-        return new SaveNode(nodeId, projectId, coordinates);
+        return new SaveNode(nodeId, authorId, projectId, coordinates);
       case NodeType.View:
-        return new ViewNode(nodeId, projectId, coordinates);
+        return new ViewNode(nodeId, authorId, projectId, coordinates);
       case NodeType.Merge:
-        return new MergeNode(nodeId, projectId, coordinates);
+        return new MergeNode(nodeId, authorId, projectId, coordinates);
     }
   },
 

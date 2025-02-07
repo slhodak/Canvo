@@ -35,11 +35,6 @@ CREATE TABLE IF NOT EXISTS projects (
 );
 
 -- Nodes table
-CREATE TYPE state_value AS (
-    string_value TEXT,
-    number_value DOUBLE PRECISION
-);
-
 CREATE TABLE IF NOT EXISTS nodes (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -55,8 +50,8 @@ CREATE TABLE IF NOT EXISTS nodes (
     outputs INTEGER NOT NULL,
     runs_automatically BOOLEAN NOT NULL,
     properties JSONB NOT NULL,
-    input_state state_value[] NOT NULL DEFAULT '{}',
-    output_state state_value[] NOT NULL DEFAULT '{}',
+    input_state JSONB NOT NULL DEFAULT '{}',
+    output_state JSONB NOT NULL DEFAULT '{}',
     is_dirty BOOLEAN NOT NULL DEFAULT FALSE,
 
     FOREIGN KEY (author_id) REFERENCES users(_id) ON DELETE CASCADE,
