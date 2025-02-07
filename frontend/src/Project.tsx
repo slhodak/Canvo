@@ -136,13 +136,15 @@ const Project = ({ project, handleProjectTitleChange }: ProjectProps) => {
       });
       const data = await response.json();
       if (data.status === 'success') {
-        console.log("Received nodes from server", data.nodes);
-        const visualNodes = data.nodes.map((node: BaseNode) => ({
-          id: node._id,
-          node: node,
-          x: node.coordinates.x,
-          y: node.coordinates.y,
-        }));
+        const visualNodes: Record<string, VisualNode> = {};
+        data.nodes.forEach((node: BaseNode) => {
+          visualNodes[node._id] = {
+            id: node._id,
+            node: node,
+            x: node.coordinates.x,
+            y: node.coordinates.y,
+          };
+        });
         setNodes(visualNodes);
       } else {
         console.error('Error fetching nodes for project:', data.error);

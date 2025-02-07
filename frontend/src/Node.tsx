@@ -47,7 +47,8 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
         y={node.y}
         width={neu.NODE_WIDTH}
         height={neu.NODE_HEIGHT}
-        className={`node-rectangle ${isSelected && "selected"}`}
+        className={`node-rectangle ${isSelected ? "selected" : ""}`}
+        // className={`node-rectangle`}
       />
 
       {/* Node Name */}
