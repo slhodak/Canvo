@@ -1,7 +1,5 @@
 #! /bin/bash
 
-ENVIRONMENT=$1
-
 echo "Resetting database..."
 
 DB_NAME="canvo"
@@ -24,16 +22,18 @@ fi
 USER_EXIST=$(psql -d postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='$DB_USER'")
 DB_EXIST=$(psql -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'")
 
-# Ensure the user exists
-if [ "$USER_EXIST" != "1" ]; then
-  echo "User '$DB_USER' does not exist. Cannot reset database."
-  exit 1
+# Delete the user if it exists
+if [ "$USER_EXIST" = "1" ]; then
+  dropuser $DB_USER
 fi
 
-# Drop and create the database
-dropdb $DB_NAME
-psql postgres -c "CREATE DATABASE $DB_NAME;"
-psql $DB_NAME -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO $DB_USER;"
+# Drop database if it exists
+if [ "$DB_EXIST" = "1" ]; then
+  dropdb $DB_NAME
+fi
+
+# Run the init_db script
+./db/init_db.sh dev
 
 # Run migrations
 echo "Running migrations..."
