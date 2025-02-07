@@ -49,14 +49,6 @@ CREATE TABLE IF NOT EXISTS connections (
 );
 
 -- Nodes table
-CREATE TYPE node_type AS ENUM (
-    'text',
-    'prompt',
-    'merge',
-    'save',
-    'view'
-);
-
 CREATE TYPE state_value AS (
     string_value TEXT,
     number_value NUMERIC
@@ -70,7 +62,7 @@ CREATE TABLE IF NOT EXISTS nodes (
     project_id INTEGER NOT NULL,
     _id TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
-    type node_type NOT NULL,
+    type TEXT NOT NULL,
     inputs INTEGER NOT NULL,
     outputs INTEGER NOT NULL,
     runs_automatically BOOLEAN NOT NULL,
