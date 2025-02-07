@@ -2,7 +2,7 @@ import './Project.css';
 import { useState, useEffect, useCallback } from 'react';
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { VisualNode, VisualConnection } from './NetworkTypes';
-import { NodeType, BaseNode, Connection, Coordinates, MergeNode, SaveNode, PromptNode, TextNode, ViewNode } from '../../shared/types/src/models/node';
+import { NodeType, BaseNode, Connection, Coordinates } from '../../shared/types/src/models/node';
 import { NodeUtils as nu } from './Utils';
 import NetworkEditor from './NetworkEditor';
 import ParametersPane from './ParametersPane';
