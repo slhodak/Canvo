@@ -4,10 +4,10 @@
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     _id TEXT UNIQUE NOT NULL,
-    email TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE NOT NULL
 );
 
 -- Sessions table
@@ -27,25 +27,7 @@ CREATE TABLE IF NOT EXISTS projects (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    _id TEXT UNIQUE NOT NULL,
-);
-
--- Connections table
-CREATE TABLE IF NOT EXISTS connections (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    from_node TEXT NOT NULL,
-    from_output INTEGER NOT NULL,
-    to_node TEXT NOT NULL,
-    to_input INTEGER NOT NULL,
-
-    FOREIGN KEY (from_node) REFERENCES nodes(_id) ON DELETE CASCADE,
-    FOREIGN KEY (to_node) REFERENCES nodes(_id) ON DELETE CASCADE
-
-    CONSTRAINT valid_output_number CHECK (from_output >= 0),
-    CONSTRAINT valid_input_number CHECK (to_input >= 0),
+    _id TEXT UNIQUE NOT NULL
 );
 
 -- Nodes table
@@ -71,8 +53,26 @@ CREATE TABLE IF NOT EXISTS nodes (
     output_state state_value[] NOT NULL DEFAULT '{}',
     is_dirty BOOLEAN NOT NULL DEFAULT FALSE,
 
-    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
 
     CONSTRAINT valid_input_number CHECK (inputs >= 0),
-    CONSTRAINT valid_output_number CHECK (outputs >= 0),
+    CONSTRAINT valid_output_number CHECK (outputs >= 0)
+);
+
+-- Connections table
+CREATE TABLE IF NOT EXISTS connections (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    from_node TEXT NOT NULL,
+    from_output INTEGER NOT NULL,
+    to_node TEXT NOT NULL,
+    to_input INTEGER NOT NULL,
+
+    FOREIGN KEY (from_node) REFERENCES nodes(_id) ON DELETE CASCADE,
+    FOREIGN KEY (to_node) REFERENCES nodes(_id) ON DELETE CASCADE,
+
+    CONSTRAINT valid_output_number CHECK (from_output >= 0),
+    CONSTRAINT valid_input_number CHECK (to_input >= 0)
 );
