@@ -93,6 +93,10 @@ export abstract class BaseNode {
     }
   }
 
+  public static fromObject(object: BaseNode): BaseNode {
+    throw new Error('Not implemented');
+  }
+
   public setDirty() {
     this.isDirty = true;
   }
@@ -124,6 +128,10 @@ export class TextNode extends BaseNode implements SyncNode {
     });
   }
 
+  public static fromObject(object: BaseNode): BaseNode {
+    return new TextNode(object._id, object.coordinates, object.properties.text.value as string);
+  }
+
   run() {
     if (!this.isDirty) return;
 
@@ -152,6 +160,10 @@ export class PromptNode extends BaseNode implements AsyncNode {
     });
   }
 
+  public static fromObject(object: BaseNode): BaseNode {
+    return new PromptNode(object._id, object.coordinates, object.properties.prompt.value as string);
+  }
+
   async asyncRun() {
     this.state.output[0] = this.state.input[0];
     // TODO: Implement
@@ -165,6 +177,10 @@ export class SaveNode extends BaseNode implements AsyncNode {
     coordinates: Coordinates,
   ) {
     super(id, 'Save', 'save', 1, 0, coordinates, false);
+  }
+
+  public static fromObject(object: BaseNode): BaseNode {
+    return new SaveNode(object._id, object.coordinates);
   }
 
   async asyncRun() {
@@ -187,6 +203,10 @@ export class MergeNode extends BaseNode implements SyncNode {
         displayed: true,
       },
     });
+  }
+
+  public static fromObject(object: BaseNode): BaseNode {
+    return new MergeNode(object._id, object.coordinates);
   }
 
   run() {
@@ -218,6 +238,10 @@ export class ViewNode extends BaseNode implements SyncNode {
         displayed: false,
       },
     });
+  }
+
+  public static fromObject(object: BaseNode): BaseNode {
+    return new ViewNode(object._id, object.coordinates);
   }
 
   run() {

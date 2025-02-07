@@ -1,4 +1,5 @@
 import { VisualNode } from "./NetworkTypes";
+import { BaseNode, NodeType, TextNode, PromptNode, SaveNode, MergeNode, ViewNode, Coordinates } from "../../shared/types/src/models/node";
 
 export const NetworkEditorUtils = {
   NODE_WIDTH: 100,
@@ -13,5 +14,41 @@ export const NetworkEditorUtils = {
       x: node.x + spacing * (index + 1),
       y,
     };
+  }
+}
+
+// I do not like that we have two of the same switch statement here, but for now... c'est la vie
+export const NodeUtils = {
+  newNode(type: NodeType, coordinates: Coordinates): BaseNode | null {
+    const nodeId = crypto.randomUUID();
+    switch (type) {
+      case NodeType.Text:
+        return new TextNode(nodeId, coordinates);
+      case NodeType.Prompt:
+        return new PromptNode(nodeId, coordinates);
+      case NodeType.Save:
+        return new SaveNode(nodeId, coordinates);
+      case NodeType.View:
+        return new ViewNode(nodeId, coordinates);
+      case NodeType.Merge:
+        return new MergeNode(nodeId, coordinates);
+    }
+  },
+
+  fromObject(object: BaseNode): BaseNode | null {
+    switch (object.type) {
+      case NodeType.Text:
+        return TextNode.fromObject(object);
+      case NodeType.Prompt:
+        return PromptNode.fromObject(object);
+      case NodeType.Save:
+        return SaveNode.fromObject(object);
+      case NodeType.Merge:
+        return MergeNode.fromObject(object);
+      case NodeType.View:
+        return ViewNode.fromObject(object);
+    }
+
+    return null;
   }
 }

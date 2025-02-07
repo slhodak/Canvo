@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { VisualNode, VisualConnection } from './NetworkTypes';
 import { NodeType, BaseNode, Connection, Coordinates, MergeNode, SaveNode, PromptNode, TextNode, ViewNode } from '../../shared/types/src/models/node';
+import { NodeUtils as nu } from './Utils';
 import NetworkEditor from './NetworkEditor';
 import ParametersPane from './ParametersPane';
 import OutputView from "./OutputView";
@@ -46,26 +47,19 @@ const Project = ({ project, handleProjectTitleChange }: ProjectProps) => {
   const handleNewNodeClick = async (nodeType: NodeType) => {
     const currentNodes = nodes;
     const newNode = createNewNode(nodeType);
+    if (!newNode) return;
+
     await syncNewNode(currentNodes, newNode);
   }
 
-  const createNewNode = (type: NodeType) => {
+  const createNewNode = (type: NodeType): BaseNode | null => {
     const nodeId = crypto.randomUUID();
     const newNodes = { ...nodes };
-    const newNode = (() => {
-      switch (type) {
-        case NodeType.Text:
-          return new TextNode(nodeId, mousePosition);
-        case NodeType.Prompt:
-          return new PromptNode(nodeId, mousePosition);
-        case NodeType.Save:
-          return new SaveNode(nodeId, mousePosition);
-        case NodeType.View:
-          return new ViewNode(nodeId, mousePosition);
-        case NodeType.Merge:
-          return new MergeNode(nodeId, mousePosition);
-      }
-    })();
+    const newNode = nu.newNode(type, mousePosition);
+    if (!newNode) {
+      console.error('Could not create new node');
+      return null;
+    }
 
     newNodes[nodeId] = {
       id: nodeId,
@@ -136,7 +130,11 @@ const Project = ({ project, handleProjectTitleChange }: ProjectProps) => {
       const data = await response.json();
       if (data.status === 'success') {
         const visualNodes: Record<string, VisualNode> = {};
-        data.nodes.forEach((node: BaseNode) => {
+        data.nodes.forEach((nodeJson: BaseNode) => {
+          // Convert json to a real node instance so we can use its instance methods
+          const node = nu.fromObject(nodeJson);
+          if (!node) return;
+
           visualNodes[node._id] = {
             id: node._id,
             node: node,
