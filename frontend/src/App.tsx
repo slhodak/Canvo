@@ -7,7 +7,8 @@ import Menu from './Menu';
 import { useState, useEffect, useCallback } from 'react';
 import {
   // TextNode, PromptNode, SaveNode, ViewNode, MergeNode,
-  Connection, BaseNode, Coordinates } from '../../shared/types/src/models/node';
+  Connection, BaseNode, Coordinates
+} from '../../shared/types/src/models/node';
 import { NodeType } from '../../shared/types/src/types';
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { SERVER_URL } from './constants';
@@ -315,7 +316,9 @@ const App = () => {
 
       <div className="right-section">
         <div className="right-section-header">
-          <input type="text" className="project-title-input" value={project?.title} onChange={handleProjectTitleChange} />
+          {project ?
+            <input type="text" className="project-title-input" value={project?.title} onChange={handleProjectTitleChange} /> :
+            <div className="project-title-input-placeholder">No project selected</div>}
           <h2 className="app-title-header">Canvo</h2>
         </div>
 
