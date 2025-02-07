@@ -40,17 +40,12 @@ CREATE TYPE state_value AS (
     number_value NUMERIC
 );
 
-CREATE TYPE xy_coords AS (
-    x INTEGER,
-    y INTEGER
-);
-
 CREATE TABLE IF NOT EXISTS nodes (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    coordinates xy_coords NOT NULL,
+    coordinates point NOT NULL,
     author_id TEXT NOT NULL,
     project_id TEXT NOT NULL,
     _id TEXT UNIQUE NOT NULL,

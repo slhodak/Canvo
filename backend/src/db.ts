@@ -105,7 +105,7 @@ export namespace Database {
   export async function getNode(nodeId: string, userId: string): Promise<BaseNode | null> {
     const values = [nodeId, userId];
     const node = await db.oneOrNone(`
-      SELECT id, _id, project_id, name, type, inputs, outputs, runs_automatically, properties, is_dirty
+      SELECT id, _id, project_id, name, type, inputs, outputs, coordinates, runs_automatically, properties, is_dirty
       FROM nodes
       WHERE _id = $1 AND author_id = $2
     `, values);
@@ -136,7 +136,7 @@ export namespace Database {
     const values = [nodeId, userId, projectId, name, type, inputs, outputs, coordinates.x, coordinates.y, runs_automatically, properties];
     await db.none(`
       INSERT INTO nodes (_id, author_id, project_id, name, type, inputs, outputs, coordinates, runs_automatically, properties)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, ($8, $9), $10, $11)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, point($8, $9), $10, $11)
     `, values);
     return nodeId;
   }

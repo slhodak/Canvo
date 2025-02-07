@@ -136,6 +136,7 @@ const Project = ({ project, handleProjectTitleChange }: ProjectProps) => {
       });
       const data = await response.json();
       if (data.status === 'success') {
+        console.log("Received nodes from server", data.nodes);
         const visualNodes = data.nodes.map((node: BaseNode) => ({
           id: node._id,
           node: node,
