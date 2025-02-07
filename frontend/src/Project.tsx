@@ -260,7 +260,6 @@ const Project = ({ project, handleProjectTitleChange }: ProjectProps) => {
     fetchNodesForProject();
   }, [fetchNodesForProject]);
 
-
   return (
     <div className="project-container">
       <div className="project-header">
@@ -323,7 +322,7 @@ const Project = ({ project, handleProjectTitleChange }: ProjectProps) => {
         </div>
       </div>
     </div>
- );
+  );
 }
 
 export default Project;
