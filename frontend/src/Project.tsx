@@ -29,6 +29,16 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     const node = nodes[selectedNode?.id ?? ''];
     if (node) {
       node.node.setDirty();
+      // TODO: If a node is run, we need to send its updates to the server
+      // but every time we send updates to the server, we fetch all the nodes again
+
+      // so we need a way to run all the nodes and then send all the updates afterward.
+
+      // So then we send all the updates and fetch the updated data... why on earth would we do this?
+      // Send the update and just let it be sent. We fetch to ensure the frontend always reflects the backend...
+      // Yes, sync is hard. So figure it out. Or don't overthink it, just make it work.
+      // Running everything and then sending the update, and then fetching everything, is fine.
+
       if (node.node.runsAutomatically) {
         runNode(node);
       }
@@ -46,6 +56,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     const updatedNodes = { ...currentNodes, [node.nodeId]: visualNode };
     setNodes(updatedNodes);
     await syncNodeUpdate(currentNodes, node);
+    handleNodePropertyChanged();
   }
 
   // Exists on this component because node can be updated from NetworkEditor or ParametersPane
@@ -168,7 +179,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
             />
           </div>
           <div className="left-pane-bottom">
-            <ParametersPane node={selectedNode} handleNodePropertyChanged={handleNodePropertyChanged} />
+            <ParametersPane node={selectedNode} updateNode={updateNode} />
           </div>
 
         </div>
