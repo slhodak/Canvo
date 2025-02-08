@@ -44,7 +44,7 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
       if (data.status == 'success') {
         await fetchAllProjects();
         // If you deleted the current group, set the group to null
-        if (project?._id == projectId) {
+        if (project?.projectId == projectId) {
           setProject(null);
         }
       }
@@ -72,9 +72,9 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
             </div>
             <div className="menu-items-projects">
               {projects.map((_project) => {
-                const highlighted = _project._id === project?._id;
+                const highlighted = _project.projectId === project?.projectId;
                 return (
-                  <ProjectPreview key={_project._id} highlighted={highlighted} project={_project} deleteProject={deleteProject} setProject={setProject} />
+                  <ProjectPreview key={_project.projectId} highlighted={highlighted} project={_project} deleteProject={deleteProject} setProject={setProject} />
                 )
               })}
             </div>
@@ -110,7 +110,7 @@ const ProjectPreview = ({ highlighted, project, deleteProject, setProject }: Pro
         className="project-preview-delete-button"
         onClick={(e) => {
           e.stopPropagation();
-          deleteProject(project._id);
+          deleteProject(project.projectId);
         }}
       >
         <TrashIcon />

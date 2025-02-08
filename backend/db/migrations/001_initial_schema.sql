@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    _id TEXT UNIQUE NOT NULL,
+    user_id TEXT UNIQUE NOT NULL,
     email TEXT UNIQUE NOT NULL
 );
 
@@ -27,11 +27,11 @@ CREATE TABLE IF NOT EXISTS projects (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    _id TEXT UNIQUE NOT NULL,
+    project_id TEXT UNIQUE NOT NULL,
     author_id TEXT NOT NULL,
     title TEXT NOT NULL,
 
-    FOREIGN KEY (author_id) REFERENCES users(_id) ON DELETE CASCADE
+    FOREIGN KEY (author_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 -- Nodes table
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS nodes (
     coordinates point NOT NULL,
     author_id TEXT NOT NULL,
     project_id TEXT NOT NULL,
-    _id TEXT UNIQUE NOT NULL,
+    node_id TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
     type TEXT NOT NULL,
     inputs INTEGER NOT NULL,
@@ -54,8 +54,8 @@ CREATE TABLE IF NOT EXISTS nodes (
     output_state JSONB NOT NULL DEFAULT '{}',
     is_dirty BOOLEAN NOT NULL DEFAULT FALSE,
 
-    FOREIGN KEY (author_id) REFERENCES users(_id) ON DELETE CASCADE,
-    FOREIGN KEY (project_id) REFERENCES projects(_id) ON DELETE CASCADE,
+    FOREIGN KEY (author_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (project_id) REFERENCES projects(project_id) ON DELETE CASCADE,
 
     CONSTRAINT valid_input_number CHECK (inputs >= 0),
     CONSTRAINT valid_output_number CHECK (outputs >= 0)
@@ -74,10 +74,10 @@ CREATE TABLE IF NOT EXISTS connections (
     to_node TEXT NOT NULL,
     to_input INTEGER NOT NULL,
 
-    FOREIGN KEY (author_id) REFERENCES users(_id) ON DELETE CASCADE,
+    FOREIGN KEY (author_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
-    FOREIGN KEY (from_node) REFERENCES nodes(_id) ON DELETE CASCADE,
-    FOREIGN KEY (to_node) REFERENCES nodes(_id) ON DELETE CASCADE,
+    FOREIGN KEY (from_node) REFERENCES nodes(node_id) ON DELETE CASCADE,
+    FOREIGN KEY (to_node) REFERENCES nodes(node_id) ON DELETE CASCADE,
 
     CONSTRAINT valid_output_number CHECK (from_output >= 0),
     CONSTRAINT valid_input_number CHECK (to_input >= 0)

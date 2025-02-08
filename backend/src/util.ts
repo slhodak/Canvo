@@ -1,3 +1,4 @@
+import humps from 'humps';
 import { BaseNode, IOState } from "../../shared/types/src/models/node";
 
 // Check if a value is null or undefined
@@ -22,12 +23,27 @@ export const formatStateArray = (state: IOState) => {
 
 
 export const validateNode = (node: BaseNode): boolean => {
-  const { _id, projectId, name, type, inputs, outputs, coordinates, runsAutomatically, properties, state, isDirty } = node;
+  const { nodeId, projectId, name, type, inputs, outputs, coordinates, runsAutomatically, properties, state, isDirty } = node;
   try {
-    checkAnyNullOrUndefined({ _id, projectId, name, type, inputs, outputs, coordinates, runsAutomatically, properties, state, isDirty });
+    checkAnyNullOrUndefined({ nodeId, projectId, name, type, inputs, outputs, coordinates, runsAutomatically, properties, state, isDirty });
   } catch (error) {
     console.error(`A required field is missing from the node: ${error}`);
     return false;
   }
   return true;
+}
+
+// Convert column names from snake_case to camelCase
+export const camelizeColumns = (data: any) => {
+  var template = data[0];
+  for (var prop in template) {
+    var camel = humps.camelize(prop);
+    if (!(camel in template)) {
+      for (var i = 0; i < data.length; i++) {
+        var d = data[i];
+        d[camel] = d[prop];
+        delete d[prop];
+      }
+    }
+  }
 }

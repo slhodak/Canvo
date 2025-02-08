@@ -40,7 +40,7 @@ const App = ({ user }: AppProps) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ projectId: project._id, title: newTitle }),
+        body: JSON.stringify({ projectId: project.projectId, title: newTitle }),
       });
       const data = await response.json();
       if (data.status == 'success') {

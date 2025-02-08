@@ -38,13 +38,14 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   const updateNode = async (node: BaseNode) => {
     const currentNodes = nodes;
     const visualNode = {
-      id: node._id,
+      id: node.nodeId,
       node: node,
       x: node.coordinates.x,
       y: node.coordinates.y,
     };
-    const updatedNodes = { ...currentNodes, [node._id]: visualNode };
+    const updatedNodes = { ...currentNodes, [node.nodeId]: visualNode };
     setNodes(updatedNodes);
+    console.log("Updating node", node);
     await syncNodeUpdate(currentNodes, node);
   }
 
@@ -109,7 +110,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     if (!project) return;
 
     try {
-      const response = await fetch(`${SERVER_URL}/api/get_nodes_for_project/${project._id}`, {
+      const response = await fetch(`${SERVER_URL}/api/get_nodes_for_project/${project.projectId}`, {
         credentials: 'include',
       });
       const data = await response.json();
@@ -120,9 +121,8 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
           const node = nu.fromObject(nodeJson);
           if (!node) return;
 
-          console.log(`${node._id}: ${node.coordinates.x}, ${node.coordinates.y}`);
-          visualNodes[node._id] = {
-            id: node._id,
+          visualNodes[node.nodeId] = {
+            id: node.nodeId,
             node: node,
             x: node.coordinates.x,
             y: node.coordinates.y,

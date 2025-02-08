@@ -21,7 +21,9 @@ export interface Coordinates {
 
 export class Connection {
   constructor(
-    public _id: string,
+    public id: string,
+    public authorId: string,
+    public projectId: string,
     public fromNode: string,
     public fromOutput: number,
     public toNode: string,
@@ -45,7 +47,7 @@ export interface IOState {
 }
 
 export abstract class BaseNode {
-  public _id: string;
+  public nodeId: string;
   public projectId: string;
   public authorId: string;
   public name: string;
@@ -62,7 +64,7 @@ export abstract class BaseNode {
   public isDirty = false;
 
   constructor(
-    _id: string,
+    nodeId: string,
     authorId: string,
     projectId: string,
     name: string,
@@ -73,7 +75,7 @@ export abstract class BaseNode {
     runsAutomatically: boolean,
     properties: Record<string, NodeProperty> = {},
   ) {
-    this._id = _id;
+    this.nodeId = nodeId;
     this.authorId = authorId;
     this.projectId = projectId;
     this.name = name;
@@ -137,7 +139,7 @@ export class TextNode extends BaseNode implements SyncNode {
   }
 
   public static fromObject(object: BaseNode): BaseNode {
-    return new TextNode(object._id, object.authorId, object.projectId, object.coordinates, object.properties.text.value as string);
+    return new TextNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.properties.text.value as string);
   }
 
   run() {
@@ -171,7 +173,7 @@ export class PromptNode extends BaseNode implements AsyncNode {
   }
 
   public static fromObject(object: BaseNode): BaseNode {
-    return new PromptNode(object._id, object.authorId, object.projectId, object.coordinates, object.properties.prompt.value as string);
+    return new PromptNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.properties.prompt.value as string);
   }
 
   async asyncRun() {
@@ -192,7 +194,7 @@ export class SaveNode extends BaseNode implements AsyncNode {
   }
 
   public static fromObject(object: BaseNode): BaseNode {
-    return new SaveNode(object._id, object.authorId, object.projectId, object.coordinates);
+    return new SaveNode(object.nodeId, object.authorId, object.projectId, object.coordinates);
   }
 
   async asyncRun() {
@@ -220,7 +222,7 @@ export class MergeNode extends BaseNode implements SyncNode {
   }
 
   public static fromObject(object: BaseNode): BaseNode {
-    return new MergeNode(object._id, object.authorId, object.projectId, object.coordinates);
+    return new MergeNode(object.nodeId, object.authorId, object.projectId, object.coordinates);
   }
 
   run() {
@@ -257,7 +259,7 @@ export class ViewNode extends BaseNode implements SyncNode {
   }
 
   public static fromObject(object: BaseNode): BaseNode {
-    return new ViewNode(object._id, object.authorId, object.projectId, object.coordinates);
+    return new ViewNode(object.nodeId, object.authorId, object.projectId, object.coordinates);
   }
 
   run() {

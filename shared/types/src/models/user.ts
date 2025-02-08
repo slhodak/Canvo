@@ -1,15 +1,15 @@
 export interface UserModel {
   id: number;
-  _id: string;
+  userId: string;
   email: string;
-  created_at: Date;
-  updated_at: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface SessionModel {
   id: number;
-  session_token: string;
-  user_email: string;
-  session_start: Date;
-  session_expiration: Date;
+  sessionToken: string;
+  userEmail: string;
+  sessionStart: Date;
+  sessionExpiration: Date;
 }

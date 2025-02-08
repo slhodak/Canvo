@@ -6,15 +6,16 @@ import { ProjectModel } from '../../shared/types/src/models/project';
 import {
   BaseNode,
   Connection,
-  Coordinates,
-  IOState,
 } from '../../shared/types/src/models/node';
-import { formatStateArray } from './util';
-
+import { camelizeColumns } from './util';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
-const pgp = pgPromise();
+const pgp = pgPromise({
+  receive(e) {
+    camelizeColumns(e.data);
+  }
+});
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL is not set');
@@ -29,15 +30,15 @@ export namespace Database {
   export async function insertUser(email: string) {
     const userId = uuidv4();
     // The database itself can protect against duplicate emails, but we'll check here anyway
-    const user = await db.oneOrNone('SELECT id, _id, email FROM users WHERE _id = $1', [userId]);
+    const user = await db.oneOrNone('SELECT id, user_id, email FROM users WHERE user_id = $1', [userId]);
     if (user) {
       return;
     }
-    await db.none('INSERT INTO users (_id, email) VALUES ($1, $2)', [userId, email]);
+    await db.none('INSERT INTO users (user_id, email) VALUES ($1, $2)', [userId, email]);
   }
 
   export async function getUser(email: string): Promise<UserModel | null> {
-    const user = await db.oneOrNone('SELECT id, _id, email FROM users WHERE email = $1', [email]);
+    const user = await db.oneOrNone('SELECT id, user_id, email FROM users WHERE email = $1', [email]);
     return user;
   }
 
@@ -61,13 +62,13 @@ export namespace Database {
 
   export async function getProject(projectId: string, userId: string): Promise<ProjectModel | null> {
     const values = [projectId, userId];
-    const project = await db.oneOrNone('SELECT id, _id, author_id, title, updated_at, created_at FROM projects WHERE _id = $1 and author_id = $2', values);
+    const project = await db.oneOrNone('SELECT id, project_id, author_id, title, updated_at, created_at FROM projects WHERE project_id = $1 and author_id = $2', values);
     return project;
   }
 
   export async function getLatestProject(userId: string): Promise<ProjectModel | null> {
     const project = await db.oneOrNone(`
-      SELECT id, _id, author_id, title, updated_at, created_at
+      SELECT id, project_id, author_id, title, updated_at, created_at
       FROM projects
       WHERE author_id = $1
       ORDER BY updated_at DESC
@@ -77,28 +78,28 @@ export namespace Database {
   }
 
   export async function getAllProjects(userId: string): Promise<ProjectModel[]> {
-    const projects = await db.any('SELECT id, _id, author_id, title, updated_at, created_at FROM projects WHERE author_id = $1', [userId]);
+    const projects = await db.any('SELECT id, project_id, author_id, title, updated_at, created_at FROM projects WHERE author_id = $1', [userId]);
     return projects;
   }
 
   export async function createProject(userId: string, title: string) {
     const projectId = uuidv4();
-    await db.none('INSERT INTO projects (_id, author_id, title) VALUES ($1, $2, $3)', [projectId, userId, title]);
+    await db.none('INSERT INTO projects (project_id, author_id, title) VALUES ($1, $2, $3)', [projectId, userId, title]);
     return projectId;
   }
 
   export async function updateProjectTitle(projectId: string, title: string) {
-    const result = await db.result('UPDATE projects SET title = $1, updated_at = CURRENT_TIMESTAMP WHERE _id = $2', [title, projectId]);
+    const result = await db.result('UPDATE projects SET title = $1, updated_at = CURRENT_TIMESTAMP WHERE project_id = $2', [title, projectId]);
     return result;
   }
 
   export async function updateProjectUpdatedAt(projectId: string) {
-    const result = await db.result('UPDATE projects SET updated_at = CURRENT_TIMESTAMP WHERE _id = $1', [projectId]);
+    const result = await db.result('UPDATE projects SET updated_at = CURRENT_TIMESTAMP WHERE project_id = $1', [projectId]);
     return result;
   }
 
   export async function deleteProject(projectId: string, userId: string) {
-    const result = await db.result('DELETE FROM projects WHERE _id = $1 AND author_id = $2', [projectId, userId]);
+    const result = await db.result('DELETE FROM projects WHERE project_id = $1 AND author_id = $2', [projectId, userId]);
     return result;
   }
 
@@ -107,35 +108,25 @@ export namespace Database {
   export async function getNode(nodeId: string, userId: string): Promise<BaseNode | null> {
     const values = [nodeId, userId];
     const node = await db.oneOrNone(`
-      SELECT id, _id, project_id, name, type, inputs, outputs, coordinates, runs_automatically, properties, is_dirty
+      SELECT node_id, project_id, author_id, name, type, inputs, outputs, coordinates, runs_automatically, properties, input_state, output_state, is_dirty
       FROM nodes
-      WHERE _id = $1 AND author_id = $2
+      WHERE node_id = $1 AND author_id = $2
     `, values);
     return node;
   }
 
   export async function getNodesForProject(projectId: string, userId: string): Promise<BaseNode[]> {
     const nodes = await db.any(`
-      SELECT n._id, n.name, n.type, n.inputs, n.outputs, n.coordinates, n.runs_automatically, n.properties, n.is_dirty
+      SELECT n.node_id, n.project_id, n.author_id, n.name, n.type, n.inputs, n.outputs, n.coordinates, n.runs_automatically, n.properties, n.input_state, n.output_state, n.is_dirty
       FROM nodes n
       WHERE n.project_id = $1 AND n.author_id = $2
     `, [projectId, userId]);
     return nodes;
   }
 
-  export async function getOutputNodes(nodeId: string, userId: string): Promise<BaseNode[]> {
-    const nodes = await db.any(`
-      SELECT n._id, n.name, n.type, n.inputs, n.outputs, n.runs_automatically, n.properties, n.is_dirty
-      FROM nodes n
-      LEFT JOIN node_outputs r ON n._id = r.output_node_id
-      WHERE r.node_id = $1 AND n.author_id = $2
-    `, [nodeId, userId]);
-    return nodes;
-  }
-
   export async function createNode(node: BaseNode) {
     const values = [
-      node._id,
+      node.nodeId,
       node.authorId,
       node.projectId,
       node.name,
@@ -153,7 +144,7 @@ export namespace Database {
 
     await db.none(`
       INSERT INTO nodes (
-          _id, author_id, project_id, name, type, inputs, outputs,
+          node_id, author_id, project_id, name, type, inputs, outputs,
           coordinates, runs_automatically, properties,
           input_state, output_state, is_dirty
       )
@@ -176,18 +167,18 @@ export namespace Database {
       node.state.input,
       node.state.output,
       node.isDirty,
-      node._id,
+      node.nodeId,
       node.authorId
     ];
     await db.none(`
       UPDATE nodes SET name = $1, type = $2, inputs = $3, outputs = $4, runs_automatically = $5,
       properties = $6, input_state = $7, output_state = $8, is_dirty = $9,
-      updated_at = CURRENT_TIMESTAMP WHERE _id = $10 AND author_id = $11`,
+      updated_at = CURRENT_TIMESTAMP WHERE node_id = $10 AND author_id = $11`,
       values);
   }
 
   export async function deleteNode(nodeId: string, userId: string) {
-    const result = await db.result('DELETE FROM nodes WHERE _id = $1 AND author_id = $2', [nodeId, userId]);
+    const result = await db.result('DELETE FROM nodes WHERE node_id = $1 AND author_id = $2', [nodeId, userId]);
     return result;
   }
 
@@ -195,16 +186,16 @@ export namespace Database {
 
   export async function getConnection(connectionId: string, userId: string): Promise<Connection | null> {
     const connection = await db.oneOrNone(`
-      SELECT id, _id, node_id, output_node_id, output_index
+      SELECT id, node_id, author_id, project_id, from_node, from_output, to_node, to_input
       FROM connections
-      WHERE _id = $1 and author_id = $2
+      WHERE node_id = $1 and author_id = $2
     `, [connectionId, userId]);
     return connection;
   }
 
   export async function getConnectionsForProject(projectId: string, userId: string): Promise<Connection[]> {
     const connections = await db.any(`
-      SELECT id, _id, node_id, output_node_id, output_index
+      SELECT id, node_id, author_id, project_id, from_node, from_output, to_node, to_input
       FROM connections
       WHERE project_id = $1 AND author_id = $2
     `, [projectId, userId]);
@@ -215,14 +206,14 @@ export namespace Database {
     const connectionId = uuidv4();
     const values = [connectionId, userId, nodeId, outputNodeId, outputIndex];
     await db.none(`
-      INSERT INTO connections (_id, author_id, node_id, output_node_id, output_index)
+      INSERT INTO connections (node_id, author_id, node_id, output_node_id, output_index)
       VALUES ($1, $2, $3, $4, $5)
     `, values);
     return connectionId;
   }
 
   export async function deleteConnection(connectionId: string, userId: string) {
-    const result = await db.result('DELETE FROM connections WHERE _id = $1 AND author_id = $2', [connectionId, userId]);
+    const result = await db.result('DELETE FROM connections WHERE node_id = $1 AND author_id = $2', [connectionId, userId]);
     return result;
   }
 }

@@ -65,7 +65,7 @@ const NetworkEditor = ({
   const createNewNode = (type: NodeType, position: Coordinates): BaseNode | null => {
     const nodeId = crypto.randomUUID();
     const newNodes = { ...nodes };
-    const newNode = nu.newNode(type, user._id, project._id, position);
+    const newNode = nu.newNode(type, user.userId, project.projectId, position);
     if (!newNode) {
       console.error('Could not create new node');
       return null;
@@ -286,6 +286,8 @@ const NetworkEditor = ({
       id: `${fromNodeId}-${toNodeId}-${Date.now()}`,
       connection: new Connection(
         crypto.randomUUID(),
+        user.userId,
+        project.projectId,
         fromNodeId,
         fromOutput,
         toNodeId,
@@ -318,8 +320,8 @@ const NetworkEditor = ({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          node_id: node.node._id,
-          project_id: project._id,
+          nodeId: node.node.nodeId,
+          projectId: project.projectId,
         }),
       });
       const data = await response.json();
@@ -333,7 +335,7 @@ const NetworkEditor = ({
       console.error('Error deleting node:', error);
       setNodes(originalNodes);
     }
-  }, [nodes, fetchNodesForProject, project._id, setNodes, setSelectedNode]);
+  }, [nodes, fetchNodesForProject, project.projectId, setNodes, setSelectedNode]);
 
   const connectToViewNode = useCallback((node: VisualNode) => {
     if (node.node.outputs < 1) return;
