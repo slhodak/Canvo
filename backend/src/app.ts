@@ -369,7 +369,6 @@ router.get('/api/get_nodes_for_project/:projectId', async (req: Request, res: Re
     }
 
     const nodes = await db.getNodesForProject(projectId, user.userId);
-    console.log("Nodes", nodes);
 
     return res.json({
       status: "success",
