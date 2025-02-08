@@ -182,6 +182,15 @@ const NetworkEditor = ({
   };
 
   const handleMouseUp = () => {
+    if (dragState.isDragging && dragState.nodeId) {
+      const draggedNode = nodes[dragState.nodeId];
+      if (!draggedNode) return;
+
+      draggedNode.node.coordinates.x = draggedNode.x;
+      draggedNode.node.coordinates.y = draggedNode.y;
+      updateNode(draggedNode.node);
+    }
+
     setDragState({
       isDragging: false,
       nodeId: null,
@@ -200,7 +209,6 @@ const NetworkEditor = ({
 
       nodes[dragState.nodeId] = draggedNode;
       setNodes(nodes);
-      updateNode(draggedNode.node);
     }
 
     const svgRect = svgRef.current?.getBoundingClientRect();

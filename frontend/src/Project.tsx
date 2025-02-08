@@ -45,7 +45,6 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     };
     const updatedNodes = { ...currentNodes, [node.nodeId]: visualNode };
     setNodes(updatedNodes);
-    console.log("Updating node", node);
     await syncNodeUpdate(currentNodes, node);
   }
 

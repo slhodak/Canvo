@@ -162,18 +162,20 @@ export namespace Database {
       node.type,
       node.inputs,
       node.outputs,
+      node.coordinates.x,
+      node.coordinates.y,
       node.runsAutomatically,
       node.properties,
-      node.state.input,
-      node.state.output,
+      JSON.stringify(node.state.input),
+      JSON.stringify(node.state.output),
       node.isDirty,
       node.nodeId,
       node.authorId
     ];
     await db.none(`
-      UPDATE nodes SET name = $1, type = $2, inputs = $3, outputs = $4, runs_automatically = $5,
-      properties = $6, input_state = $7, output_state = $8, is_dirty = $9,
-      updated_at = CURRENT_TIMESTAMP WHERE node_id = $10 AND author_id = $11`,
+      UPDATE nodes SET name = $1, type = $2, inputs = $3, outputs = $4, coordinates = point($5, $6),
+      runs_automatically = $7, properties = $8, input_state = $9::jsonb, output_state = $10::jsonb, is_dirty = $11,
+      updated_at = CURRENT_TIMESTAMP WHERE node_id = $12 AND author_id = $13`,
       values);
   }
 
