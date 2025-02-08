@@ -168,6 +168,7 @@ const NetworkEditor = ({
         nodeId: null,
         offsetX: 0,
         offsetY: 0,
+        hasMoved: false,
       });
       setWireState({
         isDrawing: false,
@@ -188,7 +189,9 @@ const NetworkEditor = ({
 
       draggedNode.node.coordinates.x = draggedNode.x;
       draggedNode.node.coordinates.y = draggedNode.y;
-      updateNode(draggedNode.node);
+      if (dragState.hasMoved) {
+        updateNode(draggedNode.node);
+      }
     }
 
     setDragState({
@@ -196,11 +199,13 @@ const NetworkEditor = ({
       nodeId: null,
       offsetX: 0,
       offsetY: 0,
+      hasMoved: false,
     });
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (dragState.isDragging && dragState.nodeId) {
+      dragState.hasMoved = true;
       const draggedNode = nodes[dragState.nodeId];
       if (!draggedNode) return;
 
@@ -311,7 +316,7 @@ const NetworkEditor = ({
       toNode.node.state.input[inputIndex] = fromNode.node.state.output[fromOutput];
       runNode(toNode);
     }
-  }, [connections, nodes, runNode, setConnections]);
+  }, [connections, nodes, runNode, setConnections, project.projectId, user.userId]);
 
   const deleteNode = useCallback(async (node: VisualNode) => {
     const originalNodes = { ...nodes };
