@@ -253,9 +253,9 @@ const NetworkEditor = ({
     deleteConnection(connectionId);
   };
 
-  const endDrawingWire = (toNode: VisualNode, inputIndex: number) => {
+  const endDrawingWire = (toNodeId: string, inputIndex: number) => {
     if (wireState.isDrawing && wireState.fromNode && wireState.fromOutput !== null) {
-      createNewConnection(wireState.fromNode, wireState.fromOutput, toNode, inputIndex);
+      createNewConnection(wireState.fromNode, wireState.fromOutput, toNodeId, inputIndex);
     }
     setWireState({
       isDrawing: false,
@@ -272,11 +272,11 @@ const NetworkEditor = ({
   // Memoized Functions
   //////////////////////////////
 
-  const createNewConnection = useCallback((fromNodeId: string, fromOutput: number, toNode: VisualNode, inputIndex: number) => {
+  const createNewConnection = useCallback((fromNodeId: string, fromOutput: number, toNodeId: string, inputIndex: number) => {
     // Don't create a redundant connection
     const existingConnection = connections.find(conn => (
       conn.connection.fromNode === fromNodeId &&
-      conn.connection.toNode === toNode.id &&
+      conn.connection.toNode === toNodeId &&
       conn.connection.toInput === inputIndex
     ));
     if (existingConnection) {
@@ -285,20 +285,20 @@ const NetworkEditor = ({
 
     let newConnections = connections;
     // If there is already a connection from any node to this node's inputIndex, remove it
-    const connectionToInput = connections.find(conn => conn.connection.toNode === toNode.id && conn.connection.toInput === inputIndex);
+    const connectionToInput = connections.find(conn => conn.connection.toNode === toNodeId && conn.connection.toInput === inputIndex);
     if (connectionToInput) {
       newConnections = connections.filter(conn => conn.id !== connectionToInput.id);
     }
 
     const newConnection: VisualConnection = {
-      id: `${fromNodeId}-${toNode.id}-${fromOutput}-${inputIndex}`,
+      id: `${fromNodeId}-${toNodeId}-${fromOutput}-${inputIndex}`,
       connection: new Connection(
         crypto.randomUUID(),
         user.userId,
         project.projectId,
         fromNodeId,
         fromOutput,
-        toNode.id,
+        toNodeId,
         inputIndex,
       ),
     };
@@ -343,7 +343,7 @@ const NetworkEditor = ({
 
     const viewNode = Object.values(nodes).find(n => n.node.type === 'view');
     if (viewNode) {
-      createNewConnection(node.id, 0, viewNode, 0);
+      createNewConnection(node.id, 0, viewNode.id, 0);
     }
   }, [nodes, createNewConnection]);
 

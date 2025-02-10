@@ -9,7 +9,7 @@ interface NodeProps {
   wireState: WireState;
   handleMouseDown: (e: React.MouseEvent, nodeId: string) => void;
   startDrawingWire: (nodeId: string, outputIndex: number, startX: number, startY: number) => void;
-  endDrawingWire: (toNode: VisualNode, inputIndex: number) => void;
+  endDrawingWire: (toNodeId: string, inputIndex: number) => void;
   disconnectWire: (connectionId: string) => void;
 }
 
@@ -19,7 +19,7 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
       // Immediately start a new connection if the clicked port is an output port
       if (isInputPort) {
         if (wireState.isDrawing) {
-          endDrawingWire(node, inputIndex);
+          endDrawingWire(nodeId, inputIndex);
         } else {
           disconnectWire(connectionId);
         }
@@ -28,7 +28,7 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
       }
     } else {
       if (isInputPort) {
-        endDrawingWire(node, inputIndex);
+        endDrawingWire(nodeId, inputIndex);
       } else {
         startDrawingWire(nodeId, inputIndex, e.clientX, e.clientY);
       }
