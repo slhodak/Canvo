@@ -229,9 +229,17 @@ export class MergeNode extends BaseNode implements SyncNode {
 
   run(inputValues: (OutputState | null)[]) {
     // Merge the input texts into a single output text
-    const mergedResult = Object.values(inputValues).join(
-      this.properties.separator.value as string
-    );
+    let mergedResult = '';
+    let i = 0;
+    for (const inputValue of inputValues) {
+      if (inputValue) {
+        if (i > 0) {
+          mergedResult += this.properties.separator.value as string;
+        }
+        mergedResult += inputValue.stringValue as string;
+        i++;
+      }
+    }
 
     this.outputState[0] = {
       stringValue: mergedResult,
