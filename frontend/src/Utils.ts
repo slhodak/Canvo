@@ -1,5 +1,5 @@
-import { VisualNode } from "./NetworkTypes";
-import { BaseNode, NodeType, TextNode, PromptNode, SaveNode, MergeNode, ViewNode, Coordinates } from "../../shared/types/src/models/node";
+import { VisualConnection, VisualNode } from "./NetworkTypes";
+import { BaseNode, NodeType, TextNode, PromptNode, SaveNode, MergeNode, ViewNode, Coordinates, IOState } from "../../shared/types/src/models/node";
 
 export const NetworkEditorUtils = {
   NODE_WIDTH: 100,
@@ -50,5 +50,23 @@ export const NodeUtils = {
     }
 
     return null;
+  },
+
+  readNodeInput(node: BaseNode, inputIndex: number, connections: VisualConnection[], nodes: Record<string, VisualNode>): IOState | null {
+    const connectionsToNode = connections.filter(conn => conn.connection.toNode === node.nodeId && conn.connection.toInput === inputIndex);
+    if (connectionsToNode.length === 0) {
+      return null;
+    }
+
+    const connection = connectionsToNode[0];
+    if (!connection) return null;
+
+    const fromNode = nodes[connection.connection.fromNode];
+    if (!fromNode) return null;
+
+    const fromNodeOutput = fromNode.node.state.output[connection.connection.fromOutput];
+    if (!fromNodeOutput) return null;
+
+    return fromNodeOutput;
   }
 }
