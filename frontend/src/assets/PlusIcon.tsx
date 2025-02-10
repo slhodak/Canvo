@@ -1,7 +1,8 @@
 
-const PlusIcon = () => (
-	<svg fill="#555555" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink"
+const PlusIcon = ({ color = "#555555" }: { color?: string }) => (
+	<svg fill={color} version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink"
 		width="100%" height="100%" viewBox="0 0 45.402 45.402"
+
 		xmlSpace="preserve">
 		<g>
 			<path d="M41.267,18.557H26.832V4.134C26.832,1.851,24.99,0,22.707,0c-2.283,0-4.124,1.851-4.124,4.135v14.432H4.141

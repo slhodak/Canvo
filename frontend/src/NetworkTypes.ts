@@ -17,6 +17,7 @@ export interface DragState {
   nodeId: string | null;
   offsetX: number;
   offsetY: number;
+  hasMoved: boolean;
 }
 
 export interface WireState {

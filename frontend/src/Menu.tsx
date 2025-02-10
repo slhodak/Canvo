@@ -5,16 +5,18 @@ import PlusIcon from "./assets/PlusIcon";
 import { SERVER_URL } from "./constants";
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { TrashIcon } from "./assets/TrashIcon";
+import { UserModel } from '../../shared/types/src/models/user';
 
 interface MenuProps {
+  user: UserModel;
   project: ProjectModel | null;
   setProject: (project: ProjectModel | null) => void;
   projects: ProjectModel[];
   fetchAllProjects: () => void;
 }
 
-const Menu = ({ project, setProject, projects, fetchAllProjects }: MenuProps) => {
-  const [isCollapsed, setIsCollapsed] = useState(true);
+const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuProps) => {
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const createProject = async () => {
     try {
@@ -42,7 +44,7 @@ const Menu = ({ project, setProject, projects, fetchAllProjects }: MenuProps) =>
       if (data.status == 'success') {
         await fetchAllProjects();
         // If you deleted the current group, set the group to null
-        if (project?._id == projectId) {
+        if (project?.projectId == projectId) {
           setProject(null);
         }
       }
@@ -57,22 +59,28 @@ const Menu = ({ project, setProject, projects, fetchAllProjects }: MenuProps) =>
         <button className="collapse-button" onClick={() => setIsCollapsed(!isCollapsed)}>
           <BurgerMenu isCollapsed={isCollapsed} strokeColor={"var(--font-color)"} />
         </button>
+        <h2 className="app-title-header">{isCollapsed ? 'C' : 'Canvo'}</h2>
       </div>
       {!isCollapsed && (
-        <div className="menu-items-container">
-          <div className="menu-items-header">
-            <h3>Projects</h3>
-            <button className="add-project-button" onClick={createProject}>
-              <PlusIcon />
-            </button>
+        <div className="menu-body-container">
+          <div className="menu-projects-container">
+            <div className="menu-projects-header">
+              <h3>Projects</h3>
+              <button className="add-project-button" onClick={createProject}>
+                <PlusIcon />
+              </button>
+            </div>
+            <div className="menu-items-projects">
+              {projects.map((_project) => {
+                const highlighted = _project.projectId === project?.projectId;
+                return (
+                  <ProjectPreview key={_project.projectId} highlighted={highlighted} project={_project} deleteProject={deleteProject} setProject={setProject} />
+                )
+              })}
+            </div>
           </div>
-          <div className="menu-items-projects">
-            {projects.map((_project) => {
-              const highlighted = _project._id === project?._id;
-              return (
-                <ProjectPreview key={_project._id} highlighted={highlighted} project={_project} deleteProject={deleteProject} setProject={setProject} />
-              )
-            })}
+          <div className="menu-user">
+            <p className="menu-user-info">User: <span className="menu-user-email">{user.email}</span></p>
           </div>
         </div>
       )}
@@ -102,7 +110,7 @@ const ProjectPreview = ({ highlighted, project, deleteProject, setProject }: Pro
         className="project-preview-delete-button"
         onClick={(e) => {
           e.stopPropagation();
-          deleteProject(project._id);
+          deleteProject(project.projectId);
         }}
       >
         <TrashIcon />

@@ -6,16 +6,9 @@ import dotenv from "dotenv";
 import path from 'path';
 import { Database as db } from './db';
 import { UserModel } from '../../shared/types/src/models/user';
-import {
-  TextNode,
-  PromptNode,
-  SaveNode,
-  ViewNode,
-  MergeNode,
-} from '../../shared/types/src/models/node';
 import { runPrompt } from './llm';
 import stytch from 'stytch';
-import { v4 as uuidv4 } from 'uuid';
+import { validateNode } from './util';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -141,7 +134,7 @@ async function getUserFromSessionToken(req: Request): Promise<UserModel | null> 
     return null;
   }
 
-  return await db.getUser(session.user_email);
+  return await db.getUser(session.userEmail);
 }
 
 // Redirects from stytch to this endpoint will include an oauth token in the query parameters
@@ -213,7 +206,18 @@ router.get('/auth/check', async (req: Request, res: Response) => {
 // Middleware to guard the /api/* routes
 app.use('/api', authenticate);
 
+router.get('/api/get_user', async (req: Request, res: Response) => {
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ error: "Could not find user email from session token" });
+  }
+
+  return res.json({ status: 'success', user });
+});
+
+////////////////////////////////////////////////////////////
 // Projects
+////////////////////////////////////////////////////////////
 
 router.get('/api/get_latest_project', async (req: Request, res: Response) => {
   try {
@@ -222,7 +226,7 @@ router.get('/api/get_latest_project', async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Could not find user email from session token" });
     }
 
-    const project = await db.getLatestProject(user._id);
+    const project = await db.getLatestProject(user.userId);
 
     return res.json({
       status: "success",
@@ -243,7 +247,7 @@ router.get('/api/get_all_projects', async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Could not find user email from session token" });
     }
 
-    const results = await db.getAllProjects(user._id);
+    const results = await db.getAllProjects(user.userId);
 
     return res.json({
       status: "success",
@@ -265,12 +269,12 @@ router.post('/api/new_project', async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Could not find user email from session token" });
     }
 
-    const projectId = await db.createProject(user._id, 'untitled');
+    const projectId = await db.createProject(user.userId, 'untitled');
     if (!projectId) {
       return res.status(500).json({ status: "failed", error: "Could not create project" });
     }
 
-    const project = await db.getProject(projectId, user._id);
+    const project = await db.getProject(projectId, user.userId);
     if (!project) {
       return res.status(500).json({ status: "failed", error: "Could not get project" });
     }
@@ -307,16 +311,16 @@ router.post('/api/update_project_title', async (req: Request, res: Response) => 
   }
 });
 
-router.delete('/api/delete_project/:project_id', async (req: Request, res: Response) => {
+router.delete('/api/delete_project/:projectId', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
   if (!user) {
     return res.status(401).json({ error: "Could not find user email from session token" });
   }
 
-  const projectId = req.params.project_id;
+  const projectId = req.params.projectId;
 
   try {
-    const result = await db.deleteProject(projectId, user._id);
+    const result = await db.deleteProject(projectId, user.userId);
     if (result.rowCount === 0) {
       return res.status(404).json({ error: "Project not found" });
     }
@@ -330,21 +334,23 @@ router.delete('/api/delete_project/:project_id', async (req: Request, res: Respo
   }
 });
 
-// Blocks
+////////////////////////////////////////////////////////////
+// Nodes
+////////////////////////////////////////////////////////////
 
-router.get('/api/get_node/:node_id', async (req: Request, res: Response) => {
+router.get('/api/get_node/:nodeId', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
   if (!user) {
     return res.status(401).json({ error: "Could not find user email from session token" });
   }
 
-  const nodeId = req.params.node_id;
+  const nodeId = req.params.nodeId;
   if (!nodeId) {
     return res.status(400).json({ error: "No node ID provided" });
   }
 
   try {
-    const node = await db.getNode(nodeId, user._id);
+    const node = await db.getNode(nodeId, user.userId);
     return res.json({ status: "success", node });
   } catch (error) {
     if (error instanceof Error) {
@@ -354,15 +360,15 @@ router.get('/api/get_node/:node_id', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/api/get_nodes_for_project/:project_id', async (req: Request, res: Response) => {
-  const projectId = req.params.project_id;
+router.get('/api/get_nodes_for_project/:projectId', async (req: Request, res: Response) => {
+  const projectId = req.params.projectId;
   try {
     const user = await getUserFromSessionToken(req);
     if (!user) {
       return res.status(401).json({ error: "Could not find user email from session token" });
     }
 
-    const nodes = await db.getNodesForProject(projectId, user._id);
+    const nodes = await db.getNodesForProject(projectId, user.userId);
 
     return res.json({
       status: "success",
@@ -378,9 +384,14 @@ router.get('/api/get_nodes_for_project/:project_id', async (req: Request, res: R
 });
 
 router.post('/api/new_node', async (req: Request, res: Response) => {
-  const { project_id, type } = req.body;
-  if (!project_id || !type) {
-    return res.status(400).json({ error: "No project ID or type provided" });
+  const { node } = req.body;
+  if (!node) {
+    console.error("No node provided", req.body);
+    return res.status(400).json({ error: "No node provided" });
+  }
+
+  if (!validateNode(node)) {
+    return res.status(400).json({ error: "Invalid node" });
   }
 
   try {
@@ -389,42 +400,9 @@ router.post('/api/new_node', async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Could not find user email from session token" });
     }
 
-    let node = null;
-    switch (type) {
-      case 'text':
-        node = new TextNode(uuidv4());
-        break;
-      case 'prompt':
-        node = new PromptNode(uuidv4());
-        break;
-      case 'save':
-        node = new SaveNode(uuidv4());
-        break;
-      case 'view':
-        node = new ViewNode(uuidv4());
-        break;
-      case 'merge':
-        node = new MergeNode(uuidv4());
-        break;
-      default:
-        return res.status(400).json({ error: "Invalid node type" });
-    }
-
-    if (!node) {
-      return res.status(500).json({ status: "failed", error: "Could not create node object" });
-    }
-
-    const nodeId = await db.createNode(user._id, project_id, node.name, node.type, node.inputs, node.outputs, node.runsAutomatically, node.properties);
-    if (!nodeId) {
-      return res.status(500).json({ status: "failed", error: "Could not create node in database" });
-    }
-
-    await db.updateProjectUpdatedAt(project_id);
-
-    return res.json({
-      status: "success",
-      nodeId: nodeId
-    });
+    await db.createNode(node);
+    await db.updateProjectUpdatedAt(node.projectId);
+    return res.json({ status: "success" });
   } catch (error) {
     if (error instanceof Error) {
       return res.status(500).json({ status: "failed", error: error.message });
@@ -434,28 +412,25 @@ router.post('/api/new_node', async (req: Request, res: Response) => {
 });
 
 router.post('/api/update_node', async (req: Request, res: Response) => {
+  const { node } = req.body;
+  if (!node) {
+    return res.status(400).json({ error: "No node provided" });
+  }
+
   const user = await getUserFromSessionToken(req);
   if (!user) {
     return res.status(401).json({ error: "Could not find user email from session token" });
   }
-
-  const { nodeId, projectId, name, type, inputs, outputs, runsAutomatically, properties } = req.body;
-  if (!nodeId || !projectId) {
-    return res.status(400).json({ error: "No nodeId or projectId provided" });
+  
+  if (!validateNode(node)) {
+    return res.status(400).json({ error: "Invalid node" });
   }
 
   try {
-    const result = await db.updateNode(nodeId, name, type, inputs, outputs, runsAutomatically, properties, user._id);
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: "Node ID not found" });
-    }
+    await db.updateNode(node);
+    await db.updateProjectUpdatedAt(node.projectId);
 
-    await db.updateProjectUpdatedAt(projectId);
-
-    return res.json({
-      status: "success",
-      nodeId: nodeId
-    });
+    return res.json({ status: "success" });
   } catch (error) {
     if (error instanceof Error) {
       return res.status(500).json({ error: error.message });
@@ -476,7 +451,7 @@ router.post('/api/delete_node', async (req: Request, res: Response) => {
   }
 
   try {
-    const result = await db.deleteNode(nodeId, user._id);
+    const result = await db.deleteNode(nodeId, user.userId);
     if (result.rowCount === 0) {
       return res.status(404).json({ error: "Node not found" });
     }
@@ -496,15 +471,15 @@ router.post('/api/delete_node', async (req: Request, res: Response) => {
 // Connections
 ////////////////////////////////////////////////////////////
 
-router.get('/api/get_connections_for_project/:project_id', async (req: Request, res: Response) => {
-  const projectId = req.params.project_id;
+router.get('/api/get_connections_for_project/:projectId', async (req: Request, res: Response) => {
+  const projectId = req.params.projectId;
   try {
     const user = await getUserFromSessionToken(req);
     if (!user) {
       return res.status(401).json({ error: "Could not find user email from session token" });
     }
 
-    const connections = await db.getConnectionsForProject(projectId, user._id);
+    const connections = await db.getConnectionsForProject(projectId, user.userId);
     return res.json({ status: "success", connections });
   } catch (error) {
     if (error instanceof Error) {
@@ -526,7 +501,7 @@ router.post('/api/create_connection', async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Could not find user email from session token" });
     }
 
-    const connectionId = await db.createConnection(user._id, nodeId, outputNodeId, outputIndex);
+    const connectionId = await db.createConnection(user.userId, nodeId, outputNodeId, outputIndex);
     return res.json({ status: "success", connectionId });
   } catch (error) {
     if (error instanceof Error) {
@@ -536,15 +511,15 @@ router.post('/api/create_connection', async (req: Request, res: Response) => {
   }
 });
 
-router.delete('/api/delete_connection/:connection_id', async (req: Request, res: Response) => {
-  const connectionId = req.params.connection_id;
+router.delete('/api/delete_connection/:connectionId', async (req: Request, res: Response) => {
+  const connectionId = req.params.connectionId;
   try {
     const user = await getUserFromSessionToken(req);
     if (!user) {
       return res.status(401).json({ error: "Could not find user email from session token" });
     }
 
-    const result = await db.deleteConnection(connectionId, user._id);
+    const result = await db.deleteConnection(connectionId, user.userId);
     if (result.rowCount === 0) {
       return res.status(404).json({ error: "Connection not found" });
     }

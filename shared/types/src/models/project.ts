@@ -1,8 +1,8 @@
 export interface ProjectModel {
   id: number;
-  _id: string;
-  author_id: string;
+  projectId: string;
+  authorId: string;
   title: string;
-  updated_at: Date;
-  created_at: Date;
+  updatedAt: Date;
+  createdAt: Date;
 }
