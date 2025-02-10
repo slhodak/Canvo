@@ -121,7 +121,7 @@ export class TextNode extends BaseNode implements SyncNode {
     authorId: string,
     projectId: string,
     coordinates: Coordinates,
-    public text: string = '',
+    text: string = '',
     outputState: OutputState[] = [],
   ) {
     super(id, authorId, projectId, 'Text', 'text', 0, 1, coordinates, true, {
@@ -157,7 +157,7 @@ export class PromptNode extends BaseNode implements AsyncNode {
     authorId: string,
     projectId: string,
     coordinates: Coordinates,
-    public prompt: string = '',
+    prompt: string = '',
     outputState: OutputState[] = [],
   ) {
     super(id, authorId, projectId, 'Prompt', 'prompt', 1, 1, coordinates, false, {
@@ -210,13 +210,14 @@ export class MergeNode extends BaseNode implements SyncNode {
     authorId: string,
     projectId: string,
     coordinates: Coordinates,
+    separator: string = ' ',
     outputState: OutputState[] = [],
   ) {
     super(id, authorId, projectId, 'Merge', 'merge', 2, 1, coordinates, true, {
       separator: {
         type: 'string',
         label: 'Separator',
-        value: ' ',
+        value: separator,
         editable: true,
         displayed: true,
       },
@@ -224,7 +225,7 @@ export class MergeNode extends BaseNode implements SyncNode {
   }
 
   public static fromObject(object: BaseNode): BaseNode {
-    return new MergeNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.outputState);
+    return new MergeNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.properties.separator.value as string, object.outputState);
   }
 
   run(inputValues: (OutputState | null)[]) {
