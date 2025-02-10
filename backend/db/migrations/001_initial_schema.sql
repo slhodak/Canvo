@@ -50,7 +50,6 @@ CREATE TABLE IF NOT EXISTS nodes (
     outputs INTEGER NOT NULL,
     runs_automatically BOOLEAN NOT NULL,
     properties JSONB NOT NULL,
-    input_state JSONB NOT NULL DEFAULT '{}',
     output_state JSONB NOT NULL DEFAULT '{}',
     is_dirty BOOLEAN NOT NULL DEFAULT FALSE,
 

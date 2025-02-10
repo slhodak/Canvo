@@ -1,5 +1,5 @@
 import humps from 'humps';
-import { BaseNode, IOState } from "../../shared/types/src/models/node";
+import { BaseNode, OutputState } from "../../shared/types/src/models/node";
 
 // Check if a value is null or undefined
 export function isNullOrUndefined(value: any): boolean {
@@ -16,16 +16,21 @@ export function checkAnyNullOrUndefined(object: Record<string, any>) {
 }
 
 // Convert input and output states to the correct PostgreSQL format
-export const formatStateArray = (state: IOState) => {
+export const formatStateArray = (state: OutputState) => {
   const { stringValue, numberValue } = state;
   return `{${stringValue ?? null}, ${numberValue ?? null}}`;
 };
 
 
 export const validateNode = (node: BaseNode): boolean => {
-  const { nodeId, projectId, name, type, inputs, outputs, coordinates, runsAutomatically, properties, state, isDirty } = node;
+  const {
+    nodeId, projectId, name, type, inputs, outputs, coordinates,
+    runsAutomatically, properties, outputState, isDirty } = node;
   try {
-    checkAnyNullOrUndefined({ nodeId, projectId, name, type, inputs, outputs, coordinates, runsAutomatically, properties, state, isDirty });
+    checkAnyNullOrUndefined({
+      nodeId, projectId, name, type, inputs, outputs, coordinates,
+      runsAutomatically, properties, outputState, isDirty
+    });
   } catch (error) {
     console.error(`A required field is missing from the node: ${error}`);
     return false;

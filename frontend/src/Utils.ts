@@ -1,5 +1,5 @@
-import { VisualNode } from "./NetworkTypes";
-import { BaseNode, NodeType, TextNode, PromptNode, SaveNode, MergeNode, ViewNode, Coordinates } from "../../shared/types/src/models/node";
+import { VisualConnection, VisualNode } from "./NetworkTypes";
+import { BaseNode, NodeType, TextNode, PromptNode, SaveNode, MergeNode, ViewNode, Coordinates, OutputState } from "../../shared/types/src/models/node";
 
 export const NetworkEditorUtils = {
   NODE_WIDTH: 100,
@@ -50,5 +50,32 @@ export const NodeUtils = {
     }
 
     return null;
+  },
+
+  // Read the input values from the corresponding outputs of connected nodes
+  readNodeInputs(node: BaseNode, connections: VisualConnection[], nodes: Record<string, VisualNode>): (OutputState | null)[] {
+    const connectionsToNode = connections.filter(conn => conn.connection.toNode === node.nodeId);
+    if (connectionsToNode.length === 0) {
+      // Print this warning because the caller should have already confirmed that the node is supposed to have inputs
+      // And readNodeInputs should only be run when the node is part of a DAG, i.e. at least one of the inputs is connected
+      console.warn("No connections to node:", node.nodeId);
+      return [];
+    }
+
+    return connectionsToNode.map(conn => {
+      const fromNode = nodes[conn.connection.fromNode];
+      if (!fromNode) {
+        console.warn("No fromNode found for connection:", conn);
+        return null;
+      }
+
+      const fromNodeOutput = fromNode.node.outputState[conn.connection.fromOutput];
+      if (!fromNodeOutput) {
+        console.warn("No output found for fromNode:", fromNode);
+        return null;
+      }
+
+      return fromNodeOutput;
+    });
   }
 }
