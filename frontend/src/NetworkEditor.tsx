@@ -147,7 +147,9 @@ const NetworkEditor = ({
     if (!node) return;
 
     setSelectedNode(node);
-    runNode(node);
+    if (node.node.runsAutomatically) {
+      runNode(node);
+    }
 
     setDragState({
       isDragging: true,
