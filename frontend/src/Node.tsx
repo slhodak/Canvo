@@ -48,7 +48,7 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
         width={neu.NODE_WIDTH}
         height={neu.NODE_HEIGHT}
         className={`node-rectangle ${isSelected ? "selected" : ""}`}
-        // className={`node-rectangle`}
+      // className={`node-rectangle`}
       />
 
       {/* Node Name */}
@@ -73,7 +73,10 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
               cx={pos.x}
               cy={pos.y}
               r={neu.PORT_RADIUS}
-              onMouseDown={(e) => handleConnectionClick(e, true, connection?.id, node.node.nodeId, i)}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                handleConnectionClick(e, true, connection?.connection.connectionId, node.node.nodeId, i)
+              }}
               className={`node-input-port ${connection && "connected"} ${wireState.isDrawing && "drawing"}`}
             />
           </g>
@@ -93,7 +96,10 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
             cx={pos.x}
             cy={pos.y}
             r={neu.PORT_RADIUS}
-            onMouseDown={(e) => handleConnectionClick(e, false, connection?.id, node.node.nodeId, i)}
+            onMouseDown={(e) => {
+              e.stopPropagation();
+              handleConnectionClick(e, false, connection?.connection.connectionId, node.node.nodeId, i)
+            }}
             className="node-output-port"
           />
         );

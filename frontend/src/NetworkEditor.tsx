@@ -18,9 +18,9 @@ interface NetworkEditorProps {
   selectedNode: VisualNode | null;
   setSelectedNode: (node: VisualNode | null) => void;
   connections: VisualConnection[];
-  setConnections: (connections: VisualConnection[]) => void;
+  updateConnections: (connections: VisualConnection[]) => void;
   runNode: (node: VisualNode) => void;
-  updateNode: (node: BaseNode) => void;
+  updateNode: (node: BaseNode, shouldSync: boolean) => void;
 }
 
 const NetworkEditor = ({
@@ -32,7 +32,7 @@ const NetworkEditor = ({
   selectedNode,
   setSelectedNode,
   connections,
-  setConnections,
+  updateConnections,
   runNode,
   updateNode,
 }: NetworkEditorProps) => {
@@ -110,13 +110,7 @@ const NetworkEditor = ({
   };
 
   const deleteConnection = (connectionId: string) => {
-    setConnections(connections.filter(conn => conn.id !== connectionId));
-    // Rerun the node whose input was disconnected
-    /// TODO: Fix because this won't work since setConnections is async
-    const toNode = nodes[connections.find(conn => conn.id === connectionId)?.connection.toNode ?? ''];
-    if (toNode) {
-      runNode(toNode);
-    }
+    updateConnections(connections.filter(conn => conn.connection.connectionId !== connectionId));
   }
 
   //////////////////////////////
@@ -143,11 +137,14 @@ const NetworkEditor = ({
   }
 
   const handleMouseDownInNode = (e: React.MouseEvent, nodeId: string) => {
+    console.log('handleMouseDownInNode', nodeId);
     const node = nodes[nodeId];
     if (!node) return;
 
     setSelectedNode(node);
-    runNode(node);
+    if (node.node.runsAutomatically) {
+      runNode(node);
+    }
 
     setDragState({
       isDragging: true,
@@ -188,7 +185,7 @@ const NetworkEditor = ({
       draggedNode.node.coordinates.x = draggedNode.x;
       draggedNode.node.coordinates.y = draggedNode.y;
       if (dragState.hasMoved) {
-        updateNode(draggedNode.node);
+        updateNode(draggedNode.node, false);
       }
     }
 
@@ -294,7 +291,7 @@ const NetworkEditor = ({
     }
 
     const newConnection: VisualConnection = {
-      id: `${fromNodeId}-${toNodeId}-${Date.now()}`,
+      id: `${fromNodeId}-${toNodeId}-${fromOutput}-${inputIndex}`,
       connection: new Connection(
         crypto.randomUUID(),
         user.userId,
@@ -305,14 +302,9 @@ const NetworkEditor = ({
         inputIndex,
       ),
     };
-    setConnections([...newConnections, newConnection]);
 
-    // Run the toNode
-    const toNode = nodes[toNodeId];
-    if (toNode) {
-      runNode(toNode);
-    }
-  }, [connections, nodes, runNode, setConnections, project.projectId, user.userId]);
+    updateConnections([...newConnections, newConnection]);
+  }, [connections, updateConnections, project.projectId, user.userId]);
 
   const deleteNode = useCallback(async (node: VisualNode) => {
     const originalNodes = { ...nodes };
@@ -427,7 +419,7 @@ const NetworkEditor = ({
 
           return (
             <path
-              key={conn.id}
+              key={`${conn.connection.fromNode}-${conn.connection.toNode}-${conn.connection.fromOutput}-${conn.connection.toInput}`}
               d={`M ${start.x} ${start.y} C ${start.x} ${start.y + 50}, ${end.x} ${end.y - 50}, ${end.x} ${end.y}`}
               className="network-editor-wire"
             />

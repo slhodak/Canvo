@@ -67,14 +67,15 @@ CREATE TABLE IF NOT EXISTS connections (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     author_id TEXT NOT NULL,
-    project_id INTEGER NOT NULL,
+    project_id TEXT NOT NULL,
+    connection_id TEXT UNIQUE NOT NULL,
     from_node TEXT NOT NULL,
     from_output INTEGER NOT NULL,
     to_node TEXT NOT NULL,
     to_input INTEGER NOT NULL,
 
     FOREIGN KEY (author_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    FOREIGN KEY (project_id) REFERENCES projects(project_id) ON DELETE CASCADE,
     FOREIGN KEY (from_node) REFERENCES nodes(node_id) ON DELETE CASCADE,
     FOREIGN KEY (to_node) REFERENCES nodes(node_id) ON DELETE CASCADE,
 
