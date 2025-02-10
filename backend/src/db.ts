@@ -108,7 +108,8 @@ export namespace Database {
   export async function getNode(nodeId: string, userId: string): Promise<BaseNode | null> {
     const values = [nodeId, userId];
     const node = await db.oneOrNone(`
-      SELECT node_id, project_id, author_id, name, type, inputs, outputs, coordinates, runs_automatically, properties, input_state, output_state, is_dirty
+      SELECT node_id, project_id, author_id, name, type, inputs,
+      outputs, coordinates, runs_automatically, properties, output_state, is_dirty
       FROM nodes
       WHERE node_id = $1 AND author_id = $2
     `, values);
@@ -117,7 +118,8 @@ export namespace Database {
 
   export async function getNodesForProject(projectId: string, userId: string): Promise<BaseNode[]> {
     const nodes = await db.any(`
-      SELECT n.node_id, n.project_id, n.author_id, n.name, n.type, n.inputs, n.outputs, n.coordinates, n.runs_automatically, n.properties, n.input_state, n.output_state, n.is_dirty
+      SELECT n.node_id, n.project_id, n.author_id, n.name, n.type, n.inputs, n.outputs,
+      n.coordinates, n.runs_automatically, n.properties, n.output_state, n.is_dirty
       FROM nodes n
       WHERE n.project_id = $1 AND n.author_id = $2
     `, [projectId, userId]);
@@ -137,8 +139,7 @@ export namespace Database {
       node.coordinates.y,
       node.runsAutomatically,
       node.properties,
-      JSON.stringify(node.state.input),
-      JSON.stringify(node.state.output),
+      JSON.stringify(node.outputState),
       node.isDirty
     ];
 
@@ -146,17 +147,18 @@ export namespace Database {
       INSERT INTO nodes (
           node_id, author_id, project_id, name, type, inputs, outputs,
           coordinates, runs_automatically, properties,
-          input_state, output_state, is_dirty
+          output_state, is_dirty
       )
       VALUES (
           $1, $2, $3, $4, $5, $6, $7, 
           point($8, $9), $10, $11, 
-          $12::jsonb, $13::jsonb, $14
+          $12::jsonb, $13
       )
   `, values);
   }
 
   export async function updateNode(node: BaseNode) {
+    console.log('Updating node:', node);
     const values = [
       node.name,
       node.type,
@@ -166,16 +168,15 @@ export namespace Database {
       node.coordinates.y,
       node.runsAutomatically,
       node.properties,
-      JSON.stringify(node.state.input),
-      JSON.stringify(node.state.output),
+      JSON.stringify(node.outputState),
       node.isDirty,
       node.nodeId,
       node.authorId
     ];
     await db.none(`
       UPDATE nodes SET name = $1, type = $2, inputs = $3, outputs = $4, coordinates = point($5, $6),
-      runs_automatically = $7, properties = $8, input_state = $9::jsonb, output_state = $10::jsonb, is_dirty = $11,
-      updated_at = CURRENT_TIMESTAMP WHERE node_id = $12 AND author_id = $13`,
+      runs_automatically = $7, properties = $8, output_state = $9::jsonb, is_dirty = $10,
+      updated_at = CURRENT_TIMESTAMP WHERE node_id = $11 AND author_id = $12`,
       values);
   }
 

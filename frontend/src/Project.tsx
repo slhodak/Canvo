@@ -1,5 +1,5 @@
 import './Project.css';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { VisualNode, VisualConnection } from './NetworkTypes';
 import { BaseNode } from '../../shared/types/src/models/node';
@@ -16,35 +16,18 @@ interface ProjectProps {
   handleProjectTitleChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
+type NetworkNodes = Record<string, VisualNode>;
+type NetworkConnections = VisualConnection[];
+
 const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
-  const [nodes, setNodes] = useState<Record<string, VisualNode>>({});
-  const [connections, setConnections] = useState<VisualConnection[]>([]);
+  const [nodes, setNodes] = useState<NetworkNodes>({});
+  const [connections, setConnections] = useState<NetworkConnections>([]);
+  const prevNetworkRef = useRef<{ nodes: NetworkNodes, connections: NetworkConnections }>({ nodes, connections: [] });
+  const shouldSyncNodesRef = useRef<boolean>(false);
   const [selectedNode, setSelectedNode] = useState<VisualNode | null>(null);
-  const [nodePropertyChanges, setNodePropertyChanges] = useState<number>(0);
   const [viewText, setViewText] = useState<string>('');
 
-  const handleNodePropertyChanged = () => {
-    setNodePropertyChanges(nodePropertyChanges + 1);
-    // Let the node know that its properties have changed
-    const node = nodes[selectedNode?.id ?? ''];
-    if (node) {
-      node.node.setDirty();
-      // TODO: If a node is run, we need to send its updates to the server
-      // but every time we send updates to the server, we fetch all the nodes again
-
-      // so we need a way to run all the nodes and then send all the updates afterward.
-
-      // So then we send all the updates and fetch the updated data... why on earth would we do this?
-      // Send the update and just let it be sent. We fetch to ensure the frontend always reflects the backend...
-      // Yes, sync is hard. So figure it out. Or don't overthink it, just make it work.
-      // Running everything and then sending the update, and then fetching everything, is fine.
-
-      if (node.node.runsAutomatically) {
-        runNode(node);
-      }
-    }
-  }
-
+  // Node may have had a property updated in the ParametersPane, or coordinates changed in the NetworkEditor
   const updateNode = async (node: BaseNode) => {
     const currentNodes = nodes;
     const visualNode = {
@@ -54,35 +37,8 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       y: node.coordinates.y,
     };
     const updatedNodes = { ...currentNodes, [node.nodeId]: visualNode };
+    shouldSyncNodesRef.current = true;
     setNodes(updatedNodes);
-    await syncNodeUpdate(currentNodes, node);
-    handleNodePropertyChanged();
-  }
-
-  // Exists on this component because node can be updated from NetworkEditor or ParametersPane
-  const syncNodeUpdate = async (currentNodes: Record<string, VisualNode>, updatedNode: BaseNode) => {
-    try {
-      const response = await fetch(`${SERVER_URL}/api/update_node`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          node: updatedNode,
-        }),
-      });
-      const data = await response.json();
-      if (data.status === 'success') {
-        fetchNodesForProject();
-      } else {
-        console.error('Server error while updating node:', data.error);
-        setNodes(currentNodes);
-      }
-    } catch (error) {
-      console.error('Could not update node:', error);
-      setNodes(currentNodes);
-    }
   }
 
   //////////////////////////////
@@ -91,27 +47,26 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
 
   const runNode = useCallback((node: VisualNode) => {
     if ('run' in node.node && typeof node.node.run === 'function') {
-      node.node.run();
+      const inputValues = node.node.inputs > 0 ? nu.readNodeInputs(node.node, connections, nodes) : [];
+      node.node.run(inputValues);
       // If the node is a View Node, set the view text
       if (node.node.type === 'view') {
+        console.log('Setting view text:', node.node.properties['content'].value);
         setViewText(node.node.properties['content'].value as string);
       }
     }
+
     if ('asyncRun' in node.node && typeof node.node.asyncRun === 'function') {
-      node.node.asyncRun();
+      const inputValues = nu.readNodeInputs(node.node, connections, nodes);
+      node.node.asyncRun(inputValues);
     }
 
-    // Find this node's connections via it output ports
+    // Find this node's connections via its output ports
     const outputConnections = connections.filter(conn => conn.connection.fromNode === node.id);
     outputConnections.forEach(conn => {
       const descendent = nodes[conn.connection.toNode];
       if (!descendent) return;
 
-      // Copy the output of the node to the input of the descendent
-      // TODO: Do this more efficiently,
-      // maybe have the descendent just read the output of the parent when it runs,
-      // instead of keeping a copy of that output in its own state
-      descendent.node.state.input[conn.connection.toInput] = node.node.state.output[conn.connection.fromOutput];
       runNode(descendent);
     });
   }, [nodes, connections]);
@@ -138,6 +93,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
             y: node.coordinates.y,
           };
         });
+        shouldSyncNodesRef.current = false;
         setNodes(visualNodes);
       } else {
         console.error('Error fetching nodes for project:', data.error);
@@ -154,6 +110,56 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   useEffect(() => {
     fetchNodesForProject();
   }, [fetchNodesForProject]);
+
+  useEffect(() => {
+    const syncNodes = async (prevNodes: Record<string, VisualNode>, newNodes: BaseNode[]) => {
+      try {
+        const response = await fetch(`${SERVER_URL}/api/update_nodes`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ nodes: newNodes }),
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+          fetchNodesForProject();
+        } else {
+          console.error('Server error while updating node:', data.error);
+          shouldSyncNodesRef.current = false; // Do not sync nodes when we're reverting
+          setNodes(prevNodes);
+        }
+      } catch (error) {
+        console.error('Could not update node:', error);
+        shouldSyncNodesRef.current = false; // Do not sync nodes when we're reverting
+        setNodes(prevNodes);
+      }
+    }
+
+    const handleNodesChanged = () => {
+      if (!selectedNode || !selectedNode.node) return;
+
+      if (shouldSyncNodesRef.current === false) {
+        console.debug(`${Date.now()}: Apparent network changes will not be synced to the server, they were probably a result of fetching nodes`);
+        return;
+      }
+
+      console.debug(`${Date.now()}: Network changed`);
+      const prevNodes = prevNetworkRef.current.nodes; // Store this in case we need to revert to it
+      if (selectedNode.node.runsAutomatically) {
+        // This recursive function will not return until every runnable descendent node has been run
+        runNode(selectedNode);
+      }
+      prevNetworkRef.current = { nodes, connections };
+      // Sync all the nodes to the server once the network has been fully updated
+      // Even if the selected node is not runnable, its content may still have changed
+      const updatedNodes = Object.values(nodes).map(node => node.node);
+      syncNodes(prevNodes, updatedNodes);
+    };
+
+    handleNodesChanged();
+  }, [nodes, connections, selectedNode, runNode, fetchNodesForProject]);
 
   return (
     <div className="project-container">

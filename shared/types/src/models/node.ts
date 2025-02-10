@@ -33,15 +33,15 @@ export class Connection {
 
 // For nodes whose functions are synchronous
 export interface SyncNode {
-  run(): void;
+  run(inputValues: (OutputState | null)[]): void;
 }
 
 // For nodes whose functions are asynchronous
 export interface AsyncNode {
-  asyncRun(): Promise<void>;
+  asyncRun(inputValues: (OutputState | null)[]): Promise<void>;
 }
 
-export interface IOState {
+export interface OutputState {
   stringValue: string | null;
   numberValue: number | null;
 }
@@ -54,13 +54,10 @@ export abstract class BaseNode {
   public type: string;
   public inputs: number;
   public outputs: number;
+  public outputState: OutputState[] = [];
   public coordinates: Coordinates;
   public runsAutomatically: boolean;
   public properties: Record<string, NodeProperty> = {};
-  public state = {
-    input: Array<IOState>(),
-    output: Array<IOState>(),
-  }
   public isDirty = false;
 
   constructor(
@@ -74,6 +71,7 @@ export abstract class BaseNode {
     coordinates: Coordinates,
     runsAutomatically: boolean,
     properties: Record<string, NodeProperty> = {},
+    outputState: OutputState[] = [],
   ) {
     this.nodeId = nodeId;
     this.authorId = authorId;
@@ -85,19 +83,16 @@ export abstract class BaseNode {
     this.coordinates = coordinates;
     this.runsAutomatically = runsAutomatically;
     this.properties = properties;
-    // Initialize the input and output arrays
-    for (let i = 0; i < this.inputs; i++) {
-      this.state.input.push({
-        stringValue: null,
-        numberValue: null,
-      });
-    }
+    this.outputState = outputState;
 
-    for (let i = 0; i < this.outputs; i++) {
-      this.state.output.push({
-        stringValue: null,
-        numberValue: null,
-      });
+    // For new nodes, initialize the output state array
+    if (outputState.length === 0) {
+      for (let i = 0; i < this.outputs; i++) {
+        this.outputState.push({
+          stringValue: null,
+          numberValue: null,
+        });
+      }
     }
   }
 
@@ -115,7 +110,8 @@ export abstract class BaseNode {
 
   public setProperty(key: string, value: string | number) {
     this.properties[key].value = value;
-    // TODO: Work out how to change size of input and output arrays
+    this.setDirty();
+    // TODO: Work out how to change size of output array
   }
 }
 
@@ -126,6 +122,7 @@ export class TextNode extends BaseNode implements SyncNode {
     projectId: string,
     coordinates: Coordinates,
     public text: string = '',
+    outputState: OutputState[] = [],
   ) {
     super(id, authorId, projectId, 'Text', 'text', 0, 1, coordinates, true, {
       text: {
@@ -135,17 +132,18 @@ export class TextNode extends BaseNode implements SyncNode {
         editable: true,
         displayed: true,
       },
-    });
+    }, outputState);
   }
 
   public static fromObject(object: BaseNode): BaseNode {
-    return new TextNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.properties.text.value as string);
+    return new TextNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.properties.text.value as string, object.outputState);
   }
 
-  run() {
+  // Every node accepts an array of input values, but sometimes that array is empty
+  run(inputValues: (OutputState | null)[]) {
     if (!this.isDirty) return;
 
-    this.state.output[0] = {
+    this.outputState[0] = {
       stringValue: this.properties.text.value as string,
       numberValue: null,
     };
@@ -160,6 +158,7 @@ export class PromptNode extends BaseNode implements AsyncNode {
     projectId: string,
     coordinates: Coordinates,
     public prompt: string = '',
+    outputState: OutputState[] = [],
   ) {
     super(id, authorId, projectId, 'Prompt', 'prompt', 1, 1, coordinates, false, {
       prompt: {
@@ -169,15 +168,17 @@ export class PromptNode extends BaseNode implements AsyncNode {
         editable: true,
         displayed: true,
       },
-    });
+    }, outputState);
   }
 
   public static fromObject(object: BaseNode): BaseNode {
-    return new PromptNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.properties.prompt.value as string);
+    return new PromptNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.properties.prompt.value as string, object.outputState);
   }
 
-  async asyncRun() {
-    this.state.output[0] = this.state.input[0];
+  async asyncRun(inputValues: (OutputState | null)[]) {
+    if (!inputValues[0]) return;
+
+    this.outputState[0] = inputValues[0] as OutputState;
     // TODO: Implement
     // Call the LLM with the prompt and the input text
   }
@@ -190,14 +191,14 @@ export class SaveNode extends BaseNode implements AsyncNode {
     projectId: string,
     coordinates: Coordinates,
   ) {
-    super(id, authorId, projectId, 'Save', 'save', 1, 0, coordinates, false);
+    super(id, authorId, projectId, 'Save', 'save', 1, 0, coordinates, false, {});
   }
 
   public static fromObject(object: BaseNode): BaseNode {
     return new SaveNode(object.nodeId, object.authorId, object.projectId, object.coordinates);
   }
 
-  async asyncRun() {
+  async asyncRun(inputValues: (OutputState | null)[]) {
     // TODO: Implement
     // Save the input text to a file
   }
@@ -209,6 +210,7 @@ export class MergeNode extends BaseNode implements SyncNode {
     authorId: string,
     projectId: string,
     coordinates: Coordinates,
+    outputState: OutputState[] = [],
   ) {
     super(id, authorId, projectId, 'Merge', 'merge', 2, 1, coordinates, true, {
       separator: {
@@ -218,20 +220,20 @@ export class MergeNode extends BaseNode implements SyncNode {
         editable: true,
         displayed: true,
       },
-    });
+    }, outputState);
   }
 
   public static fromObject(object: BaseNode): BaseNode {
-    return new MergeNode(object.nodeId, object.authorId, object.projectId, object.coordinates);
+    return new MergeNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.outputState);
   }
 
-  run() {
+  run(inputValues: (OutputState | null)[]) {
     // Merge the input texts into a single output text
-    const mergedResult = Object.values(this.state.input).join(
+    const mergedResult = Object.values(inputValues).join(
       this.properties.separator.value as string
     );
 
-    this.state.output[0] = {
+    this.outputState[0] = {
       stringValue: mergedResult,
       numberValue: null,
     };
@@ -262,10 +264,10 @@ export class ViewNode extends BaseNode implements SyncNode {
     return new ViewNode(object.nodeId, object.authorId, object.projectId, object.coordinates);
   }
 
-  run() {
+  run(inputValues: (OutputState | null)[]) {
     // Copy the input to the content
-    if (this.state.input[0].stringValue) {
-      this.properties.content.value = this.state.input[0].stringValue;
+    if (inputValues[0]) {
+      this.properties.content.value = inputValues[0].stringValue as string;
     } else {
       this.properties.content.value = '';
     }

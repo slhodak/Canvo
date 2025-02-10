@@ -411,24 +411,28 @@ router.post('/api/new_node', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/api/update_node', async (req: Request, res: Response) => {
-  const { node } = req.body;
-  if (!node) {
-    return res.status(400).json({ error: "No node provided" });
+router.post('/api/update_nodes', async (req: Request, res: Response) => {
+  const { nodes } = req.body;
+  if (!nodes) {
+    return res.status(400).json({ error: "No nodes provided" });
   }
 
   const user = await getUserFromSessionToken(req);
   if (!user) {
     return res.status(401).json({ error: "Could not find user email from session token" });
   }
-  
-  if (!validateNode(node)) {
-    return res.status(400).json({ error: "Invalid node" });
+
+  for (const node of nodes) {
+    if (!validateNode(node)) {
+      return res.status(400).json({ error: "Invalid node received" });
+    }
   }
 
   try {
-    await db.updateNode(node);
-    await db.updateProjectUpdatedAt(node.projectId);
+    for (const node of nodes) {
+      await db.updateNode(node);
+      await db.updateProjectUpdatedAt(node.projectId);
+    }
 
     return res.json({ status: "success" });
   } catch (error) {

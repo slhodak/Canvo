@@ -45,6 +45,7 @@ const NetworkEditor = ({
     nodeId: null,
     offsetX: 0,
     offsetY: 0,
+    hasMoved: false,
   });
   const [wireState, setWireState] = useState<WireState>({
     isDrawing: false,
@@ -71,8 +72,6 @@ const NetworkEditor = ({
       return null;
     }
 
-    console.log(`${nodeId}: ${JSON.stringify(newNode)}`);
-    console.log(`${nodeId}: ${newNode.coordinates.x}, ${newNode.coordinates.y}`);
     newNodes[nodeId] = {
       id: nodeId,
       node: newNode,
@@ -112,13 +111,11 @@ const NetworkEditor = ({
 
   const deleteConnection = (connectionId: string) => {
     setConnections(connections.filter(conn => conn.id !== connectionId));
-    // Erase the input that was disconnected from the toNode and rerun the node
+    // Rerun the node whose input was disconnected
+    /// TODO: Fix because this won't work since setConnections is async
     const toNode = nodes[connections.find(conn => conn.id === connectionId)?.connection.toNode ?? ''];
     if (toNode) {
-      toNode.node.state.input[connections.find(conn => conn.id === connectionId)?.connection.toInput ?? 0] = {
-        stringValue: null,
-        numberValue: null,
-      };
+      runNode(toNode);
     }
   }
 
@@ -157,6 +154,7 @@ const NetworkEditor = ({
       nodeId,
       offsetX: e.clientX - node.x,
       offsetY: e.clientY - node.y,
+      hasMoved: false,
     });
   }
 
@@ -309,11 +307,9 @@ const NetworkEditor = ({
     };
     setConnections([...newConnections, newConnection]);
 
-    // Copy the output of the fromNode to the input of the toNode
-    const fromNode = nodes[fromNodeId];
+    // Run the toNode
     const toNode = nodes[toNodeId];
-    if (fromNode && toNode) {
-      toNode.node.state.input[inputIndex] = fromNode.node.state.output[fromOutput];
+    if (toNode) {
       runNode(toNode);
     }
   }, [connections, nodes, runNode, setConnections, project.projectId, user.userId]);

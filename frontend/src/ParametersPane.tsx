@@ -11,7 +11,7 @@ interface ParametersPaneProps {
 const ParametersPane = ({ node, updateNode }: ParametersPaneProps) => (
   <div className="parameters-pane-container">
     <div className="parameters-pane-header">
-      <h3>Parameters</h3>
+      <h3>Parameters<span className="parameters-pane-node-id">{node?.node.nodeId}</span></h3>
     </div>
 
     <div className="parameters-pane-content">
