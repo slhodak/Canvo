@@ -18,7 +18,7 @@ interface NetworkEditorProps {
   selectedNode: VisualNode | null;
   setSelectedNode: (node: VisualNode | null) => void;
   connections: VisualConnection[];
-  setConnections: (connections: VisualConnection[]) => void;
+  updateConnections: (connections: VisualConnection[]) => void;
   runNode: (node: VisualNode) => void;
   updateNode: (node: BaseNode, shouldSync: boolean) => void;
 }
@@ -32,7 +32,7 @@ const NetworkEditor = ({
   selectedNode,
   setSelectedNode,
   connections,
-  setConnections,
+  updateConnections,
   runNode,
   updateNode,
 }: NetworkEditorProps) => {
@@ -110,7 +110,7 @@ const NetworkEditor = ({
   };
 
   const deleteConnection = (connectionId: string) => {
-    setConnections(connections.filter(conn => conn.id !== connectionId));
+    updateConnections(connections.filter(conn => conn.id !== connectionId));
     // Rerun the node whose input was disconnected
     /// TODO: Fix because this won't work since setConnections is async
     const toNode = nodes[connections.find(conn => conn.id === connectionId)?.connection.toNode ?? ''];
@@ -143,6 +143,7 @@ const NetworkEditor = ({
   }
 
   const handleMouseDownInNode = (e: React.MouseEvent, nodeId: string) => {
+    console.log('handleMouseDownInNode', nodeId);
     const node = nodes[nodeId];
     if (!node) return;
 
@@ -258,9 +259,9 @@ const NetworkEditor = ({
     deleteConnection(connectionId);
   };
 
-  const endDrawingWire = (toNodeId: string, inputIndex: number) => {
+  const endDrawingWire = (toNode: VisualNode, inputIndex: number) => {
     if (wireState.isDrawing && wireState.fromNode && wireState.fromOutput !== null) {
-      createNewConnection(wireState.fromNode, wireState.fromOutput, toNodeId, inputIndex);
+      createNewConnection(wireState.fromNode, wireState.fromOutput, toNode, inputIndex);
     }
     setWireState({
       isDrawing: false,
@@ -277,11 +278,11 @@ const NetworkEditor = ({
   // Memoized Functions
   //////////////////////////////
 
-  const createNewConnection = useCallback((fromNodeId: string, fromOutput: number, toNodeId: string, inputIndex: number) => {
+  const createNewConnection = useCallback((fromNodeId: string, fromOutput: number, toNode: VisualNode, inputIndex: number) => {
     // Don't create a redundant connection
     const existingConnection = connections.find(conn => (
       conn.connection.fromNode === fromNodeId &&
-      conn.connection.toNode === toNodeId &&
+      conn.connection.toNode === toNode.id &&
       conn.connection.toInput === inputIndex
     ));
     if (existingConnection) {
@@ -290,31 +291,26 @@ const NetworkEditor = ({
 
     let newConnections = connections;
     // If there is already a connection from any node to this node's inputIndex, remove it
-    const connectionToInput = connections.find(conn => conn.connection.toNode === toNodeId && conn.connection.toInput === inputIndex);
+    const connectionToInput = connections.find(conn => conn.connection.toNode === toNode.id && conn.connection.toInput === inputIndex);
     if (connectionToInput) {
       newConnections = connections.filter(conn => conn.id !== connectionToInput.id);
     }
 
     const newConnection: VisualConnection = {
-      id: `${fromNodeId}-${toNodeId}-${Date.now()}`,
+      id: `${fromNodeId}-${toNode.id}-${fromOutput}-${inputIndex}`,
       connection: new Connection(
         crypto.randomUUID(),
         user.userId,
         project.projectId,
         fromNodeId,
         fromOutput,
-        toNodeId,
+        toNode.id,
         inputIndex,
       ),
     };
-    setConnections([...newConnections, newConnection]);
 
-    // Run the toNode
-    const toNode = nodes[toNodeId];
-    if (toNode) {
-      runNode(toNode);
-    }
-  }, [connections, nodes, runNode, setConnections, project.projectId, user.userId]);
+    updateConnections([...newConnections, newConnection]);
+  }, [connections, updateConnections, project.projectId, user.userId]);
 
   const deleteNode = useCallback(async (node: VisualNode) => {
     const originalNodes = { ...nodes };
@@ -353,7 +349,7 @@ const NetworkEditor = ({
 
     const viewNode = Object.values(nodes).find(n => n.node.type === 'view');
     if (viewNode) {
-      createNewConnection(node.id, 0, viewNode.id, 0);
+      createNewConnection(node.id, 0, viewNode, 0);
     }
   }, [nodes, createNewConnection]);
 
@@ -429,7 +425,7 @@ const NetworkEditor = ({
 
           return (
             <path
-              key={conn.id}
+              key={`${conn.connection.fromNode}-${conn.connection.toNode}-${conn.connection.fromOutput}-${conn.connection.toInput}`}
               d={`M ${start.x} ${start.y} C ${start.x} ${start.y + 50}, ${end.x} ${end.y - 50}, ${end.x} ${end.y}`}
               className="network-editor-wire"
             />

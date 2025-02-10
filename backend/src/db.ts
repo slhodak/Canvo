@@ -198,25 +198,30 @@ export namespace Database {
 
   export async function getConnectionsForProject(projectId: string, userId: string): Promise<Connection[]> {
     const connections = await db.any(`
-      SELECT id, node_id, author_id, project_id, from_node, from_output, to_node, to_input
+      SELECT author_id, project_id, from_node, from_output, to_node, to_input
       FROM connections
       WHERE project_id = $1 AND author_id = $2
     `, [projectId, userId]);
     return connections;
   }
 
-  export async function createConnection(userId: string, nodeId: string, outputNodeId: string, outputIndex: number): Promise<string | null> {
+  export async function createConnection(userId: string, projectId: string, fromNodeId: string, fromNodeOutput: string, toNodeId: number, toNodeInput: number): Promise<string | null> {
     const connectionId = uuidv4();
-    const values = [connectionId, userId, nodeId, outputNodeId, outputIndex];
+    const values = [userId, projectId, fromNodeId, fromNodeOutput, toNodeId, toNodeInput];
     await db.none(`
-      INSERT INTO connections (node_id, author_id, node_id, output_node_id, output_index)
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO connections (author_id, project_id, from_node, from_output, to_node, to_input)
+      VALUES ($1, $2, $3, $4, $5, $6)
     `, values);
     return connectionId;
   }
 
   export async function deleteConnection(connectionId: string, userId: string) {
     const result = await db.result('DELETE FROM connections WHERE node_id = $1 AND author_id = $2', [connectionId, userId]);
+    return result;
+  }
+
+  export async function deleteConnectionsForProject(projectId: string, userId: string) {
+    const result = await db.result('DELETE FROM connections WHERE project_id = $1 AND author_id = $2', [projectId, userId]);
     return result;
   }
 }

@@ -2,7 +2,7 @@ import './Project.css';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { VisualNode, VisualConnection } from './NetworkTypes';
-import { BaseNode } from '../../shared/types/src/models/node';
+import { BaseNode, Connection } from '../../shared/types/src/models/node';
 import { NodeUtils as nu } from './Utils';
 import NetworkEditor from './NetworkEditor';
 import ParametersPane from './ParametersPane';
@@ -24,6 +24,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   const [connections, setConnections] = useState<NetworkConnections>([]);
   const prevNetworkRef = useRef<{ nodes: NetworkNodes, connections: NetworkConnections }>({ nodes, connections: [] });
   const shouldSyncNodesRef = useRef<boolean>(false);
+  const shouldSyncConnectionsRef = useRef<boolean>(false);
   const [selectedNode, setSelectedNode] = useState<VisualNode | null>(null);
   const [viewText, setViewText] = useState<string>('');
 
@@ -39,6 +40,11 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     const updatedNodes = { ...currentNodes, [node.nodeId]: visualNode };
     shouldSyncNodesRef.current = shouldSync;
     setNodes(updatedNodes);
+  }
+
+  const updateConnections = async (updatedConnections: VisualConnection[], shouldSync: boolean = true) => {
+    shouldSyncConnectionsRef.current = shouldSync;
+    setConnections(updatedConnections);
   }
 
   //////////////////////////////
@@ -103,13 +109,41 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     }
   }, [project]);
 
+  const fetchConnectionsForProject = useCallback(async () => {
+    if (!project) return;
+
+    try {
+      const response = await fetch(`${SERVER_URL}/api/get_connections_for_project/${project.projectId}`, {
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        const visualConnections: VisualConnection[] = [];
+        data.connections.forEach((object: Connection) => {
+          visualConnections.push({
+            id: object.id,
+            connection: object,
+          });
+        });
+        shouldSyncConnectionsRef.current = false;
+        setConnections(visualConnections);
+      } else {
+        console.error('Error fetching connections for project:', data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching connections for project:', error);
+    }
+  }, [project]);
+
+
   //////////////////////////////
   // React Hooks
   //////////////////////////////
 
   useEffect(() => {
     fetchNodesForProject();
-  }, [fetchNodesForProject]);
+    fetchConnectionsForProject();
+  }, [fetchNodesForProject, fetchConnectionsForProject]);
 
   useEffect(() => {
     const syncNodes = async (prevNodes: Record<string, VisualNode>, newNodes: BaseNode[]) => {
@@ -137,30 +171,63 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       }
     }
 
-    const handleNodesChanged = () => {
+    const syncConnections = async (prevConnections: NetworkConnections, newConnections: NetworkConnections) => {
+      try {
+        const serverConnections = newConnections.map(conn => conn.connection);
+        const response = await fetch(`${SERVER_URL}/api/set_connections`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ projectId: project.projectId, connections: serverConnections }),
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+          fetchConnectionsForProject();
+        } else {
+          console.error('Server error while updating connections:', data.error);
+          shouldSyncConnectionsRef.current = false; // Do not sync connections when we're reverting
+          setConnections(prevConnections);
+        }
+      } catch (error) {
+        console.error('Could not update connections:', error);
+        shouldSyncConnectionsRef.current = false; // Do not sync connections when we're reverting
+        setConnections(prevConnections);
+      }
+    }
+
+    const handleNetworkChanged = () => {
       if (!selectedNode || !selectedNode.node) return;
 
-      if (shouldSyncNodesRef.current === false) {
-        console.debug(`${Date.now()}: Apparent network changes will not be synced to the server`);
-        return;
-      } else {
+      if (shouldSyncNodesRef.current === true) {
         console.debug(`${Date.now()}: Network changed, will rerun subnetwork and sync to server`);
+        const prevNodes = prevNetworkRef.current.nodes; // Store this in case we need to revert to it
+        if (selectedNode.node.runsAutomatically) {
+          // This recursive function will not return until every runnable descendent node has been run
+          runNode(selectedNode);
+        }
+        prevNetworkRef.current = { nodes, connections };
+        // Sync all the nodes to the server once the network has been fully updated
+        // Even if the selected node is not runnable, its content may still have changed
+        const updatedNodes = Object.values(nodes).map(node => node.node);
+        syncNodes(prevNodes, updatedNodes);
+
+      } else {
+        console.debug(`${Date.now()}: Apparent network changes will not be synced to the server`);
       }
 
-      const prevNodes = prevNetworkRef.current.nodes; // Store this in case we need to revert to it
-      if (selectedNode.node.runsAutomatically) {
-        // This recursive function will not return until every runnable descendent node has been run
-        runNode(selectedNode);
+      if (shouldSyncConnectionsRef.current === true) {
+        console.debug(`${Date.now()}: Network changed, will sync connections to server`);
+        const prevConnections = prevNetworkRef.current.connections;
+        syncConnections(prevConnections, connections);
+      } else {
+        console.debug(`${Date.now()}: Apparent network changes will not be synced to the server`);
       }
-      prevNetworkRef.current = { nodes, connections };
-      // Sync all the nodes to the server once the network has been fully updated
-      // Even if the selected node is not runnable, its content may still have changed
-      const updatedNodes = Object.values(nodes).map(node => node.node);
-      syncNodes(prevNodes, updatedNodes);
     };
 
-    handleNodesChanged();
-  }, [nodes, connections, selectedNode, runNode, fetchNodesForProject]);
+    handleNetworkChanged();
+  }, [nodes, connections, selectedNode, runNode, fetchNodesForProject, fetchConnectionsForProject, project.projectId]);
 
   return (
     <div className="project-container">
@@ -180,7 +247,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
               selectedNode={selectedNode}
               setSelectedNode={setSelectedNode}
               connections={connections}
-              setConnections={setConnections}
+              updateConnections={updateConnections}
               runNode={runNode}
               updateNode={updateNode}
             />

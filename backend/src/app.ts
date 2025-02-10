@@ -493,10 +493,11 @@ router.get('/api/get_connections_for_project/:projectId', async (req: Request, r
   }
 });
 
-router.post('/api/create_connection', async (req: Request, res: Response) => {
-  const { nodeId, outputNodeId, outputIndex } = req.body;
-  if (!nodeId || !outputNodeId || !outputIndex) {
-    return res.status(400).json({ error: "No nodeId or outputNodeId or outputIndex provided" });
+router.post('/api/set_connections', async (req: Request, res: Response) => {
+  // Overwrite all the connections for a project
+  const { projectId, connections } = req.body;
+  if (!projectId || !connections) {
+    return res.status(400).json({ error: "No projectId or connections provided" });
   }
 
   try {
@@ -505,8 +506,12 @@ router.post('/api/create_connection', async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Could not find user email from session token" });
     }
 
-    const connectionId = await db.createConnection(user.userId, nodeId, outputNodeId, outputIndex);
-    return res.json({ status: "success", connectionId });
+    await db.deleteConnectionsForProject(projectId, user.userId);
+    for (const connection of connections) {
+      await db.createConnection(user.userId, projectId, connection.fromNode, connection.fromOutput, connection.toNode, connection.toInput);
+    }
+
+    return res.json({ status: "success" });
   } catch (error) {
     if (error instanceof Error) {
       return res.status(500).json({ status: "failed", error: error.message });
