@@ -28,7 +28,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   const [viewText, setViewText] = useState<string>('');
 
   // Node may have had a property updated in the ParametersPane, or coordinates changed in the NetworkEditor
-  const updateNode = async (node: BaseNode) => {
+  const updateNode = async (node: BaseNode, shouldSync: boolean = true) => {
     const currentNodes = nodes;
     const visualNode = {
       id: node.nodeId,
@@ -37,7 +37,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       y: node.coordinates.y,
     };
     const updatedNodes = { ...currentNodes, [node.nodeId]: visualNode };
-    shouldSyncNodesRef.current = true;
+    shouldSyncNodesRef.current = shouldSync;
     setNodes(updatedNodes);
   }
 
@@ -51,7 +51,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       node.node.run(inputValues);
       // If the node is a View Node, set the view text
       if (node.node.type === 'view') {
-        console.log('Setting view text:', node.node.properties['content'].value);
+        console.debug('Setting view text:', node.node.properties['content'].value);
         setViewText(node.node.properties['content'].value as string);
       }
     }
@@ -141,11 +141,12 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       if (!selectedNode || !selectedNode.node) return;
 
       if (shouldSyncNodesRef.current === false) {
-        console.debug(`${Date.now()}: Apparent network changes will not be synced to the server, they were probably a result of fetching nodes`);
+        console.debug(`${Date.now()}: Apparent network changes will not be synced to the server`);
         return;
+      } else {
+        console.debug(`${Date.now()}: Network changed, will rerun subnetwork and sync to server`);
       }
 
-      console.debug(`${Date.now()}: Network changed`);
       const prevNodes = prevNetworkRef.current.nodes; // Store this in case we need to revert to it
       if (selectedNode.node.runsAutomatically) {
         // This recursive function will not return until every runnable descendent node has been run

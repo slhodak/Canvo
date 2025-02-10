@@ -20,7 +20,7 @@ interface NetworkEditorProps {
   connections: VisualConnection[];
   setConnections: (connections: VisualConnection[]) => void;
   runNode: (node: VisualNode) => void;
-  updateNode: (node: BaseNode) => void;
+  updateNode: (node: BaseNode, shouldSync: boolean) => void;
 }
 
 const NetworkEditor = ({
@@ -188,7 +188,7 @@ const NetworkEditor = ({
       draggedNode.node.coordinates.x = draggedNode.x;
       draggedNode.node.coordinates.y = draggedNode.y;
       if (dragState.hasMoved) {
-        updateNode(draggedNode.node);
+        updateNode(draggedNode.node, false);
       }
     }
 
