@@ -21,7 +21,7 @@ export interface Coordinates {
 
 export class Connection {
   constructor(
-    public id: string,
+    public connectionId: string,
     public authorId: string,
     public projectId: string,
     public fromNode: string,

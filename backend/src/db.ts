@@ -158,7 +158,6 @@ export namespace Database {
   }
 
   export async function updateNode(node: BaseNode) {
-    console.log('Updating node:', node);
     const values = [
       node.name,
       node.type,
@@ -189,16 +188,16 @@ export namespace Database {
 
   export async function getConnection(connectionId: string, userId: string): Promise<Connection | null> {
     const connection = await db.oneOrNone(`
-      SELECT id, node_id, author_id, project_id, from_node, from_output, to_node, to_input
+      SELECT id, connection_id, author_id, project_id, from_node, from_output, to_node, to_input
       FROM connections
-      WHERE node_id = $1 and author_id = $2
+      WHERE connection_id = $1 and author_id = $2
     `, [connectionId, userId]);
     return connection;
   }
 
   export async function getConnectionsForProject(projectId: string, userId: string): Promise<Connection[]> {
     const connections = await db.any(`
-      SELECT author_id, project_id, from_node, from_output, to_node, to_input
+      SELECT author_id, project_id, connection_id, from_node, from_output, to_node, to_input
       FROM connections
       WHERE project_id = $1 AND author_id = $2
     `, [projectId, userId]);
@@ -207,16 +206,16 @@ export namespace Database {
 
   export async function createConnection(userId: string, projectId: string, fromNodeId: string, fromNodeOutput: string, toNodeId: number, toNodeInput: number): Promise<string | null> {
     const connectionId = uuidv4();
-    const values = [userId, projectId, fromNodeId, fromNodeOutput, toNodeId, toNodeInput];
+    const values = [userId, projectId, connectionId, fromNodeId, fromNodeOutput, toNodeId, toNodeInput];
     await db.none(`
-      INSERT INTO connections (author_id, project_id, from_node, from_output, to_node, to_input)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO connections (author_id, project_id, connection_id, from_node, from_output, to_node, to_input)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
     `, values);
     return connectionId;
   }
 
   export async function deleteConnection(connectionId: string, userId: string) {
-    const result = await db.result('DELETE FROM connections WHERE node_id = $1 AND author_id = $2', [connectionId, userId]);
+    const result = await db.result('DELETE FROM connections WHERE connection_id = $1 AND author_id = $2', [connectionId, userId]);
     return result;
   }
 

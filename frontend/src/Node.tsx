@@ -75,7 +75,7 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
               r={neu.PORT_RADIUS}
               onMouseDown={(e) => {
                 e.stopPropagation();
-                handleConnectionClick(e, true, connection?.id, node.node.nodeId, i)
+                handleConnectionClick(e, true, connection?.connection.connectionId, node.node.nodeId, i)
               }}
               className={`node-input-port ${connection && "connected"} ${wireState.isDrawing && "drawing"}`}
             />
@@ -98,7 +98,7 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
             r={neu.PORT_RADIUS}
             onMouseDown={(e) => {
               e.stopPropagation();
-              handleConnectionClick(e, false, connection?.id, node.node.nodeId, i)
+              handleConnectionClick(e, false, connection?.connection.connectionId, node.node.nodeId, i)
             }}
             className="node-output-port"
           />

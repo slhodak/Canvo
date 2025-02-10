@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS connections (
 
     author_id TEXT NOT NULL,
     project_id TEXT NOT NULL,
+    connection_id TEXT UNIQUE NOT NULL,
     from_node TEXT NOT NULL,
     from_output INTEGER NOT NULL,
     to_node TEXT NOT NULL,

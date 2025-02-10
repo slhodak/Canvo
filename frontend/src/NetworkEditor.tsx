@@ -110,13 +110,7 @@ const NetworkEditor = ({
   };
 
   const deleteConnection = (connectionId: string) => {
-    updateConnections(connections.filter(conn => conn.id !== connectionId));
-    // Rerun the node whose input was disconnected
-    /// TODO: Fix because this won't work since setConnections is async
-    const toNode = nodes[connections.find(conn => conn.id === connectionId)?.connection.toNode ?? ''];
-    if (toNode) {
-      runNode(toNode);
-    }
+    updateConnections(connections.filter(conn => conn.connection.connectionId !== connectionId));
   }
 
   //////////////////////////////

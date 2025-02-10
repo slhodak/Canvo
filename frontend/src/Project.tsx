@@ -121,7 +121,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
         const visualConnections: VisualConnection[] = [];
         data.connections.forEach((object: Connection) => {
           visualConnections.push({
-            id: object.id,
+            id: object.connectionId,
             connection: object,
           });
         });
