@@ -4,6 +4,7 @@ export enum NodeType {
   Save = 'save',
   View = 'view',
   Merge = 'merge',
+  Split = 'split',
 }
 
 export interface NodeProperty {
@@ -51,7 +52,7 @@ export abstract class BaseNode {
   public projectId: string;
   public authorId: string;
   public name: string;
-  public type: string;
+  public type: NodeType;
   public inputs: number;
   public outputs: number;
   public outputState: OutputState[] = [];
@@ -65,7 +66,7 @@ export abstract class BaseNode {
     authorId: string,
     projectId: string,
     name: string,
-    type: string,
+    type: NodeType,
     inputs: number,
     outputs: number,
     coordinates: Coordinates,
@@ -124,7 +125,7 @@ export class TextNode extends BaseNode implements SyncNode {
     text: string = '',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Text', 'text', 0, 1, coordinates, true, {
+    super(id, authorId, projectId, 'Text', NodeType.Text, 0, 1, coordinates, true, {
       text: {
         type: 'string',
         label: 'Text',
@@ -160,7 +161,7 @@ export class PromptNode extends BaseNode implements AsyncNode {
     prompt: string = '',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Prompt', 'prompt', 1, 1, coordinates, false, {
+    super(id, authorId, projectId, 'Prompt', NodeType.Prompt, 1, 1, coordinates, false, {
       prompt: {
         type: 'string',
         label: 'Prompt',
@@ -191,7 +192,7 @@ export class SaveNode extends BaseNode implements AsyncNode {
     projectId: string,
     coordinates: Coordinates,
   ) {
-    super(id, authorId, projectId, 'Save', 'save', 1, 0, coordinates, false, {});
+    super(id, authorId, projectId, 'Save', NodeType.Save, 1, 0, coordinates, false, {});
   }
 
   public static fromObject(object: BaseNode): BaseNode {
@@ -213,7 +214,7 @@ export class MergeNode extends BaseNode implements SyncNode {
     separator: string = ' ',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Merge', 'merge', 2, 1, coordinates, true, {
+    super(id, authorId, projectId, 'Merge', NodeType.Merge, 2, 1, coordinates, true, {
       separator: {
         type: 'string',
         label: 'Separator',
@@ -258,7 +259,7 @@ export class ViewNode extends BaseNode implements SyncNode {
     projectId: string,
     coordinates: Coordinates,
   ) {
-    super(id, authorId, projectId, 'View', 'view', 1, 0, coordinates, true, {
+    super(id, authorId, projectId, 'View', NodeType.View, 1, 0, coordinates, true, {
       content: {
         type: 'string',
         label: 'Content',
@@ -280,5 +281,49 @@ export class ViewNode extends BaseNode implements SyncNode {
     } else {
       this.properties.content.value = '';
     }
+  }
+}
+
+export class SplitNode extends BaseNode implements SyncNode {
+  constructor(
+    id: string,
+    authorId: string,
+    projectId: string,
+    coordinates: Coordinates,
+    separator: string = ' ',
+    outputState: OutputState[] = [],
+  ) {
+    super(id, authorId, projectId, 'Split', NodeType.Split, 1, 2, coordinates, true, {
+      separator: {
+        type: 'string',
+        label: 'Separator',
+        value: separator,
+        editable: true,
+        displayed: true,
+      },
+    }, outputState);
+  }
+
+  public static fromObject(object: BaseNode): BaseNode {
+    return new SplitNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.properties.separator.value as string, object.outputState);
+  }
+
+  run(inputValues: (OutputState | null)[]) {
+    // Split the input text into two parts
+    const separator = this.properties.separator.value as string;
+    const inputText = inputValues[0]?.stringValue as string;
+    if (!inputText) {
+      return;
+    }
+
+    const parts = inputText.split(separator);
+    this.outputState[0] = {
+      stringValue: parts[0],
+      numberValue: null,
+    };
+    this.outputState[1] = {
+      stringValue: parts[1],
+      numberValue: null,
+    };
   }
 }

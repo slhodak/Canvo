@@ -2,7 +2,7 @@ import './Project.css';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { VisualNode, VisualConnection } from './NetworkTypes';
-import { BaseNode, Connection } from '../../shared/types/src/models/node';
+import { BaseNode, Connection, NodeType } from '../../shared/types/src/models/node';
 import { NodeUtils as nu } from './Utils';
 import NetworkEditor from './NetworkEditor';
 import ParametersPane from './ParametersPane';
@@ -56,7 +56,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       const inputValues = node.node.inputs > 0 ? nu.readNodeInputs(node.node, connections, nodes) : [];
       node.node.run(inputValues);
       // If the node is a View Node, set the view text
-      if (node.node.type === 'view') {
+      if (node.node.type === NodeType.View) {
         console.debug('Setting view text:', node.node.properties['content'].value);
         setViewText(node.node.properties['content'].value as string);
       }

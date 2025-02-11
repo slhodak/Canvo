@@ -476,6 +476,9 @@ const NetworkEditor = ({
           <div className="app-dropdown-option" onClick={() => handleNewNodeClick(NodeType.Merge)}>
             Merge Node
           </div>
+          <div className="app-dropdown-option" onClick={() => handleNewNodeClick(NodeType.Split)}>
+            Split Node
+          </div>
         </div>
       )}
 
