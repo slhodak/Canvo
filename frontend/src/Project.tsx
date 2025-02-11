@@ -51,7 +51,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   // Memoized Functions
   //////////////////////////////
 
-  const runNode = useCallback((node: VisualNode) => {
+  const runNode = useCallback(async (node: VisualNode) => {
     if ('run' in node.node && typeof node.node.run === 'function') {
       const inputValues = node.node.inputs > 0 ? nu.readNodeInputs(node.node, connections, nodes) : [];
       node.node.run(inputValues);
@@ -64,17 +64,19 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
 
     if ('asyncRun' in node.node && typeof node.node.asyncRun === 'function') {
       const inputValues = nu.readNodeInputs(node.node, connections, nodes);
-      node.node.asyncRun(inputValues);
+      await node.node.asyncRun(inputValues);
     }
 
     // Find this node's connections via its output ports
     const outputConnections = connections.filter(conn => conn.connection.fromNode === node.id);
-    outputConnections.forEach(conn => {
+    for (const conn of outputConnections) {
       const descendent = nodes[conn.connection.toNode];
       if (!descendent) return;
 
-      runNode(descendent);
-    });
+      if (descendent.node.runsAutomatically) {
+        await runNode(descendent);
+      }
+    }
   }, [nodes, connections]);
 
   const fetchNodesForProject = useCallback(async () => {
@@ -197,7 +199,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       }
     }
 
-    const handleNetworkChanged = () => {
+    const handleNetworkChanged = async () => {
       if (!selectedNode || !selectedNode.node) return;
 
       if (shouldSyncNodesRef.current === true) {
@@ -205,7 +207,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
         const prevNodes = prevNetworkRef.current.nodes; // Store this in case we need to revert to it
         if (selectedNode.node.runsAutomatically) {
           // This recursive function will not return until every runnable descendent node has been run
-          runNode(selectedNode);
+          await runNode(selectedNode);
         }
         prevNetworkRef.current = { nodes, connections };
         // Sync all the nodes to the server once the network has been fully updated

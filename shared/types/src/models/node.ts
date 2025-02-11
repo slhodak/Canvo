@@ -179,9 +179,33 @@ export class PromptNode extends BaseNode implements AsyncNode {
   async asyncRun(inputValues: (OutputState | null)[]) {
     if (!inputValues[0]) return;
 
-    this.outputState[0] = inputValues[0] as OutputState;
-    // TODO: Implement
     // Call the LLM with the prompt and the input text
+    try {
+      const response = await fetch(`http://localhost:3000/api/run_prompt`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          projectId: this.projectId,
+          nodeId: this.nodeId,
+          prompt: this.properties.prompt.value as string,
+          input: inputValues[0].stringValue as string,
+        }),
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        this.outputState[0] = {
+          stringValue: data.result,
+          numberValue: null,
+        };
+      } else {
+        console.error('Error running prompt:', data.error);
+      }
+    } catch (error) {
+      console.error('Error running prompt:', error);
+    }
   }
 }
 
