@@ -168,12 +168,14 @@ export class PromptNode extends BaseNode implements AsyncNode {
         value: prompt,
         editable: true,
         displayed: true,
-      },
+      }
     }, outputState);
   }
 
   public static fromObject(object: BaseNode): BaseNode {
-    return new PromptNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.properties.prompt.value as string, object.outputState);
+    return new PromptNode(
+      object.nodeId, object.authorId, object.projectId, object.coordinates,
+      object.properties.prompt.value as string, object.outputState);
   }
 
   async asyncRun(inputValues: (OutputState | null)[]) {

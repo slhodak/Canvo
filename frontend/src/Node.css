@@ -19,10 +19,14 @@
   font-weight: 425;
   text-anchor: middle;
   dominant-baseline: middle;
-  -webkit-user-select: none; /* Safari */        
-  -moz-user-select: none; /* Firefox */
-  -ms-user-select: none; /* IE10+/Edge */
-  user-select: none; /* Standard */
+  -webkit-user-select: none;
+  /* Safari */
+  -moz-user-select: none;
+  /* Firefox */
+  -ms-user-select: none;
+  /* IE10+/Edge */
+  user-select: none;
+  /* Standard */
 }
 
 .node-input-port {
@@ -55,4 +59,31 @@
   cursor: pointer;
   fill: #ffffff;
   transform: translateY(5px);
+}
+
+.node-play-button-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.node-play-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  height: 20px;
+  width: 20px;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.node-play-button svg {
+  fill: rgb(0, 30, 255);
+}
+
+.node-play-button svg:hover {
+  fill: rgb(0, 255, 0);
 }

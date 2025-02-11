@@ -449,6 +449,7 @@ const NetworkEditor = ({
               startDrawingWire={startDrawingWire}
               endDrawingWire={endDrawingWire}
               disconnectWire={disconnectWire}
+              runNode={runNode}
             />
           );
         })}
