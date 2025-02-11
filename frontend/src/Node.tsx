@@ -12,7 +12,7 @@ interface NodeProps {
   startDrawingWire: (nodeId: string, outputIndex: number, startX: number, startY: number) => void;
   endDrawingWire: (toNodeId: string, inputIndex: number) => void;
   disconnectWire: (connectionId: string) => void;
-  runNode: (node: VisualNode) => void;
+  runNode: (node: VisualNode, shouldSync?: boolean) => Promise<void>;
 }
 
 export const Node = ({ node, isSelected, connections, wireState, handleMouseDown, startDrawingWire, endDrawingWire, disconnectWire, runNode }: NodeProps) => {
@@ -75,7 +75,7 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
               className="node-play-button"
               onClick={(e) => {
                 e.stopPropagation();
-                runNode(node);
+                runNode(node, true);
               }}
               title="Run node"
             >

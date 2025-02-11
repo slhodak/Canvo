@@ -19,8 +19,8 @@ interface NetworkEditorProps {
   setSelectedNode: (node: VisualNode | null) => void;
   connections: VisualConnection[];
   updateConnections: (connections: VisualConnection[]) => void;
-  runNode: (node: VisualNode) => Promise<void>;
-  updateNode: (node: BaseNode, shouldSync: boolean) => void;
+  runNode: (node: VisualNode, shouldSync?: boolean) => Promise<void>;
+  updateNodes: (updatedNode: VisualNode, shouldSync?: boolean) => void;
 }
 
 const NetworkEditor = ({
@@ -34,7 +34,7 @@ const NetworkEditor = ({
   connections,
   updateConnections,
   runNode,
-  updateNode,
+  updateNodes,
 }: NetworkEditorProps) => {
   const [mousePosition, setMousePosition] = useState<Coordinates>({ x: 0, y: 0 });
   const [isHoveringEditor, setIsHoveringEditor] = useState(false);
@@ -185,7 +185,7 @@ const NetworkEditor = ({
       draggedNode.node.coordinates.x = draggedNode.x;
       draggedNode.node.coordinates.y = draggedNode.y;
       if (dragState.hasMoved) {
-        updateNode(draggedNode.node, false);
+        updateNodes(draggedNode, false);
       }
     }
 
