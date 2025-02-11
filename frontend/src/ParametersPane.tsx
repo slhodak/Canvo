@@ -5,7 +5,7 @@ import { NodeProperty } from '../../shared/types/src/models/node';
 
 interface ParametersPaneProps {
   node: VisualNode | null;
-  updateNodes: (updatedNode: VisualNode, shouldSync?: boolean) => void;
+  updateNodes: (updatedNodes: Record<string, VisualNode>, shouldSync?: boolean, shouldRun?: boolean) => void;
 }
 
 const ParametersPane = ({ node, updateNodes }: ParametersPaneProps) => (
@@ -28,7 +28,7 @@ interface PropertyInputContainerProps {
   propertyKey: string;
   property: NodeProperty;
   node: VisualNode;
-  updateNodes: (updatedNode: VisualNode, shouldSync?: boolean) => void;
+  updateNodes: (updatedNodes: Record<string, VisualNode>, shouldSync?: boolean, shouldRun?: boolean) => void;
 }
 
 // Using this container allows us to use a switch statement to determine the input type to display
@@ -48,7 +48,7 @@ interface PropertyInputProps {
   label: string;
   editable: boolean;
   node: VisualNode;
-  updateNodes: (updatedNode: VisualNode, shouldSync?: boolean) => void;
+  updateNodes: (updatedNodes: Record<string, VisualNode>, shouldSync?: boolean, shouldRun?: boolean) => void;
 }
 
 interface TextPropertyInputProps extends PropertyInputProps {
@@ -65,7 +65,7 @@ const TextPropertyInput = ({ propertyKey, label, editable, initialValue, node, u
   const handlePropertyChange = (newValue: string) => {
     setValue(newValue);
     node.node.setProperty(propertyKey, newValue);
-    updateNodes(node);
+    updateNodes({ [node.id]: node }, true, node.node.runsAutomatically);
   }
 
   return (
@@ -97,7 +97,7 @@ const NumberPropertyInput = ({ propertyKey, label, editable, initialValue, node,
   const handlePropertyChange = (newValue: string) => {
     setValue(Number(newValue));
     node.node.setProperty(propertyKey, Number(newValue));
-    updateNodes(node);
+    updateNodes({ [node.id]: node }, true, node.node.runsAutomatically);
   }
 
   return (

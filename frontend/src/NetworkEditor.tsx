@@ -3,7 +3,7 @@ import './NetworkEditor.css';
 import { VisualNode, VisualConnection, DragState, WireState } from './NetworkTypes';
 import { Node } from './Node';
 import { NetworkEditorUtils as neu } from './Utils';
-import { BaseNode, Connection, Coordinates, NodeType } from '../../shared/types/src/models/node';
+import { Connection, Coordinates, NodeType } from '../../shared/types/src/models/node';
 import { SERVER_URL } from './constants';
 import { NodeUtils as nu } from './Utils';
 import { ProjectModel } from '../../shared/types/src/models/project';
@@ -14,13 +14,12 @@ interface NetworkEditorProps {
   project: ProjectModel;
   fetchNodesForProject: () => void;
   nodes: Record<string, VisualNode>;
-  setNodes: (nodes: Record<string, VisualNode>) => void;
   selectedNode: VisualNode | null;
   setSelectedNode: (node: VisualNode | null) => void;
   connections: VisualConnection[];
   updateConnections: (connections: VisualConnection[]) => void;
   runNode: (node: VisualNode, shouldSync?: boolean) => Promise<void>;
-  updateNodes: (updatedNode: VisualNode, shouldSync?: boolean) => void;
+  updateNodes: (updatedNodes: Record<string, VisualNode>, shouldSync?: boolean, shouldRun?: boolean) => void;
 }
 
 const NetworkEditor = ({
@@ -28,7 +27,6 @@ const NetworkEditor = ({
   project,
   fetchNodesForProject,
   nodes,
-  setNodes,
   selectedNode,
   setSelectedNode,
   connections,
@@ -63,51 +61,24 @@ const NetworkEditor = ({
   // Regular Functions
   //////////////////////////////
 
-  const createNewNode = (type: NodeType, position: Coordinates): BaseNode | null => {
+  const createNewNode = (type: NodeType, position: Coordinates) => {
     const nodeId = crypto.randomUUID();
-    const newNodes = { ...nodes };
     const newNode = nu.newNode(type, user.userId, project.projectId, position);
     if (!newNode) {
       console.error('Could not create new node');
-      return null;
+      return;
     }
 
-    newNodes[nodeId] = {
+    const newVisualNode: VisualNode = {
       id: nodeId,
       node: newNode,
       x: position.x,
       y: position.y,
     };
 
-    setNodes(newNodes);
+    updateNodes({ [nodeId]: newVisualNode }, true, true);
     setShowDropdown(false);
-    return newNode;
   }
-
-  const syncNewNode = async (currentNodes: Record<string, VisualNode>, newNode: BaseNode) => {
-    try {
-      const response = await fetch(`${SERVER_URL}/api/new_node`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          node: newNode,
-        }),
-      });
-      const data = await response.json();
-      if (data.status === 'success') {
-        fetchNodesForProject();
-      } else {
-        console.error('Server error while creating node:', data.error);
-        setNodes(currentNodes);
-      }
-    } catch (error) {
-      console.error('Could not sync new node:', error);
-      setNodes(currentNodes);
-    }
-  };
 
   const deleteConnection = (connectionId: string) => {
     updateConnections(connections.filter(conn => conn.connection.connectionId !== connectionId));
@@ -118,7 +89,6 @@ const NetworkEditor = ({
   //////////////////////////////
 
   const handleNewNodeClick = async (nodeType: NodeType) => {
-    const currentNodes = nodes;
     const svgRect = svgRef.current?.getBoundingClientRect();
     if (!svgRect) {
       console.error('Cannot make new node: no SVG element available to find mouse position');
@@ -130,10 +100,7 @@ const NetworkEditor = ({
       y: mousePosition.y - svgRect.top,
     }
 
-    const newNode = createNewNode(nodeType, offsetMousePosition);
-    if (!newNode) return;
-
-    await syncNewNode(currentNodes, newNode);
+    createNewNode(nodeType, offsetMousePosition);
   }
 
   const handleMouseDownInNode = async (e: React.MouseEvent, nodeId: string) => {
@@ -185,7 +152,7 @@ const NetworkEditor = ({
       draggedNode.node.coordinates.x = draggedNode.x;
       draggedNode.node.coordinates.y = draggedNode.y;
       if (dragState.hasMoved) {
-        updateNodes(draggedNode, false);
+        updateNodes({ [dragState.nodeId]: draggedNode }, true, false);
       }
     }
 
@@ -208,7 +175,7 @@ const NetworkEditor = ({
       draggedNode.y = e.clientY - dragState.offsetY;
 
       nodes[dragState.nodeId] = draggedNode;
-      setNodes(nodes);
+      updateNodes(nodes);
     }
 
     const svgRect = svgRef.current?.getBoundingClientRect();
@@ -310,8 +277,10 @@ const NetworkEditor = ({
     const originalNodes = { ...nodes };
     const newNodes = { ...nodes };
     delete newNodes[node.id];
-    setNodes(newNodes);
-    setSelectedNode(null);
+    if (selectedNode?.id === node.id) {
+      setSelectedNode(null);
+    }
+    updateNodes(newNodes, true, false);
 
     try {
       const response = await fetch(`${SERVER_URL}/api/delete_node`, {
@@ -330,13 +299,13 @@ const NetworkEditor = ({
         fetchNodesForProject();
       } else {
         console.error('Error deleting node:', data.error);
-        setNodes(originalNodes);
+        updateNodes(originalNodes, true, false);
       }
     } catch (error) {
       console.error('Error deleting node:', error);
-      setNodes(originalNodes);
+      updateNodes(originalNodes, true, false);
     }
-  }, [nodes, fetchNodesForProject, project.projectId, setNodes, setSelectedNode]);
+  }, [nodes, fetchNodesForProject, project.projectId, updateNodes, setSelectedNode]);
 
   const connectToViewNode = useCallback((node: VisualNode) => {
     if (node.node.outputs < 1) return;

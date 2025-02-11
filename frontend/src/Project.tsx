@@ -25,6 +25,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   const prevNodesRef = useRef<NetworkNodes>({});
   const prevConnectionsRef = useRef<NetworkConnections>([]);
   const shouldSyncNodesRef = useRef<boolean>(false);
+  const shouldRunNodesRef = useRef<boolean>(false);
   const shouldSyncConnectionsRef = useRef<boolean>(false);
   const [selectedNode, setSelectedNode] = useState<VisualNode | null>(null);
   const [viewText, setViewText] = useState<string>('');
@@ -34,18 +35,17 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   // 2. Coordinates changed in the NetworkEditor,
   // 3. Run manually
   // In all cases, we update the `nodes` state, which triggers rerunning the subnetwork from the selected node, and syncing to the server
-  const updateNodes = useCallback(async (updatedNode: VisualNode, shouldSync: boolean = true) => {
-    const currentNodes = nodes;
-    const visualNode = {
-      id: updatedNode.node.nodeId,
-      node: updatedNode.node,
-      x: updatedNode.x,
-      y: updatedNode.y,
-    };
-    const updatedNodes = { ...currentNodes, [updatedNode.node.nodeId]: visualNode };
+  const updateNodes = useCallback(async (updatedNodes: Record<string, VisualNode>, shouldSync: boolean = false, shouldRun: boolean = false) => {
+    console.debug(`${Date.now()}: Updating nodes`, updatedNodes);
+    const newNodes: Record<string, VisualNode> = {};
+    Object.keys(updatedNodes).forEach(nodeId => {
+      newNodes[nodeId] = updatedNodes[nodeId];
+    });
+    // These refs exist to tell the consequent effect hooks what further actions to take in response to the state change
     shouldSyncNodesRef.current = shouldSync;
-    setNodes(updatedNodes);
-  }, [nodes]);
+    shouldRunNodesRef.current = shouldRun;
+    setNodes(newNodes);
+  }, []);
 
   const updateConnections = async (updatedConnections: VisualConnection[], shouldSync: boolean = true) => {
     shouldSyncConnectionsRef.current = shouldSync;
@@ -83,11 +83,12 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       }
     }
 
-    // Update the nodes array to trigger sync
+    // Update the nodes array to trigger sync, but do not re-run
     // Descendent calls to runNode will not cause duplicate syncs because shouldSync is false by default
     // shouldSync so far only true when a node is run manually
     if (shouldSync) {
-      await updateNodes(node);
+      const newNodes = { [node.id]: node };
+      await updateNodes(newNodes, true, false);
     }
   }, [nodes, connections, updateNodes]);
 
@@ -113,15 +114,14 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
             y: node.coordinates.y,
           };
         });
-        shouldSyncNodesRef.current = false;
-        setNodes(visualNodes);
+        await updateNodes(visualNodes, false, false);
       } else {
         console.error('Error fetching nodes for project:', data.error);
       }
     } catch (error) {
       console.error('Error fetching nodes for project:', error);
     }
-  }, [project]);
+  }, [project, updateNodes]);
 
   const fetchConnectionsForProject = useCallback(async () => {
     if (!project) return;
@@ -164,15 +164,13 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
         fetchNodesForProject();
       } else {
         console.error('Server error while updating node:', data.error);
-        shouldSyncNodesRef.current = false; // Do not sync nodes when we're reverting
-        setNodes(prevNodes);
+        updateNodes(prevNodes, false, false);
       }
     } catch (error) {
       console.error('Could not update node:', error);
-      shouldSyncNodesRef.current = false; // Do not sync nodes when we're reverting
-      setNodes(prevNodes);
+      updateNodes(prevNodes, false, false);
     }
-  }, [fetchNodesForProject]);
+  }, [fetchNodesForProject, updateNodes]);
 
   const syncConnections = useCallback(async (prevConnections: NetworkConnections, newConnections: NetworkConnections) => {
     try {
@@ -201,23 +199,27 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   }, [fetchConnectionsForProject, project.projectId]);
 
   const handleNodesChanged = useCallback(async () => {
-    if (!selectedNode || !selectedNode.node) return;
-    if (shouldSyncNodesRef.current !== true) {
-      console.debug(`${Date.now()}: Apparent network changes will not be synced to the server`);
-      return;
+    if (shouldRunNodesRef.current === true && selectedNode && selectedNode.node) {
+      console.debug(`${Date.now()}: Rerunning subnetwork`);
+      if (selectedNode.node.runsAutomatically) {
+        // This recursive function will not return until every runnable descendent node has been run
+        await runNode(selectedNode);
+      }
+    } else {
+      console.debug(`${Date.now()}: Apparent network changes will not cause a rerun of the subnetwork`);
     }
 
-    console.debug(`${Date.now()}: Nodes changed, will rerun subnetwork and sync to server`);
-    const prevNodes = prevNodesRef.current; // Store this in case we need to revert to it
-    if (selectedNode.node.runsAutomatically) {
-      // This recursive function will not return until every runnable descendent node has been run
-      await runNode(selectedNode);
+    if (shouldSyncNodesRef.current === true) {
+      console.debug(`${Date.now()}: Syncing nodes to server`);
+      const prevNodes = prevNodesRef.current; // Store this in case we need to revert to it
+      prevNodesRef.current = nodes;
+      // Sync all the nodes to the server once the network has been fully updated
+      // Even if the selected node is not runnable, its content may still have changed
+      const updatedNodes = Object.values(nodes).map(node => node.node);
+      syncNodes(prevNodes, updatedNodes);
+    } else {
+      console.debug(`${Date.now()}: Apparent network changes will not be synced to the server`);
     }
-    prevNodesRef.current = nodes;
-    // Sync all the nodes to the server once the network has been fully updated
-    // Even if the selected node is not runnable, its content may still have changed
-    const updatedNodes = Object.values(nodes).map(node => node.node);
-    syncNodes(prevNodes, updatedNodes);
   }, [nodes, selectedNode, runNode, syncNodes]);
 
   const handleConnectionsChanged = useCallback(async () => {
@@ -262,7 +264,6 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
               project={project}
               fetchNodesForProject={fetchNodesForProject}
               nodes={nodes}
-              setNodes={setNodes}
               selectedNode={selectedNode}
               setSelectedNode={setSelectedNode}
               connections={connections}
