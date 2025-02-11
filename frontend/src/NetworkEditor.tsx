@@ -19,7 +19,7 @@ interface NetworkEditorProps {
   setSelectedNode: (node: VisualNode | null) => void;
   connections: VisualConnection[];
   updateConnections: (connections: VisualConnection[]) => void;
-  runNode: (node: VisualNode) => void;
+  runNode: (node: VisualNode) => Promise<void>;
   updateNode: (node: BaseNode, shouldSync: boolean) => void;
 }
 
@@ -136,14 +136,14 @@ const NetworkEditor = ({
     await syncNewNode(currentNodes, newNode);
   }
 
-  const handleMouseDownInNode = (e: React.MouseEvent, nodeId: string) => {
+  const handleMouseDownInNode = async (e: React.MouseEvent, nodeId: string) => {
     console.log('handleMouseDownInNode', nodeId);
     const node = nodes[nodeId];
     if (!node) return;
 
     setSelectedNode(node);
     if (node.node.runsAutomatically) {
-      runNode(node);
+      await runNode(node);
     }
 
     setDragState({
@@ -449,6 +449,7 @@ const NetworkEditor = ({
               startDrawingWire={startDrawingWire}
               endDrawingWire={endDrawingWire}
               disconnectWire={disconnectWire}
+              runNode={runNode}
             />
           );
         })}

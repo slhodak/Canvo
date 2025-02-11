@@ -1,5 +1,6 @@
 import { NetworkEditorUtils as neu } from './Utils';
 import { VisualNode, VisualConnection, WireState } from './NetworkTypes';
+import PlayButton from './assets/PlayButton';
 import './Node.css';
 
 interface NodeProps {
@@ -11,9 +12,10 @@ interface NodeProps {
   startDrawingWire: (nodeId: string, outputIndex: number, startX: number, startY: number) => void;
   endDrawingWire: (toNodeId: string, inputIndex: number) => void;
   disconnectWire: (connectionId: string) => void;
+  runNode: (node: VisualNode) => void;
 }
 
-export const Node = ({ node, isSelected, connections, wireState, handleMouseDown, startDrawingWire, endDrawingWire, disconnectWire }: NodeProps) => {
+export const Node = ({ node, isSelected, connections, wireState, handleMouseDown, startDrawingWire, endDrawingWire, disconnectWire, runNode }: NodeProps) => {
   const handleConnectionClick = (e: React.MouseEvent, isInputPort: boolean, connectionId: string | null = null, nodeId: string, inputIndex: number) => {
     if (connectionId) {
       // Immediately start a new connection if the clicked port is an output port
@@ -59,6 +61,29 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
       >
         {node.node.name}
       </text>
+
+      {/* Play Button */}
+      {node.node.runsAutomatically == false && (
+        <foreignObject
+          x={node.x + neu.NODE_WIDTH + 5}
+          y={node.y + (neu.NODE_HEIGHT / 2) - 10}
+          width="20"
+          height="20"
+        >
+          <div className="node-play-button-container">
+            <button
+              className="node-play-button"
+              onClick={(e) => {
+                e.stopPropagation();
+                runNode(node);
+              }}
+              title="Run node"
+            >
+              <PlayButton />
+            </button>
+          </div>
+        </foreignObject>
+      )}
 
       {/* Input Ports */}
       {Array.from({ length: node.node.inputs }).map((_, i) => {
