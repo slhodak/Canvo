@@ -24,39 +24,161 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   const [connections, setConnections] = useState<NetworkConnections>([]);
   const prevNodesRef = useRef<NetworkNodes>({});
   const prevConnectionsRef = useRef<NetworkConnections>([]);
-  const shouldSyncNodesRef = useRef<boolean>(false);
-  const shouldRunNodesRef = useRef<boolean>(false);
-  const shouldSyncConnectionsRef = useRef<boolean>(false);
   const [selectedNode, setSelectedNode] = useState<VisualNode | null>(null);
   const [viewText, setViewText] = useState<string>('');
 
-  // Node may have had:
-  // 1. A property updated in the ParametersPane,
-  // 2. Coordinates changed in the NetworkEditor,
-  // 3. Run manually
-  // In all cases, we update the `nodes` state, which triggers rerunning the subnetwork from the selected node, and syncing to the server
-  const updateNodes = useCallback(async (updatedNodes: Record<string, VisualNode>, shouldSync: boolean = false, shouldRun: boolean = false) => {
-    console.debug(`${Date.now()}: Updating nodes`, updatedNodes);
-    const newNodes: Record<string, VisualNode> = {};
-    Object.keys(updatedNodes).forEach(nodeId => {
-      newNodes[nodeId] = updatedNodes[nodeId];
-    });
-    // These refs exist to tell the consequent effect hooks what further actions to take in response to the state change
-    shouldSyncNodesRef.current = shouldSync;
-    shouldRunNodesRef.current = shouldRun;
-    setNodes(newNodes);
-  }, []);
-
-  const updateConnections = async (updatedConnections: VisualConnection[], shouldSync: boolean = true) => {
-    shouldSyncConnectionsRef.current = shouldSync;
-    setConnections(updatedConnections);
-  }
-
   //////////////////////////////
-  // Memoized Functions
+  // Fetch Nodes & Connections
   //////////////////////////////
 
-  const runNode = useCallback(async (node: VisualNode, shouldSync: boolean = false) => {
+  const fetchNodesForProject = useCallback(async () => {
+    console.debug('Fetching nodes for project:', project.projectId);
+    if (!project) return;
+
+    try {
+      const response = await fetch(`${SERVER_URL}/api/get_nodes_for_project/${project.projectId}`, {
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        const visualNodes: Record<string, VisualNode> = {};
+        data.nodes.forEach((nodeJson: BaseNode) => {
+          // Convert json to a real node instance so we can use its instance methods
+          const node = nu.fromObject(nodeJson);
+          if (!node) return;
+
+          visualNodes[node.nodeId] = {
+            id: node.nodeId,
+            node: node,
+            x: node.coordinates.x,
+            y: node.coordinates.y,
+          };
+        });
+
+        setNodes(visualNodes);
+        // Cache this initial state so you can revert to it if a future update fails
+        prevNodesRef.current = visualNodes;
+      } else {
+        console.error('Error fetching nodes for project:', data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching nodes for project:', error);
+    }
+  }, [project]);
+
+  const fetchConnectionsForProject = useCallback(async () => {
+    console.debug('Fetching connections for project:', project.projectId);
+    if (!project) return;
+
+    try {
+      const response = await fetch(`${SERVER_URL}/api/get_connections_for_project/${project.projectId}`, {
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        const visualConnections: VisualConnection[] = [];
+        data.connections.forEach((object: Connection) => {
+          visualConnections.push({
+            id: object.connectionId,
+            connection: object,
+          });
+        });
+        setConnections(visualConnections);
+      } else {
+        console.error('Error fetching connections for project:', data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching connections for project:', error);
+    }
+  }, [project]);
+
+  //////////////////////////////
+  // Sync Nodes
+  //////////////////////////////
+
+  const syncNodeAdd = useCallback(async (node: BaseNode) => {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/add_node`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          projectId: project.projectId,
+          node: node,
+        }),
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        fetchNodesForProject();
+      } else {
+        console.error('Server error while updating node:', data.error);
+        setNodes(prevNodesRef.current);
+      }
+    } catch (error) {
+      console.error('Could not update node:', error);
+      setNodes(prevNodesRef.current);
+    }
+  }, [fetchNodesForProject, project.projectId]);
+
+  const syncNodesUpdate = useCallback(async (updatedNodes: BaseNode[]) => {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/update_nodes`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          projectId: project.projectId,
+          nodes: updatedNodes,
+        }),
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        fetchNodesForProject();
+      } else {
+        console.error('Server error while updating node:', data.error);
+        setNodes(prevNodesRef.current);
+      }
+    } catch (error) {
+      console.error('Could not update node:', error);
+      setNodes(prevNodesRef.current);
+    }
+  }, [fetchNodesForProject, project.projectId]);
+
+  const syncNodeDelete = useCallback(async (node: VisualNode) => {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/delete_node`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          nodeId: node.node.nodeId,
+          projectId: project.projectId,
+        }),
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        fetchNodesForProject();
+      } else {
+        console.error('Error deleting node:', data.error);
+        setNodes(prevNodesRef.current);
+      }
+    } catch (error) {
+      console.error('Error deleting node:', error);
+      setNodes(prevNodesRef.current);
+    }
+  }, [fetchNodesForProject, project.projectId]);
+
+  //////////////////////////////
+  // Run & Select Nodes
+  //////////////////////////////
+
+  const runNode = useCallback(async (node: VisualNode) => {
     if ('run' in node.node && typeof node.node.run === 'function') {
       const inputValues = node.node.inputs > 0 ? nu.readNodeInputs(node.node, connections, nodes) : [];
       node.node.run(inputValues);
@@ -82,95 +204,58 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
         await runNode(descendent);
       }
     }
+  }, [nodes, connections]);
 
-    // Update the nodes array to trigger sync, but do not re-run
-    // Descendent calls to runNode will not cause duplicate syncs because shouldSync is false by default
-    // shouldSync so far only true when a node is run manually
+  const selectNode = useCallback(async (node: VisualNode) => {
+    setSelectedNode(node);
+    if (node.node.runsAutomatically) {
+      await runNode(node);
+      // TODO: Sync only the subgraph that was run
+      await syncNodesUpdate(Object.values(nodes).map(n => n.node));
+    }
+  }, [runNode, syncNodesUpdate, nodes]);
+
+  ///////////////////////////////////////
+  // Node & Connection CRUD Handlers
+  ///////////////////////////////////////
+
+  const addNode = useCallback(async (node: VisualNode) => {
+    setNodes(prevNodes => ({ ...prevNodes, [node.node.nodeId]: node }));
+    await syncNodeAdd(node.node);
+  }, [syncNodeAdd]);
+
+  const updateNode = useCallback(async (node: VisualNode, shouldRun: boolean = true, shouldSync: boolean = true) => {
+    setNodes(prevNodes => ({ ...prevNodes, [node.node.nodeId]: node }));
+    if (shouldRun) {
+      await runNode(node);
+    }
     if (shouldSync) {
-      const newNodes = { [node.id]: node };
-      await updateNodes(newNodes, true, false);
+      // TODO: Sync only the subgraph that was updated
+      console.debug('Syncing all nodes after update');
+      await syncNodesUpdate(Object.values(nodes).map(n => n.node));
     }
-  }, [nodes, connections, updateNodes]);
+  }, [runNode, syncNodesUpdate, nodes]);
 
-  const fetchNodesForProject = useCallback(async () => {
-    if (!project) return;
-
-    try {
-      const response = await fetch(`${SERVER_URL}/api/get_nodes_for_project/${project.projectId}`, {
-        credentials: 'include',
-      });
-      const data = await response.json();
-      if (data.status === 'success') {
-        const visualNodes: Record<string, VisualNode> = {};
-        data.nodes.forEach((nodeJson: BaseNode) => {
-          // Convert json to a real node instance so we can use its instance methods
-          const node = nu.fromObject(nodeJson);
-          if (!node) return;
-
-          visualNodes[node.nodeId] = {
-            id: node.nodeId,
-            node: node,
-            x: node.coordinates.x,
-            y: node.coordinates.y,
-          };
-        });
-        await updateNodes(visualNodes, false, false);
-      } else {
-        console.error('Error fetching nodes for project:', data.error);
-      }
-    } catch (error) {
-      console.error('Error fetching nodes for project:', error);
+  const deleteNode = useCallback(async (node: VisualNode) => {
+    const newNodes = { ...nodes };
+    delete newNodes[node.id];
+    if (selectedNode?.id === node.id) {
+      setSelectedNode(null);
     }
-  }, [project, updateNodes]);
+    setNodes(newNodes);
+    await syncNodeDelete(node);
+  }, [nodes, selectedNode, syncNodeDelete]);
 
-  const fetchConnectionsForProject = useCallback(async () => {
-    if (!project) return;
-
-    try {
-      const response = await fetch(`${SERVER_URL}/api/get_connections_for_project/${project.projectId}`, {
-        credentials: 'include',
-      });
-      const data = await response.json();
-      if (data.status === 'success') {
-        const visualConnections: VisualConnection[] = [];
-        data.connections.forEach((object: Connection) => {
-          visualConnections.push({
-            id: object.connectionId,
-            connection: object,
-          });
-        });
-        shouldSyncConnectionsRef.current = false;
-        setConnections(visualConnections);
-      } else {
-        console.error('Error fetching connections for project:', data.error);
-      }
-    } catch (error) {
-      console.error('Error fetching connections for project:', error);
+  const updateConnections = async (updatedConnections: VisualConnection[], shouldSync: boolean = true) => {
+    setConnections(updatedConnections);
+    if (shouldSync) {
+      await syncConnections(prevConnectionsRef.current, updatedConnections);
     }
-  }, [project]);
+  }
 
-  const syncNodes = useCallback(async (prevNodes: Record<string, VisualNode>, newNodes: BaseNode[]) => {
-    try {
-      const response = await fetch(`${SERVER_URL}/api/upsert_nodes`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ nodes: newNodes }),
-      });
-      const data = await response.json();
-      if (data.status === 'success') {
-        fetchNodesForProject();
-      } else {
-        console.error('Server error while updating node:', data.error);
-        updateNodes(prevNodes, false, false);
-      }
-    } catch (error) {
-      console.error('Could not update node:', error);
-      updateNodes(prevNodes, false, false);
-    }
-  }, [fetchNodesForProject, updateNodes]);
+  //////////////////////////////
+  // Sync Connections
+  //////////////////////////////
 
   const syncConnections = useCallback(async (prevConnections: NetworkConnections, newConnections: NetworkConnections) => {
     try {
@@ -188,67 +273,24 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
         fetchConnectionsForProject();
       } else {
         console.error('Server error while updating connections:', data.error);
-        shouldSyncConnectionsRef.current = false; // Do not sync connections when we're reverting
         setConnections(prevConnections);
       }
     } catch (error) {
       console.error('Could not update connections:', error);
-      shouldSyncConnectionsRef.current = false; // Do not sync connections when we're reverting
       setConnections(prevConnections);
     }
   }, [fetchConnectionsForProject, project.projectId]);
-
-  const handleNodesChanged = useCallback(async () => {
-    if (shouldRunNodesRef.current === true && selectedNode && selectedNode.node) {
-      console.debug(`${Date.now()}: Rerunning subnetwork`);
-      if (selectedNode.node.runsAutomatically) {
-        // This recursive function will not return until every runnable descendent node has been run
-        await runNode(selectedNode);
-      }
-    } else {
-      console.debug(`${Date.now()}: Apparent network changes will not cause a rerun of the subnetwork`);
-    }
-
-    if (shouldSyncNodesRef.current === true) {
-      console.debug(`${Date.now()}: Syncing nodes to server`);
-      const prevNodes = prevNodesRef.current; // Store this in case we need to revert to it
-      prevNodesRef.current = nodes;
-      // Sync all the nodes to the server once the network has been fully updated
-      // Even if the selected node is not runnable, its content may still have changed
-      const updatedNodes = Object.values(nodes).map(node => node.node);
-      syncNodes(prevNodes, updatedNodes);
-    } else {
-      console.debug(`${Date.now()}: Apparent network changes will not be synced to the server`);
-    }
-  }, [nodes, selectedNode, runNode, syncNodes]);
-
-  const handleConnectionsChanged = useCallback(async () => {
-    if (shouldSyncConnectionsRef.current !== true) {
-      console.debug(`${Date.now()}: Apparent network changes will not be synced to the server`);
-      return;
-    }
-
-    console.debug(`${Date.now()}: Connections changed, will sync connections to server`);
-    const prevConnections = prevConnectionsRef.current;
-    syncConnections(prevConnections, connections);
-  }, [connections, syncConnections]);
 
   //////////////////////////////
   // React Hooks
   //////////////////////////////
 
   useEffect(() => {
+    // setViewText('');
+    setSelectedNode(null);
     fetchNodesForProject();
     fetchConnectionsForProject();
   }, [fetchNodesForProject, fetchConnectionsForProject]);
-
-  useEffect(() => {
-    handleNodesChanged();
-  }, [handleNodesChanged]);
-
-  useEffect(() => {
-    handleConnectionsChanged();
-  }, [handleConnectionsChanged]);
 
   return (
     <div className="project-container">
@@ -262,18 +304,19 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
             <NetworkEditor
               user={user}
               project={project}
-              fetchNodesForProject={fetchNodesForProject}
               nodes={nodes}
               selectedNode={selectedNode}
-              setSelectedNode={setSelectedNode}
+              selectNode={selectNode}
+              addNode={addNode}
+              updateNode={updateNode}
+              deleteNode={deleteNode}
               connections={connections}
               updateConnections={updateConnections}
               runNode={runNode}
-              updateNodes={updateNodes}
             />
           </div>
           <div className="left-pane-bottom">
-            <ParametersPane node={selectedNode} updateNodes={updateNodes} />
+            <ParametersPane node={selectedNode} updateNode={updateNode} />
           </div>
 
         </div>

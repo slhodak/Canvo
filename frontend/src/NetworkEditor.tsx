@@ -4,7 +4,6 @@ import { VisualNode, VisualConnection, DragState, WireState } from './NetworkTyp
 import { Node } from './Node';
 import { NetworkEditorUtils as neu } from './Utils';
 import { Connection, Coordinates, NodeType } from '../../shared/types/src/models/node';
-import { SERVER_URL } from './constants';
 import { NodeUtils as nu } from './Utils';
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { UserModel } from '../../shared/types/src/models/user';
@@ -12,27 +11,29 @@ import { UserModel } from '../../shared/types/src/models/user';
 interface NetworkEditorProps {
   user: UserModel;
   project: ProjectModel;
-  fetchNodesForProject: () => void;
   nodes: Record<string, VisualNode>;
   selectedNode: VisualNode | null;
-  setSelectedNode: (node: VisualNode | null) => void;
+  selectNode: (node: VisualNode) => void;
+  addNode: (node: VisualNode) => void;
+  updateNode: (node: VisualNode, shouldSync?: boolean) => Promise<void>;
+  deleteNode: (node: VisualNode) => void;
   connections: VisualConnection[];
   updateConnections: (connections: VisualConnection[]) => void;
-  runNode: (node: VisualNode, shouldSync?: boolean) => Promise<void>;
-  updateNodes: (updatedNodes: Record<string, VisualNode>, shouldSync?: boolean, shouldRun?: boolean) => void;
+  runNode: (node: VisualNode, shouldRun?: boolean, shouldSync?: boolean) => Promise<void>;
 }
 
 const NetworkEditor = ({
   user,
   project,
-  fetchNodesForProject,
   nodes,
   selectedNode,
-  setSelectedNode,
+  selectNode,
+  addNode,
+  updateNode,
+  deleteNode,
   connections,
   updateConnections,
   runNode,
-  updateNodes,
 }: NetworkEditorProps) => {
   const [mousePosition, setMousePosition] = useState<Coordinates>({ x: 0, y: 0 });
   const [isHoveringEditor, setIsHoveringEditor] = useState(false);
@@ -76,7 +77,7 @@ const NetworkEditor = ({
       y: position.y,
     };
 
-    updateNodes({ [nodeId]: newVisualNode }, true, true);
+    addNode(newVisualNode);
     setShowDropdown(false);
   }
 
@@ -104,14 +105,13 @@ const NetworkEditor = ({
   }
 
   const handleMouseDownInNode = async (e: React.MouseEvent, nodeId: string) => {
-    console.log('handleMouseDownInNode', nodeId);
     const node = nodes[nodeId];
-    if (!node) return;
-
-    setSelectedNode(node);
-    if (node.node.runsAutomatically) {
-      await runNode(node);
+    if (!node) {
+      console.error('Could not find clicked node:', nodeId);
+      return;
     }
+
+    selectNode(node);
 
     setDragState({
       isDragging: true,
@@ -152,7 +152,7 @@ const NetworkEditor = ({
       draggedNode.node.coordinates.x = draggedNode.x;
       draggedNode.node.coordinates.y = draggedNode.y;
       if (dragState.hasMoved) {
-        updateNodes({ [dragState.nodeId]: draggedNode }, true, false);
+        updateNode(draggedNode);
       }
     }
 
@@ -175,7 +175,7 @@ const NetworkEditor = ({
       draggedNode.y = e.clientY - dragState.offsetY;
 
       nodes[dragState.nodeId] = draggedNode;
-      updateNodes(nodes);
+      updateNode(draggedNode, false, false);
     }
 
     const svgRect = svgRef.current?.getBoundingClientRect();
@@ -272,40 +272,6 @@ const NetworkEditor = ({
 
     updateConnections([...newConnections, newConnection]);
   }, [connections, updateConnections, project.projectId, user.userId]);
-
-  const deleteNode = useCallback(async (node: VisualNode) => {
-    const originalNodes = { ...nodes };
-    const newNodes = { ...nodes };
-    delete newNodes[node.id];
-    if (selectedNode?.id === node.id) {
-      setSelectedNode(null);
-    }
-    updateNodes(newNodes, true, false);
-
-    try {
-      const response = await fetch(`${SERVER_URL}/api/delete_node`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          nodeId: node.node.nodeId,
-          projectId: project.projectId,
-        }),
-      });
-      const data = await response.json();
-      if (data.status === 'success') {
-        fetchNodesForProject();
-      } else {
-        console.error('Error deleting node:', data.error);
-        updateNodes(originalNodes, true, false);
-      }
-    } catch (error) {
-      console.error('Error deleting node:', error);
-      updateNodes(originalNodes, true, false);
-    }
-  }, [nodes, fetchNodesForProject, selectedNode?.id, project.projectId, updateNodes, setSelectedNode]);
 
   const connectToViewNode = useCallback((node: VisualNode) => {
     if (node.node.outputs < 1) return;

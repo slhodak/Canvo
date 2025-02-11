@@ -126,7 +126,37 @@ export namespace Database {
     return nodes;
   }
 
-  export async function upsertNode(node: BaseNode) {
+  export async function insertNode(node: BaseNode) {
+    const values = [
+      node.nodeId,
+      node.authorId,
+      node.projectId,
+      node.name,
+      node.type,
+      node.inputs,
+      node.outputs,
+      node.coordinates.x,
+      node.coordinates.y,
+      node.runsAutomatically,
+      node.properties,
+      JSON.stringify(node.outputState),
+      node.isDirty,
+    ];
+
+    await db.none(`
+      INSERT INTO nodes (
+        node_id, author_id, project_id, name, type, inputs, outputs,
+        coordinates, runs_automatically, properties, output_state, is_dirty
+      )
+      VALUES (
+        $1, $2, $3, $4, $5, $6, $7, 
+        point($8, $9), $10, $11, 
+        $12::jsonb, $13
+      )
+    `, values);
+  }
+
+  export async function updateNode(node: BaseNode) {
     const values = [
       node.nodeId,
       node.authorId,
@@ -143,19 +173,11 @@ export namespace Database {
       node.isDirty,
     ];
     await db.none(`
-      INSERT INTO nodes (
-        node_id, author_id, project_id, name, type, inputs, outputs,
-        coordinates, runs_automatically, properties, output_state, is_dirty
-      )
-      VALUES (
-        $1, $2, $3, $4, $5, $6, $7, 
-        point($8, $9), $10, $11, 
-        $12::jsonb, $13
-      )
-      ON CONFLICT (node_id) DO UPDATE
+      UPDATE nodes 
       SET node_id = $1, author_id = $2, project_id = $3, name = $4, type = $5, inputs = $6, outputs = $7,
       coordinates = point($8, $9), runs_automatically = $10, properties = $11, output_state = $12::jsonb, is_dirty = $13,
       updated_at = CURRENT_TIMESTAMP
+      WHERE node_id = $1
     `, values);
   }
 

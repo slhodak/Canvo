@@ -3,12 +3,16 @@ import './ParametersPane.css';
 import { VisualNode } from './NetworkTypes';
 import { NodeProperty } from '../../shared/types/src/models/node';
 
+////////////////////////////////////////////////////////////
+// ParametersPane
+////////////////////////////////////////////////////////////
+
 interface ParametersPaneProps {
   node: VisualNode | null;
-  updateNodes: (updatedNodes: Record<string, VisualNode>, shouldSync?: boolean, shouldRun?: boolean) => void;
+  updateNode: (updatedNode: VisualNode, shouldRun?: boolean, shouldSync?: boolean) => void;
 }
 
-const ParametersPane = ({ node, updateNodes }: ParametersPaneProps) => (
+const ParametersPane = ({ node, updateNode }: ParametersPaneProps) => (
   <div className="parameters-pane-container">
     <div className="parameters-pane-header">
       <h3>Parameters<span className="parameters-pane-node-id">{node?.node.nodeId}</span></h3>
@@ -16,7 +20,7 @@ const ParametersPane = ({ node, updateNodes }: ParametersPaneProps) => (
 
     <div className="parameters-pane-content">
       {node && Object.entries(node.node.properties).filter(([, property]) => property.displayed).map(([key, property]) => (
-        <PropertyInputContainer key={property.label} propertyKey={key} property={property} node={node} updateNodes={updateNodes} />
+        <PropertyInputContainer key={property.label} propertyKey={key} property={property} node={node} updateNode={updateNode} />
       ))}
     </div>
   </div>
@@ -24,38 +28,46 @@ const ParametersPane = ({ node, updateNodes }: ParametersPaneProps) => (
 
 export default ParametersPane;
 
+////////////////////////////////////////////////////////////
+// PropertyInputContainer
+////////////////////////////////////////////////////////////
+
 interface PropertyInputContainerProps {
   propertyKey: string;
   property: NodeProperty;
   node: VisualNode;
-  updateNodes: (updatedNodes: Record<string, VisualNode>, shouldSync?: boolean, shouldRun?: boolean) => void;
+  updateNode: (updatedNode: VisualNode, shouldSync?: boolean) => void;
 }
 
 // Using this container allows us to use a switch statement to determine the input type to display
-const PropertyInputContainer = ({ propertyKey, property, node, updateNodes }: PropertyInputContainerProps) => {
+const PropertyInputContainer = ({ propertyKey, property, node, updateNode }: PropertyInputContainerProps) => {
   switch (property.type) {
     case 'string':
-      return <TextPropertyInput propertyKey={propertyKey} label={property.label} editable={property.editable} initialValue={property.value as string} node={node} updateNodes={updateNodes} />;
+      return <TextPropertyInput propertyKey={propertyKey} label={property.label} editable={property.editable} initialValue={property.value as string} node={node} updateNode={updateNode} />;
     case 'number':
-      return <NumberPropertyInput propertyKey={propertyKey} label={property.label} editable={property.editable} initialValue={property.value as number} node={node} updateNodes={updateNodes} />;
+      return <NumberPropertyInput propertyKey={propertyKey} label={property.label} editable={property.editable} initialValue={property.value as number} node={node} updateNode={updateNode} />;
     default:
       return null;
   }
 }
+
+////////////////////////////////////////////////////////////
+// TextPropertyInput
+////////////////////////////////////////////////////////////
 
 interface PropertyInputProps {
   propertyKey: string;
   label: string;
   editable: boolean;
   node: VisualNode;
-  updateNodes: (updatedNodes: Record<string, VisualNode>, shouldSync?: boolean, shouldRun?: boolean) => void;
+  updateNode: (updatedNode: VisualNode, shouldRun?: boolean, shouldSync?: boolean) => void;
 }
 
 interface TextPropertyInputProps extends PropertyInputProps {
   initialValue: string;
 }
 
-const TextPropertyInput = ({ propertyKey, label, editable, initialValue, node, updateNodes }: TextPropertyInputProps) => {
+const TextPropertyInput = ({ propertyKey, label, editable, initialValue, node, updateNode }: TextPropertyInputProps) => {
   const [value, setValue] = useState<string>(initialValue);
 
   useEffect(() => {
@@ -65,7 +77,7 @@ const TextPropertyInput = ({ propertyKey, label, editable, initialValue, node, u
   const handlePropertyChange = (newValue: string) => {
     setValue(newValue);
     node.node.setProperty(propertyKey, newValue);
-    updateNodes({ [node.id]: node }, true, node.node.runsAutomatically);
+    updateNode(node, node.node.runsAutomatically, true);
   }
 
   return (
@@ -83,11 +95,15 @@ const TextPropertyInput = ({ propertyKey, label, editable, initialValue, node, u
   )
 }
 
+////////////////////////////////////////////////////////////
+// NumberPropertyInput
+////////////////////////////////////////////////////////////
+
 interface NumberPropertyInputProps extends PropertyInputProps {
   initialValue: number;
 }
 
-const NumberPropertyInput = ({ propertyKey, label, editable, initialValue, node, updateNodes }: NumberPropertyInputProps) => {
+const NumberPropertyInput = ({ propertyKey, label, editable, initialValue, node, updateNode }: NumberPropertyInputProps) => {
   const [value, setValue] = useState<number>(initialValue);
 
   useEffect(() => {
@@ -97,7 +113,7 @@ const NumberPropertyInput = ({ propertyKey, label, editable, initialValue, node,
   const handlePropertyChange = (newValue: string) => {
     setValue(Number(newValue));
     node.node.setProperty(propertyKey, Number(newValue));
-    updateNodes({ [node.id]: node }, true, node.node.runsAutomatically);
+    updateNode(node, node.node.runsAutomatically, true);
   }
 
   return (
