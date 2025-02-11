@@ -462,22 +462,22 @@ const NetworkEditor = ({
           }}
         >
           <div className="app-dropdown-option" onClick={() => handleNewNodeClick(NodeType.Text)}>
-            Text Node
+            Text
           </div>
           <div className="app-dropdown-option" onClick={() => handleNewNodeClick(NodeType.Prompt)}>
-            Prompt Node
+            Prompt
           </div>
           <div className="app-dropdown-option" onClick={() => handleNewNodeClick(NodeType.Save)}>
-            Save Node
+            Save
           </div>
           <div className="app-dropdown-option" onClick={() => handleNewNodeClick(NodeType.View)}>
-            View Node
+            View
           </div>
           <div className="app-dropdown-option" onClick={() => handleNewNodeClick(NodeType.Merge)}>
-            Merge Node
+            Merge
           </div>
           <div className="app-dropdown-option" onClick={() => handleNewNodeClick(NodeType.Split)}>
-            Split Node
+            Split
           </div>
         </div>
       )}
