@@ -180,6 +180,7 @@ export class PromptNode extends BaseNode implements AsyncNode {
 
   async asyncRun(inputValues: (OutputState | null)[]) {
     if (!inputValues[0]) return;
+    if (!this.properties.prompt.value || this.properties.prompt.value === '') return;
 
     // Call the LLM with the prompt and the input text
     try {

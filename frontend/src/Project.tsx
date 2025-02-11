@@ -29,7 +29,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   const [viewText, setViewText] = useState<string>('');
 
   // Node may have had a property updated in the ParametersPane, or coordinates changed in the NetworkEditor
-  const updateNode = async (node: BaseNode, shouldSync: boolean = true) => {
+  const updateNode = useCallback(async (node: BaseNode, shouldSync: boolean = true) => {
     const currentNodes = nodes;
     const visualNode = {
       id: node.nodeId,
@@ -40,7 +40,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     const updatedNodes = { ...currentNodes, [node.nodeId]: visualNode };
     shouldSyncNodesRef.current = shouldSync;
     setNodes(updatedNodes);
-  }
+  }, [nodes]);
 
   const updateConnections = async (updatedConnections: VisualConnection[], shouldSync: boolean = true) => {
     shouldSyncConnectionsRef.current = shouldSync;
@@ -65,6 +65,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     if ('asyncRun' in node.node && typeof node.node.asyncRun === 'function') {
       const inputValues = nu.readNodeInputs(node.node, connections, nodes);
       await node.node.asyncRun(inputValues);
+      await updateNode(node.node);
     }
 
     // Find this node's connections via its output ports
@@ -77,7 +78,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
         await runNode(descendent);
       }
     }
-  }, [nodes, connections]);
+  }, [nodes, connections, updateNode]);
 
   const fetchNodesForProject = useCallback(async () => {
     if (!project) return;
