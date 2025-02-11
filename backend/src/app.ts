@@ -383,35 +383,7 @@ router.get('/api/get_nodes_for_project/:projectId', async (req: Request, res: Re
   }
 });
 
-router.post('/api/new_node', async (req: Request, res: Response) => {
-  const { node } = req.body;
-  if (!node) {
-    console.error("No node provided", req.body);
-    return res.status(400).json({ error: "No node provided" });
-  }
-
-  if (!validateNode(node)) {
-    return res.status(400).json({ error: "Invalid node" });
-  }
-
-  try {
-    const user = await getUserFromSessionToken(req);
-    if (!user) {
-      return res.status(401).json({ error: "Could not find user email from session token" });
-    }
-
-    await db.createNode(node);
-    await db.updateProjectUpdatedAt(node.projectId);
-    return res.json({ status: "success" });
-  } catch (error) {
-    if (error instanceof Error) {
-      return res.status(500).json({ status: "failed", error: error.message });
-    }
-    return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
-  }
-});
-
-router.post('/api/update_nodes', async (req: Request, res: Response) => {
+router.post('/api/upsert_nodes', async (req: Request, res: Response) => {
   const { nodes } = req.body;
   if (!nodes) {
     return res.status(400).json({ error: "No nodes provided" });
@@ -430,7 +402,7 @@ router.post('/api/update_nodes', async (req: Request, res: Response) => {
 
   try {
     for (const node of nodes) {
-      await db.updateNode(node);
+      await db.upsertNode(node);
       await db.updateProjectUpdatedAt(node.projectId);
     }
 

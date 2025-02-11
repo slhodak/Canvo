@@ -151,7 +151,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
 
   const syncNodes = useCallback(async (prevNodes: Record<string, VisualNode>, newNodes: BaseNode[]) => {
     try {
-      const response = await fetch(`${SERVER_URL}/api/update_nodes`, {
+      const response = await fetch(`${SERVER_URL}/api/upsert_nodes`, {
         method: 'POST',
         credentials: 'include',
         headers: {

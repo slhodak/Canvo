@@ -305,7 +305,7 @@ const NetworkEditor = ({
       console.error('Error deleting node:', error);
       updateNodes(originalNodes, true, false);
     }
-  }, [nodes, fetchNodesForProject, project.projectId, updateNodes, setSelectedNode]);
+  }, [nodes, fetchNodesForProject, selectedNode?.id, project.projectId, updateNodes, setSelectedNode]);
 
   const connectToViewNode = useCallback((node: VisualNode) => {
     if (node.node.outputs < 1) return;
