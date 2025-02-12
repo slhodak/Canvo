@@ -11,8 +11,8 @@ backend/db/migrations/
 
 ai-service/pyproject.toml
 ai-service/poetry.lock
-ai-service/semantic_search.py
-ai-service/main.py
+ai-service/ai-service/main.py
+ai-service/ai-service/semantic_search.py
 
 frontend/dist/
 frontend/package.json

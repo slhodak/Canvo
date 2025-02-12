@@ -199,7 +199,7 @@ export class PromptNode extends BaseNode implements AsyncNode {
           input: inputValues[0].stringValue as string,
         }),
       });
-      const data = await response.json();
+      const data: LLMResponse = await response.json() as LLMResponse;
       if (data.status === 'success') {
         this.outputState[0] = {
           stringValue: data.result,
@@ -358,3 +358,10 @@ export class SplitNode extends BaseNode implements SyncNode {
     };
   }
 }
+
+type LLMResponse = {
+  status: 'success' | 'error';
+  result: string;
+  error?: string;
+}
+
