@@ -144,6 +144,8 @@ export class TextNode extends BaseNode implements SyncNode {
   run(inputValues: (OutputState | null)[]) {
     if (!this.isDirty) return;
 
+    console.debug('Running TextNode:', this.nodeId);
+
     this.outputState[0] = {
       stringValue: this.properties.text.value as string,
       numberValue: null,
