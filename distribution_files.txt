@@ -9,6 +9,11 @@ backend/db/init_db.sh
 backend/db/run_migrations.sh
 backend/db/migrations/
 
+ai-service/pyproject.toml
+ai-service/poetry.lock
+ai-service/semantic_search.py
+ai-service/main.py
+
 frontend/dist/
 frontend/package.json
 frontend/yarn.lock

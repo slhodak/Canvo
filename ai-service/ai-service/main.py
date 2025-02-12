@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Dict, List
-from semantic_search import SemanticSearch
+from typing import Dict
+from .semantic_search import SemanticSearch
 
 app = FastAPI()
 search_engine = SemanticSearch()
