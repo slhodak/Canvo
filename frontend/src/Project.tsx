@@ -32,7 +32,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   //////////////////////////////
 
   const fetchNodesForProject = useCallback(async () => {
-    console.debug('Fetching nodes for project:', project.projectId);
+    console.debug(`${Date.now()}: Fetching nodes for project: ${project.projectId}`);
     if (!project) return;
 
     try {
@@ -110,9 +110,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
         }),
       });
       const data = await response.json();
-      if (data.status === 'success') {
-        fetchNodesForProject();
-      } else {
+      if (data.status !== 'success') {
         console.error('Server error while updating node:', data.error);
         setNodes(prevNodesRef.current);
       }
@@ -120,7 +118,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       console.error('Could not update node:', error);
       setNodes(prevNodesRef.current);
     }
-  }, [fetchNodesForProject, project.projectId]);
+  }, [project.projectId]);
 
   const syncNodesUpdate = useCallback(async (updatedNodes: BaseNode[]) => {
     try {
@@ -136,9 +134,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
         }),
       });
       const data = await response.json();
-      if (data.status === 'success') {
-        fetchNodesForProject();
-      } else {
+      if (data.status !== 'success') {
         console.error('Server error while updating node:', data.error);
         setNodes(prevNodesRef.current);
       }
@@ -146,7 +142,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       console.error('Could not update node:', error);
       setNodes(prevNodesRef.current);
     }
-  }, [fetchNodesForProject, project.projectId]);
+  }, [project.projectId]);
 
   const syncNodeDelete = useCallback(async (node: VisualNode) => {
     try {
@@ -162,9 +158,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
         }),
       });
       const data = await response.json();
-      if (data.status === 'success') {
-        fetchNodesForProject();
-      } else {
+      if (data.status !== 'success') {
         console.error('Error deleting node:', data.error);
         setNodes(prevNodesRef.current);
       }
@@ -172,7 +166,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       console.error('Error deleting node:', error);
       setNodes(prevNodesRef.current);
     }
-  }, [fetchNodesForProject, project.projectId]);
+  }, [project.projectId]);
 
   //////////////////////////////
   // Run & Select Nodes
@@ -226,12 +220,13 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
 
   const updateNode = useCallback(async (node: VisualNode, shouldRun: boolean = true, shouldSync: boolean = true) => {
     setNodes(prevNodes => ({ ...prevNodes, [node.node.nodeId]: node }));
+    // The updated nodes above may/will not be available immediately for runNode to find the new data
     if (shouldRun) {
       await runNode(node);
     }
     if (shouldSync) {
       // TODO: Sync only the subgraph that was updated
-      console.debug('Syncing all nodes after update');
+      console.debug(`${Date.now()}: Syncing all nodes after update`);
       await syncNodesUpdate(Object.values(nodes).map(n => n.node));
     }
   }, [runNode, syncNodesUpdate, nodes]);
@@ -291,6 +286,10 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     fetchNodesForProject();
     fetchConnectionsForProject();
   }, [fetchNodesForProject, fetchConnectionsForProject]);
+
+  useEffect(() => {
+    console.log(`${Date.now()}: Nodes updated`);
+  }, [nodes]);
 
   return (
     <div className="project-container">

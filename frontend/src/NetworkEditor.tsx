@@ -15,11 +15,11 @@ interface NetworkEditorProps {
   selectedNode: VisualNode | null;
   selectNode: (node: VisualNode) => void;
   addNode: (node: VisualNode) => void;
-  updateNode: (node: VisualNode, shouldSync?: boolean) => Promise<void>;
+  updateNode: (node: VisualNode, shouldRun?: boolean, shouldSync?: boolean) => Promise<void>;
   deleteNode: (node: VisualNode) => void;
   connections: VisualConnection[];
   updateConnections: (connections: VisualConnection[]) => void;
-  runNode: (node: VisualNode, shouldRun?: boolean, shouldSync?: boolean) => Promise<void>;
+  runNode: (node: VisualNode) => Promise<void>;
 }
 
 const NetworkEditor = ({
@@ -152,7 +152,7 @@ const NetworkEditor = ({
       draggedNode.node.coordinates.x = draggedNode.x;
       draggedNode.node.coordinates.y = draggedNode.y;
       if (dragState.hasMoved) {
-        updateNode(draggedNode);
+        updateNode(draggedNode, false, true);
       }
     }
 
