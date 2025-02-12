@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "ai-service"
+version = "0.1.0"
+description = "AI features of Canvo"
+authors = ["Sam Hodak <slhodak@gmail.com>"]
+license = "UNLICENSED"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.13"
+sentence-transformers = "^3.4.1"
+scikit-learn = "^1.6.1"
+numpy = "^2.2.2"
+fastapi = {extras = ["standard"], version = "^0.115.8"}
+pydantic = "^2.10.6"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

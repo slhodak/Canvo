@@ -1,0 +1,30 @@
+# Virtual Environment
+.venv/
+venv/
+
+# Poetry
+dist/
+*.egg-info/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Coverage reports
+.coverage
+coverage.xml
+htmlcov/
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment variables
+.env
+.env.local
+
+# Build output
+build/
