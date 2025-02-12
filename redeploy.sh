@@ -43,7 +43,7 @@ fi
 rm -r ~/wc/shared
 rm -r ~/wc/backend
 rm -r ~/wc/frontend
-mkdir -p ~/wc/shared/types
+mkdir -p ~/wc/shared/types/src/models
 mkdir ~/wc/backend
 mkdir ~/wc/frontend
 mkdir ~/wc/ai-service
