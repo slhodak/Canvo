@@ -55,6 +55,8 @@ const NetworkEditor = ({
     endX: 0,
     endY: 0,
   });
+  const [panOffset, setPanOffset] = useState<Coordinates>({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
 
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -122,7 +124,13 @@ const NetworkEditor = ({
     });
   }
 
-  const handleMouseDownInEditor = () => {
+  const handleMouseDownInEditor = (e: React.MouseEvent) => {
+    // Handle middle mouse button (button === 1)
+    if (e.button === 1) {
+      setIsPanning(true);
+      return;
+    }
+
     setShowDropdown(false);
     if (wireState.isDrawing) {
       setDragState({
@@ -144,7 +152,13 @@ const NetworkEditor = ({
     }
   };
 
-  const handleMouseUp = () => {
+  const handleMouseUp = (e: React.MouseEvent) => {
+    // Stop panning on any mouse button release
+    if (isPanning) {
+      setIsPanning(false);
+      return;
+    }
+
     if (dragState.isDragging && dragState.nodeId) {
       const draggedNode = nodes[dragState.nodeId];
       if (!draggedNode) return;
@@ -166,6 +180,15 @@ const NetworkEditor = ({
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
+    // Handle panning
+    if (isPanning) {
+      setPanOffset(prev => ({
+        x: prev.x + e.movementX,
+        y: prev.y + e.movementY
+      }));
+      return;
+    }
+
     if (dragState.isDragging && dragState.nodeId) {
       dragState.hasMoved = true;
       const draggedNode = nodes[dragState.nodeId];
@@ -343,51 +366,55 @@ const NetworkEditor = ({
         onMouseDown={handleMouseDownInEditor}
         onMouseUp={handleMouseUp}
       >
-        {/* Connections */}
-        {connections.map(conn => {
-          const fromNode = nodes[conn.connection.fromNode];
-          const toNode = nodes[conn.connection.toNode];
-          if (!fromNode || !toNode) return null;
+        {/* Add a transform group to apply panning */}
+        <g transform={`translate(${panOffset.x},${panOffset.y})`}>
+          {/* Move all existing SVG content inside this group */}
+          {/* Connections */}
+          {connections.map(conn => {
+            const fromNode = nodes[conn.connection.fromNode];
+            const toNode = nodes[conn.connection.toNode];
+            if (!fromNode || !toNode) return null;
 
-          const start = neu.getPortPosition(fromNode, false, conn.connection.fromOutput);
-          const end = neu.getPortPosition(toNode, true, conn.connection.toInput);
+            const start = neu.getPortPosition(fromNode, false, conn.connection.fromOutput);
+            const end = neu.getPortPosition(toNode, true, conn.connection.toInput);
 
-          return (
+            return (
+              <path
+                key={`${conn.connection.fromNode}-${conn.connection.toNode}-${conn.connection.fromOutput}-${conn.connection.toInput}`}
+                d={`M ${start.x} ${start.y} C ${start.x} ${start.y + 50}, ${end.x} ${end.y - 50}, ${end.x} ${end.y}`}
+                className="network-editor-wire"
+              />
+            );
+          })}
+
+          {/* Drawing Wire */}
+          {wireState.isDrawing && (
             <path
-              key={`${conn.connection.fromNode}-${conn.connection.toNode}-${conn.connection.fromOutput}-${conn.connection.toInput}`}
-              d={`M ${start.x} ${start.y} C ${start.x} ${start.y + 50}, ${end.x} ${end.y - 50}, ${end.x} ${end.y}`}
-              className="network-editor-wire"
+              d={`M ${wireState.startX} ${wireState.startY} C ${wireState.startX} ${wireState.startY + 50}, ${wireState.endX} ${wireState.endY - 50}, ${wireState.endX} ${wireState.endY}`}
+              className="network-editor-drawing-wire"
             />
-          );
-        })}
+          )}
 
-        {/* Drawing Wire */}
-        {wireState.isDrawing && (
-          <path
-            d={`M ${wireState.startX} ${wireState.startY} C ${wireState.startX} ${wireState.startY + 50}, ${wireState.endX} ${wireState.endY - 50}, ${wireState.endX} ${wireState.endY}`}
-            className="network-editor-drawing-wire"
-          />
-        )}
+          {/* Nodes */}
+          {Object.values(nodes).map(node => {
+            const isSelected = selectedNode?.id === node.id;
 
-        {/* Nodes */}
-        {Object.values(nodes).map(node => {
-          const isSelected = selectedNode?.id === node.id;
-
-          return (
-            <Node
-              key={node.id}
-              node={node}
-              isSelected={isSelected}
-              connections={connections}
-              wireState={wireState}
-              handleMouseDown={handleMouseDownInNode}
-              startDrawingWire={startDrawingWire}
-              endDrawingWire={endDrawingWire}
-              disconnectWire={disconnectWire}
-              runNode={runNode}
-            />
-          );
-        })}
+            return (
+              <Node
+                key={node.id}
+                node={node}
+                isSelected={isSelected}
+                connections={connections}
+                wireState={wireState}
+                handleMouseDown={handleMouseDownInNode}
+                startDrawingWire={startDrawingWire}
+                endDrawingWire={endDrawingWire}
+                disconnectWire={disconnectWire}
+                runNode={runNode}
+              />
+            );
+          })}
+        </g>
       </svg>
       {showDropdown && (
         <div
