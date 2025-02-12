@@ -1,4 +1,4 @@
-invite_user.sh
+redeploy.sh
 
 backend/dist/
 backend/ecosystem.config.js
@@ -19,4 +19,6 @@ frontend/package.json
 frontend/yarn.lock
 frontend/.env
 
-shared/types/dist/
+shared/types/src/models/node.ts
+shared/types/src/models/project.ts
+shared/types/src/models/user.ts
