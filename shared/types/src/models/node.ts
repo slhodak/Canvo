@@ -346,12 +346,14 @@ export class SplitNode extends BaseNode implements SyncNode {
     }
 
     const parts = inputText.split(separator);
+    // Join all the parts from the second to the end
+    const remainingParts = parts.slice(1).join(separator);
     this.outputState[0] = {
       stringValue: parts[0],
       numberValue: null,
     };
     this.outputState[1] = {
-      stringValue: parts[1],
+      stringValue: remainingParts,
       numberValue: null,
     };
   }
