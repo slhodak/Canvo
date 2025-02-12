@@ -24,7 +24,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   const [connections, setConnections] = useState<NetworkConnections>([]);
   const prevNodesRef = useRef<NetworkNodes>({});
   const prevConnectionsRef = useRef<NetworkConnections>([]);
-  const [selectedNode, setSelectedNode] = useState<VisualNode | null>(null);
+  const [selectedNodes, setSelectedNodes] = useState<VisualNode[]>([]);
   const [viewText, setViewText] = useState<string>('');
 
   //////////////////////////////
@@ -200,11 +200,11 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     }
   }, [nodes, connections]);
 
-  const selectNode = useCallback(async (node: VisualNode) => {
-    setSelectedNode(node);
-    if (node.node.runsAutomatically) {
-      await runNode(node);
-      // TODO: Sync only the subgraph that was run
+  const selectNodes = useCallback(async (selectedNodes: VisualNode[]) => {
+    setSelectedNodes(selectedNodes);
+    // Only run automatically if a single node is selected
+    if (selectedNodes.length === 1 && selectedNodes[0].node.runsAutomatically) {
+      await runNode(selectedNodes[0]);
       await syncNodesUpdate(Object.values(nodes).map(n => n.node));
     }
   }, [runNode, syncNodesUpdate, nodes]);
@@ -234,12 +234,10 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   const deleteNode = useCallback(async (node: VisualNode) => {
     const newNodes = { ...nodes };
     delete newNodes[node.id];
-    if (selectedNode?.id === node.id) {
-      setSelectedNode(null);
-    }
+    setSelectedNodes(prev => prev.filter(n => n.id !== node.id));
     setNodes(newNodes);
     await syncNodeDelete(node);
-  }, [nodes, selectedNode, syncNodeDelete]);
+  }, [nodes, syncNodeDelete]);
 
   const updateConnections = async (updatedConnections: VisualConnection[], shouldSync: boolean = true) => {
     setConnections(updatedConnections);
@@ -282,7 +280,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
 
   useEffect(() => {
     // setViewText('');
-    setSelectedNode(null);
+    setSelectedNodes([]);
     fetchNodesForProject();
     fetchConnectionsForProject();
   }, [fetchNodesForProject, fetchConnectionsForProject]);
@@ -304,8 +302,8 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
               user={user}
               project={project}
               nodes={nodes}
-              selectedNode={selectedNode}
-              selectNode={selectNode}
+              selectedNodes={selectedNodes}
+              selectNodes={selectNodes}
               addNode={addNode}
               updateNode={updateNode}
               deleteNode={deleteNode}
@@ -315,7 +313,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
             />
           </div>
           <div className="left-pane-bottom">
-            <ParametersPane node={selectedNode} updateNode={updateNode} />
+            <ParametersPane node={selectedNodes[0]} updateNode={updateNode} />
           </div>
 
         </div>

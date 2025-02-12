@@ -12,8 +12,8 @@ interface NetworkEditorProps {
   user: UserModel;
   project: ProjectModel;
   nodes: Record<string, VisualNode>;
-  selectedNode: VisualNode | null;
-  selectNode: (node: VisualNode) => void;
+  selectedNodes: VisualNode[];
+  selectNodes: (nodes: VisualNode[]) => void;
   addNode: (node: VisualNode) => void;
   updateNode: (node: VisualNode, shouldRun?: boolean, shouldSync?: boolean) => Promise<void>;
   deleteNode: (node: VisualNode) => void;
@@ -26,8 +26,8 @@ const NetworkEditor = ({
   user,
   project,
   nodes,
-  selectedNode,
-  selectNode,
+  selectedNodes,
+  selectNodes,
   addNode,
   updateNode,
   deleteNode,
@@ -113,7 +113,17 @@ const NetworkEditor = ({
       return;
     }
 
-    selectNode(node);
+    // Handle multi-select with shift key
+    if (e.shiftKey) {
+      const isAlreadySelected = selectedNodes.some(n => n.id === node.id);
+      if (isAlreadySelected) {
+        selectNodes(selectedNodes.filter(n => n.id !== node.id));
+      } else {
+        selectNodes([...selectedNodes, node]);
+      }
+    } else {
+      selectNodes([node]);
+    }
 
     setDragState({
       isDragging: true,
@@ -152,7 +162,7 @@ const NetworkEditor = ({
     }
   };
 
-  const handleMouseUp = (e: React.MouseEvent) => {
+  const handleMouseUp = () => {
     // Stop panning on any mouse button release
     if (isPanning) {
       setIsPanning(false);
@@ -311,11 +321,11 @@ const NetworkEditor = ({
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Don't delete the node if the user is editing text
+      // Don't delete nodes if the user is editing text
       const activeElement = document.activeElement;
       const isEditingText = activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement;
-      if ((event.key === 'Delete' || event.key === 'Backspace') && selectedNode && !isEditingText && isHoveringEditor) {
-        deleteNode(selectedNode);
+      if ((event.key === 'Delete' || event.key === 'Backspace') && selectedNodes.length > 0 && !isEditingText && isHoveringEditor) {
+        selectedNodes.forEach(node => deleteNode(node));
         return;
       }
 
@@ -341,15 +351,15 @@ const NetworkEditor = ({
         return;
       }
 
-      if (event.key === 't' && isHoveringEditor && selectedNode) {
-        connectToViewNode(selectedNode);
+      if (event.key === 't' && isHoveringEditor && selectedNodes.length > 0) {
+        selectedNodes.forEach(node => connectToViewNode(node));
         return;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedNode, nodes, isHoveringEditor, mousePosition, connectToViewNode, deleteNode]);
+  }, [selectedNodes, nodes, isHoveringEditor, mousePosition, connectToViewNode, deleteNode]);
 
   return (
     <div className="network-editor-container">
@@ -397,7 +407,7 @@ const NetworkEditor = ({
 
           {/* Nodes */}
           {Object.values(nodes).map(node => {
-            const isSelected = selectedNode?.id === node.id;
+            const isSelected = selectedNodes.some(n => n.id === node.id);
 
             return (
               <Node
