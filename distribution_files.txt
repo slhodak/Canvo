@@ -1,6 +1,3 @@
-scripts/redeploy.sh
-scripts/provision_server.sh
-
 backend/dist/
 backend/ecosystem.config.js
 backend/package.json
