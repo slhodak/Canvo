@@ -1,5 +1,3 @@
-invite_user.sh
-
 backend/dist/
 backend/ecosystem.config.js
 backend/package.json
@@ -9,9 +7,17 @@ backend/db/init_db.sh
 backend/db/run_migrations.sh
 backend/db/migrations/
 
+ai-service/pyproject.toml
+ai-service/poetry.lock
+ai-service/ai-service/main.py
+ai-service/ai-service/semantic_search.py
+ai-service/README.md
+
 frontend/dist/
 frontend/package.json
 frontend/yarn.lock
 frontend/.env
 
-shared/types/dist/
+shared/types/src/models/node.ts
+shared/types/src/models/project.ts
+shared/types/src/models/user.ts

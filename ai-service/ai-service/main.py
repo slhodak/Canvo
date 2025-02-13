@@ -1,0 +1,48 @@
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import Dict
+from .semantic_search import SemanticSearch
+
+app = FastAPI()
+search_engine = SemanticSearch()
+
+
+class Documents(BaseModel):
+    documents: Dict[str, str]
+
+
+class SearchQuery(BaseModel):
+    query: str
+    top_k: int = 5
+
+
+@app.post("/documents")
+def add_documents(docs: Documents):
+    try:
+        search_engine.add_documents(docs.documents)
+        return {"message": f"Successfully added {len(docs.documents)} documents"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/search")
+def search(search_query: SearchQuery):
+    try:
+        results = search_engine.search(search_query.query, search_query.top_k)
+        # Convert numpy values to Python native types
+        processed_results = [
+            {
+                "document": r["document"],
+                "score": float(r["score"]),
+                "snippet": r["snippet"],
+            }
+            for r in results
+        ]
+        return {"results": processed_results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/")
+def read_root():
+    return {"message": "Semantic Search API"}

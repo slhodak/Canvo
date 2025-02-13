@@ -17,6 +17,7 @@
   height: 100%;
   width: 100%;
   background-color: darkgray;
+  user-select: none;
 }
 
 .network-editor-wire {

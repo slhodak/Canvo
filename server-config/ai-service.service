@@ -1,0 +1,22 @@
+[Unit]
+Description=Canvo AI Service
+After=network.target
+
+[Service]
+User=ec2-user
+Group=ec2-user
+WorkingDirectory=/home/ec2-user/canvo/ai-service
+
+# Use poetry to run uvicorn
+ExecStart=/usr/local/bin/poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+# If you want to use a specific poetry environment:
+# Environment="POETRY_VIRTUALENVS_PATH=/path/to/your/venv"
+
+Restart=always
+RestartSec=3
+StandardOutput=append:/var/log/ai-service/access.log
+StandardError=append:/var/log/ai-service/error.log
+
+[Install]
+WantedBy=multi-user.target

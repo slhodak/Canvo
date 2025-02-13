@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "ai-service"
+version = "0.1.0"
+description = "AI features of Canvo"
+authors = ["Sam Hodak <slhodak@gmail.com>"]
+license = "UNLICENSED"
+readme = "README.md"
+packages = [
+    {include = "ai-service", from = "."}
+]
+package-mode = true
+
+[tool.poetry.dependencies]
+python = "^3.12"
+sentence-transformers = "^3.4.1"
+scikit-learn = "^1.6.1"
+numpy = "^2.2.2"
+fastapi = {extras = ["standard"], version = "^0.115.8"}
+pydantic = "^2.10.6"
+uvicorn = "^0.34.0"
+torch = "^2.6.0"
+
+[tool.poetry.group.dev.dependencies]
+flake8 = "^7.1.1"
+pytest = "^8.3.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+start = "ai-service.scripts:start"
+dev = "ai-service.scripts:dev"
+test = "ai-service.scripts:test"
+lint = "ai-service.scripts:lint"

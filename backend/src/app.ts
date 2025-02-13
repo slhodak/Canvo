@@ -81,11 +81,14 @@ if (process.env.NODE_ENV == 'development') {
     res.redirect(FRONTEND_DOMAIN)
   });
 } else {
-  const buildPath = path.join(__dirname, '../../frontend/dist');
-  app.use(express.static(buildPath));
+  const frontendPath = process.env.FRONTEND_PATH;
+  if (!frontendPath) {
+    throw new Error('Cannot start production server: FRONTEND_PATH is not set');
+  }
+  app.use(express.static(frontendPath));
 
   app.get('/', (req: Request, res: Response) => {
-    res.sendFile(path.join(buildPath, 'index.html'));
+    res.sendFile(path.join(frontendPath, 'index.html'));
   });
 }
 
