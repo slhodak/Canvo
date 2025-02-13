@@ -6,12 +6,12 @@
 ### Pre-redeployment checks
 ########################################################
 
-if [ ! -f "/etc/systemd/system/ai-service.service" ]; then
+if [ ! -f /etc/systemd/system/ai-service.service ]; then
     echo "ai-service.service must be present to run redeploy"
     exit 1
 fi
 
-if [ ! -f "canvo/bundle.tar.gz" ]; then
+if [ ! -f ~/canvo/bundle.tar.gz ]; then
     echo "bundle.tar.gz must be present to run redeploy"
     exit 1
 fi
@@ -21,7 +21,7 @@ fi
 ########################################################
 
 # If the backend directory doesn't exist, check if the app is running
-if [ ! -d "canvo/backend" ]; then
+if [ ! -d ~/canvo/backend ]; then
     echo "No canvo/backend directory. If no app is running, press y to continue."
     read -p "Continue? (y/n): " RESPONSE
     if [ "$RESPONSE" != "y" ]; then
@@ -34,7 +34,7 @@ else
     yarn stop
 
     # Save the db_version.txt file
-    if [[ -f "db/db_version.txt" ]]; then
+    if [[ -f ~/canvo/backend/db/db_version.txt ]]; then
         mv db/db_version.txt ~/
     else
         echo "No db_version.txt file found to backup"
@@ -45,6 +45,7 @@ fi
 rm -r ~/canvo/shared
 rm -r ~/canvo/backend
 rm -r ~/canvo/frontend
+rm -r ~/canvo/ai-service
 mkdir -p ~/canvo/shared/types/src/models
 mkdir ~/canvo/backend
 mkdir ~/canvo/frontend
@@ -76,17 +77,27 @@ yarn start
 ### Build the ai-service
 ########################################################
 
-cd ~/canvo/ai-service/
+# Only reinstall the python dependencies if the pyproject.toml file has changed
+COMPARISON_RESULT=$(~/compare.sh ~/canvo/ai-service/pyproject.toml ~/pyproject_prev.toml)
 
-# Change the macOS torch dependendency to the CPU version
-# Remove sentence-transformers too or else poetry will automatically reinstall it with its gpu dependency
-poetry remove sentence-transformers torch
-poetry source add --priority=supplemental torchcpu https://download.pytorch.org/whl/cpu
-poetry add --source torchcpu torch
-poetry add sentence-transformers
-rm poetry.lock
-poetry install
+if [[ $COMPARISON_RESULT == "y" ]]; then
+    echo "Python dependencies have not changed, will keep the last pyproject.toml and poetry.lock"
+    # Use the cached prod env dependency files
+    mv ~/pyproject_prod.toml ~/canvo/ai-service/pyproject.toml
+    mv ~/poetry_prod.lock ~/canvo/ai-service/poetry.lock
+else
+    echo "Python dependencies have changed, will reinstall them"
+    # Save the dev env dependency files to compare against new ones in the next deployment
+    cp ~/canvo/ai-service/pyproject.toml ~/pyproject_prev.toml
+    cp ~/canvo/ai-service/poetry.lock ~/poetry_prev.lock
 
-# This depends on the ai-service.service file in /etc/systemd/system/
+    ~/poetry_install.sh
+
+    # Cache the modified prod env dependency files to reuse them in later deployments
+    cp ~/canvo/ai-service/pyproject.toml ~/pyproject_prod.toml
+    cp ~/canvo/ai-service/poetry.lock ~/poetry_prod.lock
+fi
+
+# There must be an ai-service.service file in /etc/systemd/system/
 echo "Restarting ai-service..."
 sudo systemctl restart ai-service

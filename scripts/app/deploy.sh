@@ -13,6 +13,8 @@ scp -i "$PEM_PATH" bundle.tar.gz "$SERVER_ADDRESS":~/canvo/bundle.tar.gz
 
 # Copy the necessary scripts to the server
 scp -i "$PEM_PATH" scripts/app/unpackage.sh "$SERVER_ADDRESS":~/unpackage.sh
+scp -i "$PEM_PATH" scripts/app/compare.sh "$SERVER_ADDRESS":~/compare.sh
+scp -i "$PEM_PATH" scripts/app/poetry_install.sh "$SERVER_ADDRESS":~/poetry_install.sh
 scp -i "$PEM_PATH" scripts/system/provision_server.sh "$SERVER_ADDRESS":~/provision_server.sh
 scp -i "$PEM_PATH" scripts/system/certbot.sh "$SERVER_ADDRESS":~/certbot.sh
 scp -i "$PEM_PATH" scripts/system/install_system_dependencies.sh "$SERVER_ADDRESS":~/install_system_dependencies.sh
