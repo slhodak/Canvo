@@ -15,8 +15,9 @@ ExecStart=/home/ec2-user/.local/bin/poetry run uvicorn ai_service.main:app --hos
 
 Restart=always
 RestartSec=3
-StandardOutput=append:/var/log/ai-service/access.log
-StandardError=append:/var/log/ai-service/error.log
+StandardOutput=append:/var/log/canvo-ai/access.log
+# Apparently uvicorn sends all output to stderr, fine with me...
+StandardError=append:/var/log/canvo-ai/everything.log
 
 [Install]
 WantedBy=multi-user.target
