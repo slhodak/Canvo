@@ -103,7 +103,4 @@ elif [ "$ENVIRONMENT" == "dev" ]; then
   psql $DB_NAME -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO $DB_USER;"
 fi
 
-
 unset PGPASSWORD
-# Erase the SQL command history (it may contain the passwords entered above)
-rm ~/.psql_history
