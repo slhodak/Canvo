@@ -6,8 +6,8 @@
 ### Pre-redeployment checks
 ########################################################
 
-if [ ! -f /etc/systemd/system/ai-service.service ]; then
-    echo "ai-service.service must be present to run redeploy"
+if [ ! -f /etc/systemd/system/canvo-ai.service ]; then
+    echo "canvo-ai.service must be present to run redeploy"
     exit 1
 fi
 
@@ -98,6 +98,6 @@ else
     cp ~/canvo/ai-service/poetry.lock ~/poetry_prod.lock
 fi
 
-# There must be an ai-service.service file in /etc/systemd/system/
-echo "Restarting ai-service..."
-sudo systemctl restart ai-service
+# There must be an canvo-ai.service file in /etc/systemd/system/
+echo "Restarting canvo-ai..."
+sudo systemctl restart canvo-ai
