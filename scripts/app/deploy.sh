@@ -21,6 +21,6 @@ scp -i "$PEM_PATH" scripts/system/install_system_dependencies.sh "$SERVER_ADDRES
 scp -i "$PEM_PATH" scripts/system/configure_nginx.sh "$SERVER_ADDRESS":~/configure_nginx.sh
 
 # Copy the server-config files to the server
-scp -i "$PEM_PATH" server-config/ai-service.service "$SERVER_ADDRESS":~/ai-service.service
+scp -i "$PEM_PATH" server-config/canvo-ai.service "$SERVER_ADDRESS":~/canvo-ai.service
 scp -i "$PEM_PATH" server-config/nginx/nginx.conf "$SERVER_ADDRESS":~/nginx.conf
 scp -i "$PEM_PATH" server-config/nginx/reverse-proxy.conf "$SERVER_ADDRESS":~/reverse-proxy.conf
