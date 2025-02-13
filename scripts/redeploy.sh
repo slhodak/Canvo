@@ -70,4 +70,4 @@ yarn start
 cd ~/canvo/ai-service/
 poetry install
 # Depends on the ai-service.service file in /etc/systemd/system/
-systemctl start ai-service
+sudo systemctl start ai-service
