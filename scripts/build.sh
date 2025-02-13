@@ -24,8 +24,4 @@ echo "Creating bundle..."
 cd $ORIGINAL_DIR || exit 1
 tar -czf bundle.tar.gz -T distribution_files.txt
 
-# Move bundle to Documents
-echo "Moving bundle to Documents..."
-mv bundle.tar.gz ~/Documents/WritingAssistant/bundle.tar.gz
-
 echo "Done building Canvo"

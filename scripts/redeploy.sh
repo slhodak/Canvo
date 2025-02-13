@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# To be executed on the production server
+
 ########################################################
 ### Pre-redeployment checks
 ########################################################
