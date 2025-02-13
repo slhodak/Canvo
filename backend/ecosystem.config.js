@@ -1,7 +1,7 @@
 module.exports = {
   apps: [{
-    name: "wa",
-    script: "./dist/app.js",
+    name: "canvo-server",
+    script: "./dist/backend/src/app.js",
     env: {
       "NODE_ENV": "production"
     }

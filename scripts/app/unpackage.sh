@@ -57,18 +57,36 @@ tar -xzf bundle.tar.gz
 # Restore the db_version.txt file
 mv ~/db_version.txt ~/canvo/backend/db/db_version.txt
 
-# Build the frontend
+########################################################
+### Build the frontend
+########################################################
+
 cd ~/canvo/frontend/
 yarn
 
-# Build the backend & start
+########################################################
+### Build the backend & start
+########################################################
+
 cd ~/canvo/backend/
 yarn
 yarn start
 
-# Build the ai-service
+########################################################
+### Build the ai-service
+########################################################
+
 cd ~/canvo/ai-service/
+
+# Change the macOS torch dependendency to the CPU version
+# Remove sentence-transformers too or else poetry will automatically reinstall it with its gpu dependency
+poetry remove sentence-transformers torch
+poetry source add --priority=supplemental torchcpu https://download.pytorch.org/whl/cpu
+poetry add --source torchcpu torch
+poetry add sentence-transformers
+rm poetry.lock
 poetry install
-# Depends on the ai-service.service file in /etc/systemd/system/
+
+# This depends on the ai-service.service file in /etc/systemd/system/
 echo "Restarting ai-service..."
 sudo systemctl restart ai-service
