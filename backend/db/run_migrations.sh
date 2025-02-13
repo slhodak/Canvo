@@ -1,18 +1,12 @@
 #! /bin/bash
 
 ENVIRONMENT=$1
-DB_APP_PASSWORD=$2
 
 DB_USER="canvo_app"
 DB_NAME="canvo"
 
 if [[ -z "$ENVIRONMENT" ]]; then
   echo "Please provide the environment as the first argument (dev or prod)"
-  exit 1
-fi
-
-if [[ "$ENVIRONMENT" == "prod" && -z "$DB_APP_PASSWORD" ]]; then
-  echo "Please provide the app's database password as the second argument"
   exit 1
 fi
 
@@ -28,6 +22,11 @@ if [[ ! -f "./db/db_version.txt" ]]; then
   touch ./db/db_version.txt
 fi
 
+# Request the database password
+echo "Please enter the database password:"
+read -s DB_PASSWORD
+export PGPASSWORD=$DB_PASSWORD # Hide the password from the command history
+
 # For every file in ./db/migrations, run it
 for file in ./db/migrations/*.sql; do
   FILE_NAME=$(basename "$file")
@@ -39,7 +38,7 @@ for file in ./db/migrations/*.sql; do
   fi
 
   if [[ "$ENVIRONMENT" == "prod" ]]; then
-    PGPASSWORD=$DB_APP_PASSWORD psql -v ON_ERROR_STOP=1 -U $DB_USER -d $DB_NAME -f "$file"
+    psql -v ON_ERROR_STOP=1 -U $DB_USER -d $DB_NAME -f "$file"
   else
     psql -v ON_ERROR_STOP=1 $DB_NAME -f "$file"
   fi
@@ -52,3 +51,5 @@ for file in ./db/migrations/*.sql; do
   # Record that this migration has been run
   echo "$FILE_NAME" >> ./db/db_version.txt
 done
+
+unset PGPASSWORD
