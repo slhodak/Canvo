@@ -107,6 +107,13 @@ const NetworkEditor = ({
   }
 
   const handleMouseDownInNode = async (e: React.MouseEvent, nodeId: string) => {
+    // Start panning if Ctrl+left click
+    if (e.button === 0 && e.ctrlKey) {
+      e.preventDefault();
+      setIsPanning(true);
+      return;
+    }
+
     const node = nodes[nodeId];
     if (!node) {
       console.error('Could not find clicked node:', nodeId);
@@ -125,8 +132,9 @@ const NetworkEditor = ({
   }
 
   const handleMouseDownInEditor = (e: React.MouseEvent) => {
-    // Handle middle mouse button (button === 1)
-    if (e.button === 1) {
+    // Start panning on right click or Ctrl+left click
+    if (e.button === 2 || (e.button === 0 && e.ctrlKey)) {
+      e.preventDefault(); // Prevent context menu
       setIsPanning(true);
       return;
     }
@@ -152,8 +160,8 @@ const NetworkEditor = ({
     }
   };
 
-  const handleMouseUp = (e: React.MouseEvent) => {
-    // Stop panning on any mouse button release
+  const handleMouseUp = () => {
+    // Stop panning on mouse up
     if (isPanning) {
       setIsPanning(false);
       return;
@@ -348,7 +356,9 @@ const NetworkEditor = ({
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [selectedNode, nodes, isHoveringEditor, mousePosition, connectToViewNode, deleteNode]);
 
   return (
@@ -365,6 +375,7 @@ const NetworkEditor = ({
         onMouseMove={handleMouseMove}
         onMouseDown={handleMouseDownInEditor}
         onMouseUp={handleMouseUp}
+        onContextMenu={(e) => e.preventDefault()} // Prevent context menu on right click
       >
         {/* Add a transform group to apply panning */}
         <g transform={`translate(${panOffset.x},${panOffset.y})`}>
