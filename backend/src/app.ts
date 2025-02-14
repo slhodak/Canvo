@@ -155,7 +155,7 @@ router.get('/auth/authenticate', async (req: Request, res: Response) => {
     // Authenticate the OAuth token
     const response = await stytchClient.oauth.authenticate({
       token: oauthToken,
-      session_duration_minutes: 60,
+      session_duration_minutes: 60 * 24 * 7, // 1 week
     })
 
     const sessionToken = response.session_token;
