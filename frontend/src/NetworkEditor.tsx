@@ -57,6 +57,7 @@ const NetworkEditor = ({
   });
   const [panOffset, setPanOffset] = useState<Coordinates>({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
+  const [zoom, setZoom] = useState<number>(1);
 
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -266,6 +267,26 @@ const NetworkEditor = ({
     });
   };
 
+  const handleWheel = (e: React.WheelEvent) => {
+    // Get mouse position relative to SVG
+    const svgRect = svgRef.current?.getBoundingClientRect();
+    if (!svgRect) return;
+
+    const mouseX = e.clientX - svgRect.left;
+    const mouseY = e.clientY - svgRect.top;
+
+    // Calculate zoom
+    const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+    const newZoom = Math.min(Math.max(zoom * zoomFactor, 0.1), 5); // Limit zoom between 0.1x and 5x
+
+    // Calculate new pan offset to zoom towards mouse position
+    const newPanX = mouseX - (mouseX - panOffset.x) * (newZoom / zoom);
+    const newPanY = mouseY - (mouseY - panOffset.y) * (newZoom / zoom);
+
+    setZoom(newZoom);
+    setPanOffset({ x: newPanX, y: newPanY });
+  };
+
   //////////////////////////////
   // Memoized Functions
   //////////////////////////////
@@ -379,9 +400,10 @@ const NetworkEditor = ({
         onMouseDown={handleMouseDownInEditor}
         onMouseUp={handleMouseUp}
         onContextMenu={(e) => e.preventDefault()} // Prevent context menu on right click
+        onWheel={handleWheel}
       >
-        {/* Add a transform group to apply panning */}
-        <g transform={`translate(${panOffset.x},${panOffset.y})`}>
+        {/* Update transform to include scaling */}
+        <g transform={`translate(${panOffset.x},${panOffset.y}) scale(${zoom})`}>
           {/* Move all existing SVG content inside this group */}
           {/* Connections */}
           {connections.map(conn => {
