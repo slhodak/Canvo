@@ -371,7 +371,10 @@ const NetworkEditor = ({
         ref={svgRef}
         className="network-editor-canvas"
         onMouseEnter={() => setIsHoveringEditor(true)}
-        onMouseLeave={() => setIsHoveringEditor(false)}
+        onMouseLeave={() => {
+          setIsHoveringEditor(false);
+          setIsPanning(false);  // Stop panning when mouse leaves editor
+        }}
         onMouseMove={handleMouseMove}
         onMouseDown={handleMouseDownInEditor}
         onMouseUp={handleMouseUp}

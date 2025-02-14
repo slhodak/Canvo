@@ -281,15 +281,16 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   //////////////////////////////
 
   useEffect(() => {
-    // setViewText('');
+    // Clear all state when switching projects
+    setViewText('');
     setSelectedNode(null);
+    setConnections([]);
+    setNodes({});
+
+    // Then fetch new project data
     fetchNodesForProject();
     fetchConnectionsForProject();
-  }, [fetchNodesForProject, fetchConnectionsForProject]);
-
-  useEffect(() => {
-    console.log(`${Date.now()}: Nodes updated`);
-  }, [nodes]);
+  }, [project.projectId, fetchNodesForProject, fetchConnectionsForProject]);
 
   return (
     <div className="project-container">
