@@ -424,29 +424,25 @@ const NetworkEditor = ({
             top: dropdownPosition.y
           }}
         >
-          <div className="app-dropdown-option" onClick={() => handleNewNodeClick(NodeType.Text)}>
-            Text
-          </div>
-          <div className="app-dropdown-option" onClick={() => handleNewNodeClick(NodeType.Prompt)}>
-            Prompt
-          </div>
-          <div className="app-dropdown-option" onClick={() => handleNewNodeClick(NodeType.Save)}>
-            Save
-          </div>
-          <div className="app-dropdown-option" onClick={() => handleNewNodeClick(NodeType.View)}>
-            View
-          </div>
-          <div className="app-dropdown-option" onClick={() => handleNewNodeClick(NodeType.Merge)}>
-            Merge
-          </div>
-          <div className="app-dropdown-option" onClick={() => handleNewNodeClick(NodeType.Split)}>
-            Split
-          </div>
+          {Object.values(NodeType).map((nodeType) => (
+            <DropdownOption
+              key={nodeType}
+              label={nodeType}
+              onClick={() => handleNewNodeClick(nodeType)}
+            />
+          ))}
         </div>
       )}
-
     </div>
   );
 };
 
 export default NetworkEditor;
+
+const DropdownOption = ({ label, onClick }: { label: string, onClick: () => void }) => {
+  return (
+    <div className="app-dropdown-option" onClick={onClick}>
+      {label.charAt(0).toUpperCase() + label.slice(1)}
+    </div>
+  );
+};
