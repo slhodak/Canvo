@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import './ParametersPane.css';
 import { VisualNode } from './NetworkTypes';
-import { FileNode, NodeProperty, NodeType } from '../../shared/types/src/models/node';
+import { NodeProperty, NodeType } from '../../shared/types/src/models/node';
+import { FileNode } from './nodes';
 
 ////////////////////////////////////////////////////////////
 // ParametersPane

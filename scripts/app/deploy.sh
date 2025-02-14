@@ -6,7 +6,7 @@ set -e
 set -o pipefail
 
 PEM_PATH="~/Documents/Canvo/canvo.pem"
-SERVER_ADDRESS="ec2-user@ec2-54-219-232-169.us-west-1.compute.amazonaws.com"
+SERVER_ADDRESS="ec2-user@ec2-54-219-18-194.us-west-1.compute.amazonaws.com"
 
 # Copy the bundled program to the server
 scp -i "$PEM_PATH" bundle.tar.gz "$SERVER_ADDRESS":~/canvo/bundle.tar.gz
