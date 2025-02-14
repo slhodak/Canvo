@@ -1,5 +1,5 @@
 import { VisualConnection, VisualNode } from "./NetworkTypes";
-import { BaseNode, NodeType, TextNode, PromptNode, SaveNode, MergeNode, ViewNode, Coordinates, OutputState, SplitNode } from "../../shared/types/src/models/node";
+import { BaseNode, NodeType, TextNode, PromptNode, SaveNode, MergeNode, ViewNode, Coordinates, OutputState, SplitNode, FileNode } from "../../shared/types/src/models/node";
 
 export const NetworkEditorUtils = {
   NODE_WIDTH: 100,
@@ -34,6 +34,8 @@ export const NodeUtils = {
         return new MergeNode(nodeId, authorId, projectId, coordinates);
       case NodeType.Split:
         return new SplitNode(nodeId, authorId, projectId, coordinates);
+      case NodeType.File:
+        return new FileNode(nodeId, authorId, projectId, coordinates);
     }
   },
 
@@ -51,6 +53,8 @@ export const NodeUtils = {
         return ViewNode.fromObject(object);
       case NodeType.Split:
         return SplitNode.fromObject(object);
+      case NodeType.File:
+        return FileNode.fromObject(object);
     }
 
     return null;

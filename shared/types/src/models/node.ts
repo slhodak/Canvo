@@ -5,6 +5,7 @@ export enum NodeType {
   View = 'view',
   Merge = 'merge',
   Split = 'split',
+  File = 'file',
 }
 
 export interface NodeProperty {
@@ -356,6 +357,60 @@ export class SplitNode extends BaseNode implements SyncNode {
       stringValue: remainingParts,
       numberValue: null,
     };
+  }
+}
+
+export class FileNode extends BaseNode implements SyncNode {
+  constructor(
+    id: string,
+    authorId: string,
+    projectId: string,
+    coordinates: Coordinates,
+    content: string = '',
+    outputState: OutputState[] = [],
+  ) {
+    super(id, authorId, projectId, 'File', NodeType.File, 0, 1, coordinates, false, {
+      content: {
+        type: 'string',
+        label: 'Content',
+        value: content,
+        editable: false,
+        displayed: true,
+      },
+      filename: {
+        type: 'string',
+        label: 'Filename',
+        value: '',
+        editable: false,
+        displayed: true,
+      }
+    }, outputState);
+  }
+
+  public static fromObject(object: BaseNode): BaseNode {
+    return new FileNode(
+      object.nodeId,
+      object.authorId,
+      object.projectId,
+      object.coordinates,
+      object.properties.content.value as string,
+      object.outputState
+    );
+  }
+
+  run(inputValues: (OutputState | null)[]) {
+    this.outputState[0] = {
+      stringValue: this.properties.content.value as string,
+      numberValue: null,
+    };
+  }
+
+  async handleFileSelect(file: File) {
+    const content = await file.text();
+    this.properties.content.value = content;
+    this.properties.filename.value = file.name;
+    this.setDirty();
+    this.run([]);
   }
 }
 
