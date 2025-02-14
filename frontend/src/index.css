@@ -24,7 +24,8 @@
   -moz-osx-font-smoothing: grayscale;
 
   /* Variables */
-  --font-color: rgb(232, 232, 232);
+  --font-color-light: rgb(232, 232, 232);
+  --font-color-dark: rgb(20, 20, 20);
   --background-dark-1: #353535;
   --background-dark-2: #3f3f3f;
   --background-dark-3: #606060;
@@ -32,18 +33,18 @@
   --button-background-color: lightblue;
   --container-vertical-spacing: 6px;
 
-  color: var(--font-color);
+  color: var(--font-color-light);
 }
 
 textarea {
-  color: var(--font-color);
+  color: var(--font-color-light);
   background-color: var(--input-background-color);
   border-style: inset;
   border-width: 2px;
 }
 
 input {
-  color: var(--font-color);
+  color: var(--font-color-light);
   background-color: var(--input-background-color);
 }
 

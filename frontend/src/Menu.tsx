@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import './Menu.css';
 import BurgerMenu from "./assets/BurgerMenu";
 import PlusIcon from "./assets/PlusIcon";
@@ -57,7 +57,7 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
     <div className={`menu-container ${isCollapsed ? 'collapsed' : 'expanded'}`}>
       <div className="menu-header-container">
         <button className="collapse-button" onClick={() => setIsCollapsed(!isCollapsed)}>
-          <BurgerMenu isCollapsed={isCollapsed} strokeColor={"var(--font-color)"} />
+          <BurgerMenu isCollapsed={isCollapsed} strokeColor={"var(--font-color-light)"} />
         </button>
         <h2 className="app-title-header">{isCollapsed ? 'C' : 'Canvo'}</h2>
       </div>
@@ -98,6 +98,26 @@ interface ProjectPreviewProps {
 }
 
 const ProjectPreview = ({ highlighted, project, deleteProject, setProject }: ProjectPreviewProps) => {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteButtonRect, setDeleteButtonRect] = useState<DOMRect | null>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+        setShowDeleteConfirm(false);
+      }
+    };
+
+    if (showDeleteConfirm) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDeleteConfirm]);
+
   return (
     <div
       role="button"
@@ -110,11 +130,46 @@ const ProjectPreview = ({ highlighted, project, deleteProject, setProject }: Pro
         className="project-preview-delete-button"
         onClick={(e) => {
           e.stopPropagation();
-          deleteProject(project.projectId);
+          const rect = e.currentTarget.getBoundingClientRect();
+          setDeleteButtonRect(rect);
+          setShowDeleteConfirm(true);
         }}
       >
         <TrashIcon />
       </button>
+      {showDeleteConfirm && deleteButtonRect && (
+        <div
+          ref={popoverRef}
+          className="delete-confirm-popover"
+          style={{
+            top: `${deleteButtonRect.bottom + 5}px`,
+            left: `${deleteButtonRect.left - 100}px`,
+          }}
+        >
+          <p>Delete this project?</p>
+          <div className="delete-confirm-actions">
+            <button
+              className="project-preview-confirm-button"
+              onClick={(e) => {
+                e.stopPropagation();
+                deleteProject(project.projectId);
+                setShowDeleteConfirm(false);
+              }}
+            >
+              Delete
+            </button>
+            <button
+              className="project-preview-cancel-button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDeleteConfirm(false);
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
