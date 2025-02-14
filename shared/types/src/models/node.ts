@@ -6,6 +6,7 @@ export enum NodeType {
   Merge = 'merge',
   Split = 'split',
   File = 'file',
+  Edit = 'edit',
 }
 
 export interface NodeProperty {
@@ -369,7 +370,7 @@ export class FileNode extends BaseNode implements SyncNode {
     content: string = '',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'File', NodeType.File, 0, 1, coordinates, false, {
+    super(id, authorId, projectId, 'File', NodeType.File, 0, 1, coordinates, true, {
       content: {
         type: 'string',
         label: 'Content',
@@ -411,6 +412,56 @@ export class FileNode extends BaseNode implements SyncNode {
     this.properties.filename.value = file.name;
     this.setDirty();
     this.run([]);
+  }
+}
+
+export class EditNode extends BaseNode implements SyncNode {
+  constructor(
+    id: string,
+    authorId: string,
+    projectId: string,
+    coordinates: Coordinates,
+    content: string = '',
+    outputState: OutputState[] = [],
+  ) {
+    super(id, authorId, projectId, 'Edit', NodeType.Edit, 1, 1, coordinates, true, {
+      content: {
+        type: 'string',
+        label: 'Content',
+        value: content,
+        editable: true,
+        displayed: true,
+      }
+    }, outputState);
+  }
+
+  public static fromObject(object: BaseNode): BaseNode {
+    return new EditNode(
+      object.nodeId,
+      object.authorId,
+      object.projectId,
+      object.coordinates,
+      object.properties.content.value as string,
+      object.outputState
+    );
+  }
+
+  run(inputValues: (OutputState | null)[]) {
+    // If there's no input or the node isn't dirty, don't update the content
+    if (!inputValues[0] && !this.isDirty) return;
+
+    // If there's new input and the content hasn't been edited yet, copy the input
+    if (inputValues[0] && !this.isDirty) {
+      this.properties.content.value = inputValues[0].stringValue as string;
+    }
+
+    // Output the current content
+    this.outputState[0] = {
+      stringValue: this.properties.content.value as string,
+      numberValue: null,
+    };
+
+    this.setClean();
   }
 }
 
