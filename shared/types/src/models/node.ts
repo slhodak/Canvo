@@ -229,17 +229,69 @@ export class SaveNode extends BaseNode implements AsyncNode {
     authorId: string,
     projectId: string,
     coordinates: Coordinates,
+    filename: string = 'output.txt',
+    outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Save', NodeType.Save, 1, 0, coordinates, false, {});
+    super(id, authorId, projectId, 'Save', NodeType.Save, 1, 0, coordinates, false, {
+      filename: {
+        type: 'string',
+        label: 'Filename',
+        value: filename,
+        editable: true,
+        displayed: true,
+      },
+      status: {
+        type: 'string',
+        label: 'Status',
+        value: '',
+        editable: false,
+        displayed: true,
+      }
+    }, outputState);
   }
 
   public static fromObject(object: BaseNode): BaseNode {
-    return new SaveNode(object.nodeId, object.authorId, object.projectId, object.coordinates);
+    return new SaveNode(
+      object.nodeId,
+      object.authorId,
+      object.projectId,
+      object.coordinates,
+      object.properties.filename.value as string,
+      object.outputState
+    );
   }
 
   async asyncRun(inputValues: (OutputState | null)[]) {
-    // TODO: Implement
-    // Save the input text to a file
+    const inputText = inputValues[0]?.stringValue;
+    if (!inputText) {
+      this.properties.status.value = 'No input to save';
+      return;
+    }
+
+    try {
+      const blob = new Blob([inputText], { type: 'text/plain' });
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = this.properties.filename.value as string;
+
+      // Using click() directly is cleaner than appendChild/removeChild
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup can happen on next tick to ensure download starts
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 0);
+
+      this.properties.status.value = 'File saved successfully';
+    } catch (error) {
+      console.error('Error saving file:', error);
+      this.properties.status.value = `Error saving file: ${error instanceof Error ? error.message : 'Unknown error'}`;
+    }
   }
 }
 
