@@ -14,9 +14,6 @@ ai-service/ai-service/semantic_search.py
 ai-service/README.md
 
 frontend/dist/
-frontend/package.json
-frontend/yarn.lock
-frontend/.env
 
 shared/types/src/models/node.ts
 shared/types/src/models/project.ts

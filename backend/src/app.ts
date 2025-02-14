@@ -144,7 +144,8 @@ async function getUserFromSessionToken(req: Request): Promise<UserModel | null> 
 router.get('/auth/authenticate', async (req: Request, res: Response) => {
   try {
     const oauthToken = req.query.token as string;
-    if (!oauthToken) {
+    if (oauthToken === undefined || oauthToken === '') {
+      console.warn("No oauth token present in authenticate request; redirecting");
       return res.status(401).json({
         redirectUrl: FRONTEND_DOMAIN,
         status: 'failed',
@@ -172,7 +173,11 @@ router.get('/auth/authenticate', async (req: Request, res: Response) => {
     await db.insertSession(sessionToken, email, sessionExpiration);
 
     // The session expires in 60 minutes, as specified in the oauth authentication request above
-    res.cookie(SESSION_TOKEN, sessionToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', maxAge: sixtyMinutesInSeconds * 1000 });
+    res.cookie(SESSION_TOKEN, sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: sixtyMinutesInSeconds * 1000
+    });
     res.redirect(FRONTEND_DOMAIN);
 
   } catch (error) {

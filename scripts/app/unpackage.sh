@@ -59,13 +59,6 @@ tar -xzf bundle.tar.gz
 mv ~/db_version.txt ~/canvo/backend/db/db_version.txt
 
 ########################################################
-### Build the frontend
-########################################################
-
-cd ~/canvo/frontend/
-yarn
-
-########################################################
 ### Build the backend & start
 ########################################################
 
@@ -83,8 +76,8 @@ COMPARISON_RESULT=$(~/compare.sh ~/canvo/ai-service/pyproject.toml ~/pyproject_p
 if [[ $COMPARISON_RESULT == "y" ]]; then
     echo "Python dependencies have not changed, will keep the last pyproject.toml and poetry.lock"
     # Use the cached prod env dependency files
-    mv ~/pyproject_prod.toml ~/canvo/ai-service/pyproject.toml
-    mv ~/poetry_prod.lock ~/canvo/ai-service/poetry.lock
+    cp ~/pyproject_prod.toml ~/canvo/ai-service/pyproject.toml
+    cp ~/poetry_prod.lock ~/canvo/ai-service/poetry.lock
 else
     echo "Python dependencies have changed, will reinstall them"
     # Save the dev env dependency files to compare against new ones in the next deployment
