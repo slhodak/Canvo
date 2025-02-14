@@ -5,6 +5,11 @@ export enum NodeType {
   View = 'view',
   Merge = 'merge',
   Split = 'split',
+  File = 'file',
+  Edit = 'edit',
+  Embed = 'embed',
+  Search = 'search',
+  Join = 'join',
 }
 
 export interface NodeProperty {
@@ -45,6 +50,7 @@ export interface AsyncNode {
 export interface OutputState {
   stringValue: string | null;
   numberValue: number | null;
+  stringArrayValue: string[] | null;
 }
 
 export abstract class BaseNode {
@@ -92,6 +98,7 @@ export abstract class BaseNode {
         this.outputState.push({
           stringValue: null,
           numberValue: null,
+          stringArrayValue: null,
         });
       }
     }
@@ -149,6 +156,7 @@ export class TextNode extends BaseNode implements SyncNode {
     this.outputState[0] = {
       stringValue: this.properties.text.value as string,
       numberValue: null,
+      stringArrayValue: null,
     };
     this.setClean();
   }
@@ -204,6 +212,7 @@ export class PromptNode extends BaseNode implements AsyncNode {
         this.outputState[0] = {
           stringValue: data.result,
           numberValue: null,
+          stringArrayValue: null,
         };
       } else {
         console.error('Error running prompt:', data.error);
@@ -275,6 +284,7 @@ export class MergeNode extends BaseNode implements SyncNode {
     this.outputState[0] = {
       stringValue: mergedResult,
       numberValue: null,
+      stringArrayValue: null,
     };
   }
 }
@@ -351,10 +361,373 @@ export class SplitNode extends BaseNode implements SyncNode {
     this.outputState[0] = {
       stringValue: parts[0],
       numberValue: null,
+      stringArrayValue: null,
     };
     this.outputState[1] = {
       stringValue: remainingParts,
       numberValue: null,
+      stringArrayValue: null,
+    };
+  }
+}
+
+export class FileNode extends BaseNode implements SyncNode {
+  constructor(
+    id: string,
+    authorId: string,
+    projectId: string,
+    coordinates: Coordinates,
+    content: string = '',
+    outputState: OutputState[] = [],
+  ) {
+    super(id, authorId, projectId, 'File', NodeType.File, 0, 1, coordinates, true, {
+      content: {
+        type: 'string',
+        label: 'Content',
+        value: content,
+        editable: false,
+        displayed: true,
+      },
+      filename: {
+        type: 'string',
+        label: 'Filename',
+        value: '',
+        editable: false,
+        displayed: true,
+      }
+    }, outputState);
+  }
+
+  public static fromObject(object: BaseNode): BaseNode {
+    return new FileNode(
+      object.nodeId,
+      object.authorId,
+      object.projectId,
+      object.coordinates,
+      object.properties.content.value as string,
+      object.outputState
+    );
+  }
+
+  run(inputValues: (OutputState | null)[]) {
+    this.outputState[0] = {
+      stringValue: this.properties.content.value as string,
+      numberValue: null,
+      stringArrayValue: null,
+    };
+  }
+
+  async handleFileSelect(file: File) {
+    const content = await file.text();
+    this.properties.content.value = content;
+    this.properties.filename.value = file.name;
+    this.setDirty();
+    this.run([]);
+  }
+}
+
+export class EditNode extends BaseNode implements SyncNode {
+  constructor(
+    id: string,
+    authorId: string,
+    projectId: string,
+    coordinates: Coordinates,
+    content: string = '',
+    outputState: OutputState[] = [],
+  ) {
+    super(id, authorId, projectId, 'Edit', NodeType.Edit, 1, 1, coordinates, true, {
+      content: {
+        type: 'string',
+        label: 'Content',
+        value: content,
+        editable: true,
+        displayed: true,
+      }
+    }, outputState);
+  }
+
+  public static fromObject(object: BaseNode): BaseNode {
+    return new EditNode(
+      object.nodeId,
+      object.authorId,
+      object.projectId,
+      object.coordinates,
+      object.properties.content.value as string,
+      object.outputState
+    );
+  }
+
+  run(inputValues: (OutputState | null)[]) {
+    // If there's no input or the node isn't dirty, don't update the content
+    if (!inputValues[0] && !this.isDirty) return;
+
+    // If there's new input and the content hasn't been edited yet, copy the input
+    if (inputValues[0] && !this.isDirty) {
+      this.properties.content.value = inputValues[0].stringValue as string;
+    }
+
+    // Output the current content
+    this.outputState[0] = {
+      stringValue: this.properties.content.value as string,
+      numberValue: null,
+      stringArrayValue: null,
+    };
+
+    this.setClean();
+  }
+}
+
+export class EmbedNode extends BaseNode implements AsyncNode {
+  constructor(
+    id: string,
+    authorId: string,
+    projectId: string,
+    coordinates: Coordinates,
+    chunkSize: number = 100,
+    overlap: number = 20,
+    outputState: OutputState[] = [],
+  ) {
+    super(id, authorId, projectId, 'Embed', NodeType.Embed, 1, 1, coordinates, false, {
+      chunkSize: {
+        type: 'number',
+        label: 'Chunk Size',
+        value: chunkSize,
+        editable: true,
+        displayed: true,
+      },
+      overlap: {
+        type: 'number',
+        label: 'Overlap',
+        value: overlap,
+        editable: true,
+        displayed: true,
+      },
+      status: {
+        type: 'string',
+        label: 'Status',
+        value: '',
+        editable: false,
+        displayed: true,
+      }
+    }, outputState);
+  }
+
+  public static fromObject(object: BaseNode): BaseNode {
+    return new EmbedNode(
+      object.nodeId,
+      object.authorId,
+      object.projectId,
+      object.coordinates,
+      object.properties.chunkSize.value as number,
+      object.properties.overlap.value as number,
+      object.outputState
+    );
+  }
+
+  private chunkText(text: string, chunkSize: number, overlap: number): string[] {
+    const chunks: string[] = [];
+    let i = 0;
+
+    while (i < text.length) {
+      // Get chunk with specified size
+      const chunk = text.slice(i, i + chunkSize);
+      chunks.push(chunk);
+
+      // Move forward by chunkSize - overlap
+      i += chunkSize - overlap;
+    }
+
+    return chunks;
+  }
+
+  async asyncRun(inputValues: (OutputState | null)[]) {
+    if (!inputValues[0]?.stringValue) return;
+
+    try {
+      this.properties.status.value = 'Processing...';
+
+      // Split text into chunks
+      const chunks = this.chunkText(
+        inputValues[0].stringValue,
+        this.properties.chunkSize.value as number,
+        this.properties.overlap.value as number
+      );
+
+      // Create a mapping of document names to content
+      const documents: Record<string, string> = {};
+      chunks.forEach((chunk, i) => {
+        documents[`chunk_${i}`] = chunk;
+      });
+
+      // Send chunks to AI service for embedding
+      const response = await fetch('http://localhost:8000/documents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ documents }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      // Set success status with chunk count
+      this.properties.status.value = `Success: Created ${chunks.length} embeddings`;
+
+      // Output the chunks array
+      this.outputState[0] = {
+        stringValue: null,
+        numberValue: null,
+        stringArrayValue: chunks,
+      };
+    } catch (error: unknown) {
+      console.error('Error in EmbedNode:', error);
+      this.properties.status.value = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+
+      // Clear output on error
+      this.outputState[0] = {
+        stringValue: null,
+        numberValue: null,
+        stringArrayValue: null,
+      };
+    }
+  }
+}
+
+export class SearchNode extends BaseNode implements AsyncNode {
+  constructor(
+    id: string,
+    authorId: string,
+    projectId: string,
+    coordinates: Coordinates,
+    outputState: OutputState[] = [],
+  ) {
+    super(id, authorId, projectId, 'Search', NodeType.Search, 1, 1, coordinates, false, {
+      status: {
+        type: 'string',
+        label: 'Status',
+        value: '',
+        editable: false,
+        displayed: true,
+      },
+      query: {
+        type: 'string',
+        label: 'Query',
+        value: '',
+        editable: true,
+        displayed: true,
+      }
+    }, outputState);
+  }
+
+  public static fromObject(object: BaseNode): BaseNode {
+    return new SearchNode(
+      object.nodeId,
+      object.authorId,
+      object.projectId,
+      object.coordinates,
+      object.outputState
+    );
+  }
+
+  async asyncRun(inputValues: (OutputState | null)[]) {
+    try {
+      this.properties.status.value = 'Searching...';
+
+      const response = await fetch('http://localhost:8000/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: this.properties.query.value as string,
+          top_k: 3
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      // Extract snippets from results
+      const snippets = result.results.map((r: { snippet: string }) => r.snippet);
+
+      this.properties.status.value = `Found ${snippets.length} results`;
+
+      // Output the results as a string array
+      this.outputState[0] = {
+        stringValue: null,
+        numberValue: null,
+        stringArrayValue: snippets,
+      };
+    } catch (error: unknown) {
+      console.error('Error in SearchNode:', error);
+      this.properties.status.value = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+
+      // Clear output on error
+      this.outputState[0] = {
+        stringValue: null,
+        numberValue: null,
+        stringArrayValue: null,
+      };
+    }
+  }
+}
+
+export class JoinNode extends BaseNode implements SyncNode {
+  constructor(
+    id: string,
+    authorId: string,
+    projectId: string,
+    coordinates: Coordinates,
+    separator: string = '\n',
+    outputState: OutputState[] = [],
+  ) {
+    super(id, authorId, projectId, 'Join', NodeType.Join, 1, 1, coordinates, true, {
+      separator: {
+        type: 'string',
+        label: 'Separator',
+        value: separator,
+        editable: true,
+        displayed: true,
+      }
+    }, outputState);
+  }
+
+  public static fromObject(object: BaseNode): BaseNode {
+    return new JoinNode(
+      object.nodeId,
+      object.authorId,
+      object.projectId,
+      object.coordinates,
+      object.properties.separator.value as string,
+      object.outputState
+    );
+  }
+
+  run(inputValues: (OutputState | null)[]) {
+    if (!inputValues[0]?.stringArrayValue) {
+      this.outputState[0] = {
+        stringValue: null,
+        numberValue: null,
+        stringArrayValue: null,
+      };
+      return;
+    }
+
+    // Join the array elements with the separator
+    const joinedString = inputValues[0].stringArrayValue.join(
+      this.properties.separator.value as string
+    );
+
+    this.outputState[0] = {
+      stringValue: joinedString,
+      numberValue: null,
+      stringArrayValue: null,
     };
   }
 }
