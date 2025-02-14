@@ -211,9 +211,9 @@ const NetworkEditor = ({
 
     const svgRect = svgRef.current?.getBoundingClientRect();
     if (svgRect && wireState.isDrawing) {
-      // Get SVG coordinates
-      const x = e.clientX - svgRect.left;
-      const y = e.clientY - svgRect.top;
+      // Get SVG coordinates and adjust for panning
+      const x = e.clientX - svgRect.left - panOffset.x;
+      const y = e.clientY - svgRect.top - panOffset.y;
 
       setWireState(prev => ({
         ...prev,
@@ -232,8 +232,8 @@ const NetworkEditor = ({
     if (svgRef.current) {
       // Get SVG coordinates
       const svgRect = svgRef.current.getBoundingClientRect();
-      const x = startX - svgRect.left;
-      const y = startY - svgRect.top;
+      const x = startX - svgRect.left - panOffset.x;  // Adjust for pan offset
+      const y = startY - svgRect.top - panOffset.y;   // Adjust for pan offset
 
       setWireState({
         isDrawing: true,
@@ -389,9 +389,11 @@ const NetworkEditor = ({
             const toNode = nodes[conn.connection.toNode];
             if (!fromNode || !toNode) return null;
 
+            // Get positions and adjust for panning
             const start = neu.getPortPosition(fromNode, false, conn.connection.fromOutput);
             const end = neu.getPortPosition(toNode, true, conn.connection.toInput);
 
+            // No need to adjust the path coordinates since they're now inside the transformed group
             return (
               <path
                 key={`${conn.connection.fromNode}-${conn.connection.toNode}-${conn.connection.fromOutput}-${conn.connection.toInput}`}
