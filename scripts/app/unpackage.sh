@@ -39,6 +39,8 @@ else
     else
         echo "No db_version.txt file found to backup"
     fi;
+
+    cd $HOME
 fi
 
 # Erase everything and remake the folder structure
