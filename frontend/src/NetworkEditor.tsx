@@ -58,6 +58,7 @@ const NetworkEditor = ({
   const [panOffset, setPanOffset] = useState<Coordinates>({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [zoom, setZoom] = useState<number>(1);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -81,6 +82,7 @@ const NetworkEditor = ({
     };
 
     addNode(newVisualNode);
+    selectNode(newVisualNode);
     setShowDropdown(false);
   }
 
@@ -141,6 +143,7 @@ const NetworkEditor = ({
     }
 
     setShowDropdown(false);
+    setSearchTerm('');
     if (wireState.isDrawing) {
       setDragState({
         isDragging: false,
@@ -352,11 +355,13 @@ const NetworkEditor = ({
         event.preventDefault();
         setDropdownPosition(mousePosition);
         setShowDropdown(true);
+        setSearchTerm('');
         return;
       }
 
       if (event.key === 'Escape') {
         setShowDropdown(false);
+        setSearchTerm('');
         // Cancel wire drawing
         setWireState({
           isDrawing: false,
@@ -381,6 +386,17 @@ const NetworkEditor = ({
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [selectedNode, nodes, isHoveringEditor, mousePosition, connectToViewNode, deleteNode]);
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && searchTerm !== '') {
+      const firstMatch = Object.values(NodeType).find(type =>
+        type.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      if (firstMatch) {
+        handleNewNodeClick(firstMatch);
+      }
+    }
+  };
 
   return (
     <div className="network-editor-container">
@@ -454,32 +470,76 @@ const NetworkEditor = ({
           })}
         </g>
       </svg>
-      {showDropdown && (
-        <div
-          className={`app-dropdown ${showDropdown ? 'visible' : ''}`}
-          style={{
-            left: dropdownPosition.x,
-            top: dropdownPosition.y
-          }}
-        >
-          {Object.values(NodeType).map((nodeType) => (
-            <DropdownOption
-              key={nodeType}
-              label={nodeType}
-              onClick={() => handleNewNodeClick(nodeType)}
-            />
-          ))}
-        </div>
-      )}
+      {showDropdown &&
+        <Dropdown
+          showDropdown={showDropdown}
+          searchTerm={searchTerm}
+          dropdownPosition={dropdownPosition}
+          setSearchTerm={setSearchTerm}
+          onClickDropdownOption={handleNewNodeClick}
+          handleSearchKeyDown={handleSearchKeyDown}
+        />
+      }
     </div>
   );
 };
 
 export default NetworkEditor;
 
-const DropdownOption = ({ label, onClick }: { label: string, onClick: () => void }) => {
+
+interface DropdownProps {
+  showDropdown: boolean;
+  searchTerm: string;
+  dropdownPosition: Coordinates;
+  setSearchTerm: (searchTerm: string) => void;
+  onClickDropdownOption: (nodeType: NodeType) => void;
+  handleSearchKeyDown: (e: React.KeyboardEvent) => void;
+}
+
+const Dropdown = ({ showDropdown, searchTerm, dropdownPosition, setSearchTerm, onClickDropdownOption, handleSearchKeyDown }: DropdownProps) => {
   return (
-    <div className="app-dropdown-option" onClick={onClick}>
+    <div
+      className={`app-dropdown ${showDropdown ? 'visible' : ''}`}
+      style={{
+        left: dropdownPosition.x,
+        top: dropdownPosition.y
+      }}
+    >
+      <input
+        type="text"
+        className="app-dropdown-search"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        onKeyDown={handleSearchKeyDown}
+        autoFocus
+        placeholder="Search nodes..."
+        onClick={(e) => e.stopPropagation()}
+      />
+      {Object.values(NodeType)
+        .map((nodeType, index) => {
+          const isFirstMatch = searchTerm !== "" &&
+            index === Object.values(NodeType).findIndex(type =>
+              type.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+          return (
+            <DropdownOption
+              key={nodeType}
+              label={nodeType}
+              onClick={() => onClickDropdownOption(nodeType)}
+              isHighlighted={isFirstMatch}
+            />
+          );
+        })}
+    </div>
+  );
+};
+
+const DropdownOption = ({ label, onClick, isHighlighted }: { label: string, onClick: () => void, isHighlighted: boolean }) => {
+  return (
+    <div
+      className={`app-dropdown-option ${isHighlighted ? 'highlighted' : ''}`}
+      onClick={onClick}
+    >
       {label.charAt(0).toUpperCase() + label.slice(1)}
     </div>
   );

@@ -233,7 +233,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
 
   const deleteNode = useCallback(async (node: VisualNode) => {
     const newNodes = { ...nodes };
-    delete newNodes[node.id];
+    delete newNodes[node.node.nodeId];
     if (selectedNode?.id === node.id) {
       setSelectedNode(null);
     }

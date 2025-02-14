@@ -49,13 +49,25 @@
 }
 
 .app-dropdown-option {
-  width: 120px;
   padding: 0px 4px;
   cursor: pointer;
   color: var(--text-color);
 }
 
 .app-dropdown-option:hover {
+  background-color: rgb(40, 20, 142);
+  font-weight: bold;
+}
+
+.app-dropdown-search {
+  width: calc(100% - 4px);
+  margin: 0px 2px;
+  padding: 2px;
+  border: 1px solid #585858;
+  outline: none;
+}
+
+.app-dropdown-option.highlighted {
   background-color: rgb(40, 20, 142);
   font-weight: bold;
 }
