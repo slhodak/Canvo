@@ -7,6 +7,7 @@ export enum NodeType {
   Split = 'split',
   File = 'file',
   Edit = 'edit',
+  Embed = 'embed',
 }
 
 export interface NodeProperty {
@@ -47,6 +48,7 @@ export interface AsyncNode {
 export interface OutputState {
   stringValue: string | null;
   numberValue: number | null;
+  stringArrayValue: string[] | null;
 }
 
 export abstract class BaseNode {
@@ -94,6 +96,7 @@ export abstract class BaseNode {
         this.outputState.push({
           stringValue: null,
           numberValue: null,
+          stringArrayValue: null,
         });
       }
     }
@@ -151,6 +154,7 @@ export class TextNode extends BaseNode implements SyncNode {
     this.outputState[0] = {
       stringValue: this.properties.text.value as string,
       numberValue: null,
+      stringArrayValue: null,
     };
     this.setClean();
   }
@@ -206,6 +210,7 @@ export class PromptNode extends BaseNode implements AsyncNode {
         this.outputState[0] = {
           stringValue: data.result,
           numberValue: null,
+          stringArrayValue: null,
         };
       } else {
         console.error('Error running prompt:', data.error);
@@ -277,6 +282,7 @@ export class MergeNode extends BaseNode implements SyncNode {
     this.outputState[0] = {
       stringValue: mergedResult,
       numberValue: null,
+      stringArrayValue: null,
     };
   }
 }
@@ -353,10 +359,12 @@ export class SplitNode extends BaseNode implements SyncNode {
     this.outputState[0] = {
       stringValue: parts[0],
       numberValue: null,
+      stringArrayValue: null,
     };
     this.outputState[1] = {
       stringValue: remainingParts,
       numberValue: null,
+      stringArrayValue: null,
     };
   }
 }
@@ -403,6 +411,7 @@ export class FileNode extends BaseNode implements SyncNode {
     this.outputState[0] = {
       stringValue: this.properties.content.value as string,
       numberValue: null,
+      stringArrayValue: null,
     };
   }
 
@@ -459,9 +468,130 @@ export class EditNode extends BaseNode implements SyncNode {
     this.outputState[0] = {
       stringValue: this.properties.content.value as string,
       numberValue: null,
+      stringArrayValue: null,
     };
 
     this.setClean();
+  }
+}
+
+export class EmbedNode extends BaseNode implements AsyncNode {
+  constructor(
+    id: string,
+    authorId: string,
+    projectId: string,
+    coordinates: Coordinates,
+    chunkSize: number = 500,
+    overlap: number = 50,
+    outputState: OutputState[] = [],
+  ) {
+    super(id, authorId, projectId, 'Embed', NodeType.Embed, 1, 1, coordinates, false, {
+      chunkSize: {
+        type: 'number',
+        label: 'Chunk Size',
+        value: chunkSize,
+        editable: true,
+        displayed: true,
+      },
+      overlap: {
+        type: 'number',
+        label: 'Overlap',
+        value: overlap,
+        editable: true,
+        displayed: true,
+      },
+      status: {
+        type: 'string',
+        label: 'Status',
+        value: '',
+        editable: false,
+        displayed: true,
+      }
+    }, outputState);
+  }
+
+  public static fromObject(object: BaseNode): BaseNode {
+    return new EmbedNode(
+      object.nodeId,
+      object.authorId,
+      object.projectId,
+      object.coordinates,
+      object.properties.chunkSize.value as number,
+      object.properties.overlap.value as number,
+      object.outputState
+    );
+  }
+
+  private chunkText(text: string, chunkSize: number, overlap: number): string[] {
+    const chunks: string[] = [];
+    let i = 0;
+
+    while (i < text.length) {
+      // Get chunk with specified size
+      const chunk = text.slice(i, i + chunkSize);
+      chunks.push(chunk);
+
+      // Move forward by chunkSize - overlap
+      i += chunkSize - overlap;
+    }
+
+    return chunks;
+  }
+
+  async asyncRun(inputValues: (OutputState | null)[]) {
+    if (!inputValues[0]?.stringValue) return;
+
+    try {
+      this.properties.status.value = 'Processing...';
+
+      // Split text into chunks
+      const chunks = this.chunkText(
+        inputValues[0].stringValue,
+        this.properties.chunkSize.value as number,
+        this.properties.overlap.value as number
+      );
+
+      // Create a mapping of document names to content
+      const documents: Record<string, string> = {};
+      chunks.forEach((chunk, i) => {
+        documents[`chunk_${i}`] = chunk;
+      });
+
+      // Send chunks to AI service for embedding
+      const response = await fetch('http://localhost:8000/documents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ documents }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      // Set success status with chunk count
+      this.properties.status.value = `Success: Created ${chunks.length} embeddings`;
+
+      // Output the chunks array
+      this.outputState[0] = {
+        stringValue: null,
+        numberValue: null,
+        stringArrayValue: chunks,
+      };
+    } catch (error: unknown) {
+      console.error('Error in EmbedNode:', error);
+      this.properties.status.value = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+
+      // Clear output on error
+      this.outputState[0] = {
+        stringValue: null,
+        numberValue: null,
+        stringArrayValue: null,
+      };
+    }
   }
 }
 
