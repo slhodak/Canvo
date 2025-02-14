@@ -82,6 +82,7 @@ const NetworkEditor = ({
     };
 
     addNode(newVisualNode);
+    selectNode(newVisualNode);
     setShowDropdown(false);
   }
 
