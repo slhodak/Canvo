@@ -93,6 +93,9 @@ else
     cp ~/canvo/ai-service/poetry.lock ~/poetry_prod.lock
 fi
 
+# Copy the ai-service production env file to plain .env
+cp ~/canvo/ai-service/.env.production ~/canvo/ai-service/.env
+
 # There must be an canvo-ai.service file in /etc/systemd/system/
 echo "Restarting canvo-ai..."
 sudo systemctl restart canvo-ai
