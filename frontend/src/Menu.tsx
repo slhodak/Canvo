@@ -20,7 +20,7 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
 
   const createProject = async () => {
     try {
-      const response = await fetch(`${SERVER_URL}/api/new_project`, {
+      const response = await fetch(`${SERVER_URL}/s/api/new_project`, {
         method: 'POST',
         credentials: 'include',
       });
@@ -36,7 +36,7 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
 
   const deleteProject = async (projectId: string) => {
     try {
-      const response = await fetch(`${SERVER_URL}/api/delete_project/${projectId}`, {
+      const response = await fetch(`${SERVER_URL}/s/api/delete_project/${projectId}`, {
         method: 'DELETE',
         credentials: 'include',
       });

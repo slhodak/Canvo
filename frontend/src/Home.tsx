@@ -10,7 +10,7 @@ export default function Home() {
 
   useEffect(() => {
     const checkAuthentication = async () => {
-      const response = await fetch(`${SERVER_URL}/auth/check`, {
+      const response = await fetch(`${SERVER_URL}/s/auth/check`, {
         credentials: 'include',
       });
       const data = await response.json();
@@ -24,7 +24,7 @@ export default function Home() {
 
     const fetchUser = async () => {
       try {
-        const response = await fetch(`${SERVER_URL}/api/get_user`, {
+        const response = await fetch(`${SERVER_URL}/s/api/get_user`, {
           credentials: 'include',
         });
         const data = await response.json();

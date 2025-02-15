@@ -27,8 +27,8 @@ class SearchQuery(BaseModel):
     top_k: int = 5
 
 
-@app.post("/documents")
-def add_documents(docs: Documents):
+@app.post("/embed")
+def embed(docs: Documents):
     try:
         search_engine.add_documents(docs.documents)
         return {"message": f"Successfully added {len(docs.documents)} documents"}
