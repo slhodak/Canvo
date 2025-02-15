@@ -9,7 +9,12 @@ app = FastAPI()
 # Add CORS middleware configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Add your frontend URL
+    allow_origins=[
+        "http://localhost:5173",  # Vite's default dev server
+        "http://127.0.0.1:5173",  # Add localhost alternatives
+        "https://canvo.app",  # Production domain
+        "https://www.canvo.app",  # Production domain
+    ],
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
@@ -27,8 +32,8 @@ class SearchQuery(BaseModel):
     top_k: int = 5
 
 
-@app.post("/documents")
-def add_documents(docs: Documents):
+@app.post("/embed")
+def embed(docs: Documents):
     try:
         search_engine.add_documents(docs.documents)
         return {"message": f"Successfully added {len(docs.documents)} documents"}

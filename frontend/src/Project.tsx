@@ -36,7 +36,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     if (!project) return;
 
     try {
-      const response = await fetch(`${SERVER_URL}/api/get_nodes_for_project/${project.projectId}`, {
+      const response = await fetch(`${SERVER_URL}/s/api/get_nodes_for_project/${project.projectId}`, {
         credentials: 'include',
       });
       const data = await response.json();
@@ -71,7 +71,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     if (!project) return;
 
     try {
-      const response = await fetch(`${SERVER_URL}/api/get_connections_for_project/${project.projectId}`, {
+      const response = await fetch(`${SERVER_URL}/s/api/get_connections_for_project/${project.projectId}`, {
         credentials: 'include',
       });
       const data = await response.json();
@@ -98,7 +98,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
 
   const syncNodeAdd = useCallback(async (node: BaseNode) => {
     try {
-      const response = await fetch(`${SERVER_URL}/api/add_node`, {
+      const response = await fetch(`${SERVER_URL}/s/api/add_node`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -122,7 +122,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
 
   const syncNodesUpdate = useCallback(async (updatedNodes: BaseNode[]) => {
     try {
-      const response = await fetch(`${SERVER_URL}/api/update_nodes`, {
+      const response = await fetch(`${SERVER_URL}/s/api/update_nodes`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -146,7 +146,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
 
   const syncNodeDelete = useCallback(async (node: VisualNode) => {
     try {
-      const response = await fetch(`${SERVER_URL}/api/delete_node`, {
+      const response = await fetch(`${SERVER_URL}/s/api/delete_node`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -255,7 +255,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   const syncConnections = useCallback(async (prevConnections: NetworkConnections, newConnections: NetworkConnections) => {
     try {
       const serverConnections = newConnections.map(conn => conn.connection);
-      const response = await fetch(`${SERVER_URL}/api/set_connections`, {
+      const response = await fetch(`${SERVER_URL}/s/api/set_connections`, {
         method: 'POST',
         credentials: 'include',
         headers: {
