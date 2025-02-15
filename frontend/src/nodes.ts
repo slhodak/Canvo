@@ -488,7 +488,7 @@ export class EmbedNode extends BaseNode implements AsyncNode {
       });
 
       // Change API endpoint to go through main server instead
-      const response = await fetch(`${SERVER_URL}/api/embed`, {
+      const response = await fetch(`${SERVER_URL}/i/api/embed`, {
         method: 'POST',
         credentials: 'include', // Important for sending auth cookies
         headers: {
@@ -566,7 +566,7 @@ export class SearchNode extends BaseNode implements AsyncNode {
       this.properties.status.value = 'Searching...';
 
       // Change API endpoint to go through main server
-      const response = await fetch(`${SERVER_URL}/api/search`, {
+      const response = await fetch(`${SERVER_URL}/i/api/search`, {
         method: 'POST',
         credentials: 'include',
         headers: {
