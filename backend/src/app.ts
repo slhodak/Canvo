@@ -403,9 +403,9 @@ router.get('/api/get_nodes_for_project/:projectId', async (req: Request, res: Re
 
 // Add new node
 router.post('/api/add_node', async (req: Request, res: Response) => {
-  const { node } = req.body;
-  if (!node) {
-    return res.status(400).json({ error: "No node provided" });
+  const { projectId, node } = req.body;
+  if (!projectId || !node) {
+    return res.status(400).json({ error: "No projectId or node provided" });
   }
 
   const user = await getUserFromSessionToken(req);
@@ -413,9 +413,13 @@ router.post('/api/add_node', async (req: Request, res: Response) => {
     return res.status(401).json({ error: "Could not find user email from session token" });
   }
 
-  try {
+  if (!validateNode(node)) {
+    return res.status(400).json({ error: "Invalid node provided" });
+  }
+
+  try { 
     await db.insertNode(node);
-    await db.updateProjectUpdatedAt(node.projectId);
+    await db.updateProjectUpdatedAt(projectId);
 
     return res.json({ status: "success" });
   } catch (error) {

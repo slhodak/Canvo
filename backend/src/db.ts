@@ -147,7 +147,7 @@ export namespace Database {
       INSERT INTO nodes (
         node_id, author_id, project_id, name, type, inputs, outputs,
         coordinates, runs_automatically, properties, output_state, is_dirty
-      a
+      )
       VALUES (
         $1, $2, $3, $4, $5, $6, $7, 
         point($8, $9), $10, $11, 
