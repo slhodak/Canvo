@@ -490,7 +490,7 @@ export class EmbedNode extends BaseNode implements AsyncNode {
       });
 
       // Send chunks to AI service for embedding
-      const response = await fetch(`${SERVER_URL}/ai/embed`, {
+      const response = await fetch(`${SERVER_URL}/i/embed`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -566,7 +566,7 @@ export class SearchNode extends BaseNode implements AsyncNode {
     try {
       this.properties.status.value = 'Searching...';
 
-      const response = await fetch(`${SERVER_URL}/ai/search`, {
+      const response = await fetch(`${SERVER_URL}/i/search`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
