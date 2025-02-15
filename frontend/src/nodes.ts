@@ -1,5 +1,5 @@
 import { BaseNode, NodeType, SyncNode, AsyncNode, OutputState, Coordinates } from '../../shared/types/src/models/node';
-import { SERVER_URL, AI_SERVICE_URL } from './constants';
+import { SERVER_URL } from './constants';
 
 export class TextNode extends BaseNode implements SyncNode {
   constructor(
@@ -476,22 +476,21 @@ export class EmbedNode extends BaseNode implements AsyncNode {
     try {
       this.properties.status.value = 'Processing...';
 
-      // Split text into chunks
       const chunks = this.chunkText(
         inputValues[0].stringValue,
         this.properties.chunkSize.value as number,
         this.properties.overlap.value as number
       );
 
-      // Create a mapping of document names to content
       const documents: Record<string, string> = {};
       chunks.forEach((chunk, i) => {
         documents[`chunk_${i}`] = chunk;
       });
 
-      // Send chunks to AI service for embedding
-      const response = await fetch(`${AI_SERVICE_URL}/i/embed`, {
+      // Change API endpoint to go through main server instead
+      const response = await fetch(`${SERVER_URL}/api/embed`, {
         method: 'POST',
+        credentials: 'include', // Important for sending auth cookies
         headers: {
           'Content-Type': 'application/json',
         },
@@ -566,8 +565,10 @@ export class SearchNode extends BaseNode implements AsyncNode {
     try {
       this.properties.status.value = 'Searching...';
 
-      const response = await fetch(`${AI_SERVICE_URL}/i/search`, {
+      // Change API endpoint to go through main server
+      const response = await fetch(`${SERVER_URL}/api/search`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

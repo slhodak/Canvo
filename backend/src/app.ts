@@ -28,6 +28,16 @@ if (!FRONTEND_DOMAIN) {
   throw new Error('Cannot start server: APP_DOMAIN is not set');
 }
 
+
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL;
+if (!AI_SERVICE_URL) {
+  throw new Error('Cannot start server: AI_SERVICE_URL is not set');
+}
+
+// Token costs for different operations
+const EMBEDDING_COST = 1;  // Cost per document embedded
+const SEARCH_COST = 1;    // Cost per search query
+
 // Set up Stytch Authentication
 
 const stytchProjectId = process.env.STYTCH_PROJECT_ID;
@@ -566,6 +576,69 @@ router.post('/api/run_prompt', async (req: Request, res: Response) => {
 
   const result = await runPrompt(prompt, input);
   return res.json({ status: "success", result });
+});
+
+router.post('/api/embed', authenticate, async (req: Request, res: Response) => {
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ error: "Could not find user from session token" });
+  }
+
+  // Check token balance
+  const tokenBalance = await db.getUserTokenBalance(user.userId);
+  if (tokenBalance < EMBEDDING_COST) {
+    return res.status(403).json({ error: "Insufficient tokens" });
+  }
+
+  try {
+    // Forward request to AI service
+    const aiResponse = await fetch(`${AI_SERVICE_URL}/i/embed`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body),
+    });
+
+    const result = await aiResponse.json();
+
+    // Deduct tokens after successful operation
+    await db.deductTokens(user.userId, EMBEDDING_COST);
+
+    return res.json(result);
+  } catch (error) {
+    console.error('Error in embed:', error);
+    return res.status(500).json({ error: "AI service error" });
+  }
+});
+
+router.post('/api/search', authenticate, async (req: Request, res: Response) => {
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ error: "Could not find user from session token" });
+  }
+
+  // Check token balance
+  const tokenBalance = await db.getUserTokenBalance(user.userId);
+  if (tokenBalance < SEARCH_COST) {
+    return res.status(403).json({ error: "Insufficient tokens" });
+  }
+
+  try {
+    const aiResponse = await fetch(`${AI_SERVICE_URL}/i/search`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body),
+    });
+
+    const result = await aiResponse.json();
+
+    // Deduct tokens after successful operation
+    await db.deductTokens(user.userId, SEARCH_COST);
+
+    return res.json(result);
+  } catch (error) {
+    console.error('Error in search:', error);
+    return res.status(500).json({ error: "AI service error" });
+  }
 });
 
 ////////////////////////////////////////////////////////////
