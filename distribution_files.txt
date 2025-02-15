@@ -9,6 +9,7 @@ backend/db/migrations/
 
 ai-service/pyproject.toml
 ai-service/poetry.lock
+ai-service/.env.production
 ai-service/ai-service/main.py
 ai-service/ai-service/semantic_search.py
 ai-service/README.md

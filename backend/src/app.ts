@@ -573,6 +573,7 @@ router.post('/api/run_prompt', async (req: Request, res: Response) => {
 ////////////////////////////////////////////////////////////
 
 app.use('/', router);
+app.use('/s', router);
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on port ${port}`);

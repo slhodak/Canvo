@@ -1,5 +1,5 @@
 import { BaseNode, NodeType, SyncNode, AsyncNode, OutputState, Coordinates } from '../../shared/types/src/models/node';
-import { SERVER_URL } from './constants';
+import { SERVER_URL, AI_SERVICE_URL } from './constants';
 
 export class TextNode extends BaseNode implements SyncNode {
   constructor(
@@ -490,7 +490,7 @@ export class EmbedNode extends BaseNode implements AsyncNode {
       });
 
       // Send chunks to AI service for embedding
-      const response = await fetch(`${SERVER_URL}/i/embed`, {
+      const response = await fetch(`${AI_SERVICE_URL}/i/embed`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -566,7 +566,7 @@ export class SearchNode extends BaseNode implements AsyncNode {
     try {
       this.properties.status.value = 'Searching...';
 
-      const response = await fetch(`${SERVER_URL}/i/search`, {
+      const response = await fetch(`${AI_SERVICE_URL}/i/search`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

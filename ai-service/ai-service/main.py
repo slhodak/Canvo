@@ -2,9 +2,16 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Dict
+from dotenv import load_dotenv
+import os
 from .semantic_search import SemanticSearch
 
-app = FastAPI()
+# Load environment variables
+load_dotenv()
+is_dev = os.getenv("ENVIRONMENT") == "development"
+
+# Initiate app with proper root path
+app = FastAPI(root_path="/i" if is_dev else "/")
 
 # Add CORS middleware configuration
 app.add_middleware(
@@ -32,6 +39,11 @@ class SearchQuery(BaseModel):
     top_k: int = 5
 
 
+@app.get("/")
+def read_root():
+    return {"message": "Canvo AI Service API"}
+
+
 @app.post("/embed")
 def embed(docs: Documents):
     try:
@@ -57,8 +69,3 @@ def search(search_query: SearchQuery):
         return {"results": processed_results}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/")
-def read_root():
-    return {"message": "Semantic Search API"}
