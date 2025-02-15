@@ -9,7 +9,12 @@ app = FastAPI()
 # Add CORS middleware configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Add your frontend URL
+    allow_origins=[
+        "http://localhost:5173",  # Vite's default dev server
+        "http://127.0.0.1:5173",  # Add localhost alternatives
+        "https://canvo.app",  # Production domain
+        "https://www.canvo.app",  # Production domain
+    ],
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
