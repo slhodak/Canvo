@@ -72,7 +72,7 @@ export class PromptNode extends BaseNode implements AsyncNode {
 
     // Call the LLM with the prompt and the input text
     try {
-      const response = await fetch(`${SERVER_URL}/s/api/run_prompt`, {
+      const response = await fetch(`${SERVER_URL}/api/run_prompt`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -487,8 +487,7 @@ export class EmbedNode extends BaseNode implements AsyncNode {
         documents[`chunk_${i}`] = chunk;
       });
 
-      // Change API endpoint to go through main server instead
-      const response = await fetch(`${SERVER_URL}/i/api/embed`, {
+      const response = await fetch(`${SERVER_URL}/api/embed`, {
         method: 'POST',
         credentials: 'include', // Important for sending auth cookies
         headers: {
@@ -565,8 +564,7 @@ export class SearchNode extends BaseNode implements AsyncNode {
     try {
       this.properties.status.value = 'Searching...';
 
-      // Change API endpoint to go through main server
-      const response = await fetch(`${SERVER_URL}/i/api/search`, {
+      const response = await fetch(`${SERVER_URL}/api/search`, {
         method: 'POST',
         credentials: 'include',
         headers: {

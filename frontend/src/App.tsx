@@ -15,7 +15,7 @@ const App = ({ user }: AppProps) => {
   const [projects, setProjects] = useState<ProjectModel[]>([]);
 
   const fetchAllProjects = async () => {
-    const response = await fetch(`${SERVER_URL}/s/api/get_all_projects`, {
+    const response = await fetch(`${SERVER_URL}/api/get_all_projects`, {
       credentials: 'include',
     });
     const data = await response.json();
@@ -34,7 +34,7 @@ const App = ({ user }: AppProps) => {
     if (!project) return;
 
     try {
-      const response = await fetch(`${SERVER_URL}/s/api/update_project_title`, {
+      const response = await fetch(`${SERVER_URL}/api/update_project_title`, {
         method: 'POST',
         credentials: 'include',
         headers: {

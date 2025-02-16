@@ -28,7 +28,6 @@ if (!FRONTEND_DOMAIN) {
   throw new Error('Cannot start server: APP_DOMAIN is not set');
 }
 
-
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL;
 if (!AI_SERVICE_URL) {
   throw new Error('Cannot start server: AI_SERVICE_URL is not set');
@@ -37,6 +36,7 @@ if (!AI_SERVICE_URL) {
 // Token costs for different operations
 const EMBEDDING_COST = 1;  // Cost per document embedded
 const SEARCH_COST = 1;    // Cost per search query
+const PROMPT_COST = 1;   // Cost per prompt run
 
 // Set up Stytch Authentication
 
@@ -571,6 +571,12 @@ router.post('/api/run_prompt', async (req: Request, res: Response) => {
     return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
   }
 
+  // Check token balance
+  const tokenBalance = await db.getUserTokenBalance(user.userId);
+  if (tokenBalance < PROMPT_COST) {
+    return res.status(403).json({ status: "failed", error: "Insufficient tokens" });
+  }
+
   // TODO: The prompt node could have multiple inputs?
   // Should we just get the prompt node info from the backend assuming it was already synced, or expect it in the request?
   const { projectId, nodeId, prompt, input } = req.body;
@@ -579,6 +585,7 @@ router.post('/api/run_prompt', async (req: Request, res: Response) => {
   }
 
   const result = await runPrompt(prompt, input);
+  await db.deductTokens(user.userId, PROMPT_COST);
   return res.json({ status: "success", result });
 });
 
@@ -646,11 +653,36 @@ router.post('/api/search', authenticate, async (req: Request, res: Response) => 
 });
 
 ////////////////////////////////////////////////////////////
+// Token transactions
+////////////////////////////////////////////////////////////
+
+router.post('/api/add_tokens', authenticate, async (req: Request, res: Response) => {
+  try {
+    const user = await getUserFromSessionToken(req);
+    if (!user) {
+      return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
+    }
+
+    const { amount } = req.body;
+    if (!amount) {
+      return res.status(400).json({ status: "failed", error: "No amount provided" });
+    }
+
+    await db.addTokens(user.userId, amount);
+    return res.json({ status: "success" });
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ status: "failed", error: error.message });
+    }
+    return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
+  }
+});
+
+////////////////////////////////////////////////////////////
 // Start Server
 ////////////////////////////////////////////////////////////
 
 app.use('/', router);
-app.use('/s', router);
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on port ${port}`);

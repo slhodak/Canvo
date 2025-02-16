@@ -20,12 +20,12 @@ const LoginOrSignup = ({ isAuthenticated }: LoginOrSignupProps) => {
           type: OAuthProviders.Google,
         }
       ],
-      loginRedirectURL: `${SERVER_URL}/s/auth/authenticate`,
-      signupRedirectURL: `${SERVER_URL}/s/auth/authenticate`,
+      loginRedirectURL: `${SERVER_URL}/auth/authenticate`,
+      signupRedirectURL: `${SERVER_URL}/auth/authenticate`,
     },
     passwordOptions: {
-      loginRedirectURL: `${SERVER_URL}/s/auth/authenticate`,
-      resetPasswordRedirectURL: `${SERVER_URL}/s/auth/authenticate`,
+      loginRedirectURL: `${SERVER_URL}/auth/authenticate`,
+      resetPasswordRedirectURL: `${SERVER_URL}/auth/authenticate`,
     },
   };
 

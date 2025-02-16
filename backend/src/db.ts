@@ -231,7 +231,7 @@ export namespace Database {
   export async function getUserTokenBalance(userId: string): Promise<number> {
     const result = await db.oneOrNone(`
       SELECT token_balance 
-      FROM user_tokens 
+      FROM user_token_balance 
       WHERE user_id = $1
     `, [userId]);
 
@@ -243,14 +243,14 @@ export namespace Database {
     // First check if user has a token record
     const hasRecord = await db.oneOrNone(`
       SELECT user_id 
-      FROM user_tokens 
+      FROM user_token_balance
       WHERE user_id = $1
     `, [userId]);
 
     if (hasRecord) {
       // Update existing record
       await db.none(`
-        UPDATE user_tokens 
+        UPDATE user_token_balance 
         SET token_balance = token_balance - $2,
             updated_at = CURRENT_TIMESTAMP
         WHERE user_id = $1 AND token_balance >= $2
@@ -259,7 +259,7 @@ export namespace Database {
       // Insert new record with negative balance
       // This should rarely happen as users should start with some tokens
       await db.none(`
-        INSERT INTO user_tokens (user_id, token_balance)
+        INSERT INTO user_token_balance (user_id, token_balance)
         VALUES ($1, -$2)
       `, [userId, amount]);
     }
@@ -269,14 +269,14 @@ export namespace Database {
     // First check if user has a token record
     const hasRecord = await db.oneOrNone(`
       SELECT user_id 
-      FROM user_tokens 
+      FROM user_token_balance 
       WHERE user_id = $1
     `, [userId]);
 
     if (hasRecord) {
       // Update existing record
       await db.none(`
-        UPDATE user_tokens 
+        UPDATE user_token_balance 
         SET token_balance = token_balance + $2,
             updated_at = CURRENT_TIMESTAMP
         WHERE user_id = $1
@@ -284,7 +284,7 @@ export namespace Database {
     } else {
       // Insert new record
       await db.none(`
-        INSERT INTO user_tokens (user_id, token_balance)
+        INSERT INTO user_token_balance (user_id, token_balance)
         VALUES ($1, $2)
       `, [userId, amount]);
     }

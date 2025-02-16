@@ -2,16 +2,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Dict
-from dotenv import load_dotenv
-import os
 from .semantic_search import SemanticSearch
 
-# Load environment variables
-load_dotenv()
-is_dev = os.getenv("ENVIRONMENT") == "development"
-
 # Initiate app with proper root path
-app = FastAPI(root_path="/i" if is_dev else "/")
+app = FastAPI()
 
 # Add CORS middleware configuration
 app.add_middleware(
@@ -19,8 +13,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",  # Vite's default dev server
         "http://127.0.0.1:5173",  # Add localhost alternatives
-        "https://canvo.app",  # Production domain
-        "https://www.canvo.app",  # Production domain
+        "http://localhost:3000",  # Express.js server
+        "http://127.0.0.1:3000",  # Add localhost alternatives
     ],
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
