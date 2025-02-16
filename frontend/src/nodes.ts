@@ -1,5 +1,5 @@
 import { BaseNode, NodeType, SyncNode, AsyncNode, OutputState, Coordinates } from '../../shared/types/src/models/node';
-import { SERVER_URL, AI_SERVICE_URL } from './constants';
+import { SERVER_URL } from './constants';
 
 export class TextNode extends BaseNode implements SyncNode {
   constructor(
@@ -72,7 +72,7 @@ export class PromptNode extends BaseNode implements AsyncNode {
 
     // Call the LLM with the prompt and the input text
     try {
-      const response = await fetch(`${SERVER_URL}/s/api/run_prompt`, {
+      const response = await fetch(`${SERVER_URL}/api/run_prompt`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -476,26 +476,19 @@ export class EmbedNode extends BaseNode implements AsyncNode {
     try {
       this.properties.status.value = 'Processing...';
 
-      // Split text into chunks
       const chunks = this.chunkText(
         inputValues[0].stringValue,
         this.properties.chunkSize.value as number,
         this.properties.overlap.value as number
       );
 
-      // Create a mapping of document names to content
-      const documents: Record<string, string> = {};
-      chunks.forEach((chunk, i) => {
-        documents[`chunk_${i}`] = chunk;
-      });
-
-      // Send chunks to AI service for embedding
-      const response = await fetch(`${AI_SERVICE_URL}/i/embed`, {
+      const response = await fetch(`${SERVER_URL}/api/embed`, {
         method: 'POST',
+        credentials: 'include', // Important for sending auth cookies
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ documents }),
+        body: JSON.stringify({ chunks }),
       });
 
       if (!response.ok) {
@@ -566,8 +559,9 @@ export class SearchNode extends BaseNode implements AsyncNode {
     try {
       this.properties.status.value = 'Searching...';
 
-      const response = await fetch(`${AI_SERVICE_URL}/i/search`, {
+      const response = await fetch(`${SERVER_URL}/api/search`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -584,15 +578,15 @@ export class SearchNode extends BaseNode implements AsyncNode {
       const result = await response.json();
 
       // Extract snippets from results
-      const snippets = result.results.map((r: { snippet: string }) => r.snippet);
+      const chunks = result.results.map((r: { chunk: string }) => r.chunk);
 
-      this.properties.status.value = `Found ${snippets.length} results`;
+      this.properties.status.value = `Found ${chunks.length} results`;
 
       // Output the results as a string array
       this.outputState[0] = {
         stringValue: null,
         numberValue: null,
-        stringArrayValue: snippets,
+        stringArrayValue: chunks,
       };
     } catch (error: unknown) {
       console.error('Error in SearchNode:', error);

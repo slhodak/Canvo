@@ -225,4 +225,86 @@ export namespace Database {
     const result = await db.result('DELETE FROM connections WHERE project_id = $1 AND author_id = $2', [projectId, userId]);
     return result;
   }
+
+  // Token Management
+
+  export async function getUserTokenBalance(userId: string): Promise<number> {
+    const result = await db.oneOrNone(`
+      SELECT token_balance 
+      FROM user_token_balance 
+      WHERE user_id = $1
+    `, [userId]);
+
+    // If no record exists, return 0 balance
+    return result?.tokenBalance ?? 0;
+  }
+
+  export async function deductTokens(userId: string, amount: number): Promise<void> {
+    // First check if user has a token record
+    const hasRecord = await db.oneOrNone(`
+      SELECT user_id 
+      FROM user_token_balance
+      WHERE user_id = $1
+    `, [userId]);
+
+    if (hasRecord) {
+      // Update existing record
+      await db.none(`
+        UPDATE user_token_balance 
+        SET token_balance = token_balance - $2,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE user_id = $1 AND token_balance >= $2
+      `, [userId, amount]);
+    } else {
+      // Insert new record with negative balance
+      // This should rarely happen as users should start with some tokens
+      await db.none(`
+        INSERT INTO user_token_balance (user_id, token_balance)
+        VALUES ($1, -$2)
+      `, [userId, amount]);
+    }
+  }
+
+  export async function addTokens(userId: string, amount: number): Promise<void> {
+    // First check if user has a token record
+    const hasRecord = await db.oneOrNone(`
+      SELECT user_id 
+      FROM user_token_balance 
+      WHERE user_id = $1
+    `, [userId]);
+
+    if (hasRecord) {
+      // Update existing record
+      await db.none(`
+        UPDATE user_token_balance 
+        SET token_balance = token_balance + $2,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE user_id = $1
+      `, [userId, amount]);
+    } else {
+      // Insert new record
+      await db.none(`
+        INSERT INTO user_token_balance (user_id, token_balance)
+        VALUES ($1, $2)
+      `, [userId, amount]);
+    }
+  }
+
+  // Optional: Add a function to log token transactions
+  export async function logTokenTransaction(
+    userId: string,
+    amount: number,
+    operation: 'deduct' | 'add',
+    reason: string
+  ): Promise<void> {
+    await db.none(`
+      INSERT INTO token_transactions (
+        user_id, 
+        amount, 
+        operation,
+        reason
+      )
+      VALUES ($1, $2, $3, $4)
+    `, [userId, amount, operation, reason]);
+  }
 }

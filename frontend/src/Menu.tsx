@@ -17,10 +17,11 @@ interface MenuProps {
 
 const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [tokenBalance, setTokenBalance] = useState(0);
 
   const createProject = async () => {
     try {
-      const response = await fetch(`${SERVER_URL}/s/api/new_project`, {
+      const response = await fetch(`${SERVER_URL}/api/new_project`, {
         method: 'POST',
         credentials: 'include',
       });
@@ -36,7 +37,7 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
 
   const deleteProject = async (projectId: string) => {
     try {
-      const response = await fetch(`${SERVER_URL}/s/api/delete_project/${projectId}`, {
+      const response = await fetch(`${SERVER_URL}/api/delete_project/${projectId}`, {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -52,6 +53,45 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
       console.error('Error deleting project:', error);
     }
   }
+
+  const addTokens = async () => {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/add_tokens`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ amount: 1 }),
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        // Refresh token balance
+        const balanceResponse = await fetch(`${SERVER_URL}/api/get_token_balance`, {
+          credentials: 'include',
+        });
+        const balanceData = await balanceResponse.json();
+        if (balanceData.status === 'success') {
+          setTokenBalance(balanceData.tokenBalance);
+        }
+      }
+    } catch (error) {
+      console.error('Error adding tokens:', error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchTokenBalance = async () => {
+      const response = await fetch(`${SERVER_URL}/api/get_token_balance`, {
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.status == 'success') {
+        setTokenBalance(data.tokenBalance);
+      }
+    }
+    fetchTokenBalance();
+  }, []);
 
   return (
     <div className={`menu-container ${isCollapsed ? 'collapsed' : 'expanded'}`}>
@@ -81,6 +121,10 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
           </div>
           <div className="menu-user">
             <p className="menu-user-info">User: <span className="menu-user-email">{user.email}</span></p>
+            <div className="menu-user-tokens-container">
+              <p className="menu-user-info">Balance: <span className="menu-user-tokens">{tokenBalance} tokens</span></p>
+              <button className="add-token-button" onClick={addTokens}>+1 token</button>
+            </div>
           </div>
         </div>
       )}

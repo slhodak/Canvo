@@ -2,16 +2,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Dict
-from dotenv import load_dotenv
-import os
 from .semantic_search import SemanticSearch
 
-# Load environment variables
-load_dotenv()
-is_dev = os.getenv("ENVIRONMENT") == "development"
-
 # Initiate app with proper root path
-app = FastAPI(root_path="/i" if is_dev else "/")
+app = FastAPI()
 
 # Add CORS middleware configuration
 app.add_middleware(
@@ -19,8 +13,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",  # Vite's default dev server
         "http://127.0.0.1:5173",  # Add localhost alternatives
-        "https://canvo.app",  # Production domain
-        "https://www.canvo.app",  # Production domain
+        "http://localhost:3000",  # Express.js server
+        "http://127.0.0.1:3000",  # Add localhost alternatives
     ],
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
@@ -30,8 +24,8 @@ app.add_middleware(
 search_engine = SemanticSearch()
 
 
-class Documents(BaseModel):
-    documents: Dict[str, str]
+class Document(BaseModel):
+    chunks: list[str]
 
 
 class SearchQuery(BaseModel):
@@ -45,10 +39,10 @@ def read_root():
 
 
 @app.post("/embed")
-def embed(docs: Documents):
+def embed(document: Document):
     try:
-        search_engine.add_documents(docs.documents)
-        return {"message": f"Successfully added {len(docs.documents)} documents"}
+        search_engine.add_chunks(document.chunks)
+        return {"message": f"Successfully added {len(document.chunks)} chunks"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -56,13 +50,13 @@ def embed(docs: Documents):
 @app.post("/search")
 def search(search_query: SearchQuery):
     try:
+        print(search_query)
         results = search_engine.search(search_query.query, search_query.top_k)
         # Convert numpy values to Python native types
         processed_results = [
             {
-                "document": r["document"],
+                "chunk": r["chunk"],
                 "score": float(r["score"]),
-                "snippet": r["snippet"],
             }
             for r in results
         ]

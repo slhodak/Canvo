@@ -9,7 +9,7 @@ const AuthForm = ({ setIsAuthenticated }: { setIsAuthenticated: (isAuthenticated
 
   const handleSubmit = async () => {
     try {
-      const response = await fetch(`${SERVER_URL}/s/auth/invite`, {
+      const response = await fetch(`${SERVER_URL}/auth/invite`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

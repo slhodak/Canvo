@@ -159,6 +159,11 @@
   font-weight: 600;
 }
 
+.menu-user-tokens {
+  font-weight: 600;
+  color: var(--font-color-light);
+}
+
 .project-preview-actions {
   display: flex;
   gap: 4px;
@@ -238,4 +243,25 @@
 
 .project-preview-cancel-button:hover {
   background-color: #5a6268;
+}
+
+.menu-user-tokens-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.add-token-button {
+  padding: 2px 6px;
+  border: 1px solid var(--font-color-light);
+  border-radius: 4px;
+  background-color: transparent;
+  color: var(--font-color-light);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.add-token-button:hover {
+  background-color: var(--font-color-light);
+  color: var(--background-dark-2);
 }

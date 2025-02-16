@@ -28,6 +28,16 @@ if (!FRONTEND_DOMAIN) {
   throw new Error('Cannot start server: APP_DOMAIN is not set');
 }
 
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL;
+if (!AI_SERVICE_URL) {
+  throw new Error('Cannot start server: AI_SERVICE_URL is not set');
+}
+
+// Token costs for different operations
+const EMBEDDING_COST = 1;  // Cost per document embedded
+const SEARCH_COST = 1;    // Cost per search query
+const PROMPT_COST = 1;   // Cost per prompt run
+
 // Set up Stytch Authentication
 
 const stytchProjectId = process.env.STYTCH_PROJECT_ID;
@@ -393,9 +403,9 @@ router.get('/api/get_nodes_for_project/:projectId', async (req: Request, res: Re
 
 // Add new node
 router.post('/api/add_node', async (req: Request, res: Response) => {
-  const { node } = req.body;
-  if (!node) {
-    return res.status(400).json({ error: "No node provided" });
+  const { projectId, node } = req.body;
+  if (!projectId || !node) {
+    return res.status(400).json({ error: "No projectId or node provided" });
   }
 
   const user = await getUserFromSessionToken(req);
@@ -403,9 +413,13 @@ router.post('/api/add_node', async (req: Request, res: Response) => {
     return res.status(401).json({ error: "Could not find user email from session token" });
   }
 
-  try {
+  if (!validateNode(node)) {
+    return res.status(400).json({ error: "Invalid node provided" });
+  }
+
+  try { 
     await db.insertNode(node);
-    await db.updateProjectUpdatedAt(node.projectId);
+    await db.updateProjectUpdatedAt(projectId);
 
     return res.json({ status: "success" });
   } catch (error) {
@@ -557,6 +571,12 @@ router.post('/api/run_prompt', async (req: Request, res: Response) => {
     return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
   }
 
+  // Check token balance
+  const tokenBalance = await db.getUserTokenBalance(user.userId);
+  if (tokenBalance < PROMPT_COST) {
+    return res.status(403).json({ status: "failed", error: "Insufficient tokens" });
+  }
+
   // TODO: The prompt node could have multiple inputs?
   // Should we just get the prompt node info from the backend assuming it was already synced, or expect it in the request?
   const { projectId, nodeId, prompt, input } = req.body;
@@ -565,7 +585,124 @@ router.post('/api/run_prompt', async (req: Request, res: Response) => {
   }
 
   const result = await runPrompt(prompt, input);
+  await db.deductTokens(user.userId, PROMPT_COST);
   return res.json({ status: "success", result });
+});
+
+router.post('/api/embed', authenticate, async (req: Request, res: Response) => {
+  const { chunks } = req.body;
+  if (!chunks) {
+    return res.status(400).json({ error: "No chunks provided" });
+  }
+
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ error: "Could not find user from session token" });
+  }
+
+  // Check token balance
+  const tokenBalance = await db.getUserTokenBalance(user.userId);
+  if (tokenBalance < EMBEDDING_COST) {
+    return res.status(403).json({ error: "Insufficient tokens" });
+  }
+
+  try {
+    // Forward request to AI service
+    const aiResponse = await fetch(`${AI_SERVICE_URL}/embed`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chunks: chunks }),
+    });
+
+    const result = await aiResponse.json();
+
+    // Deduct tokens after successful operation
+    await db.deductTokens(user.userId, EMBEDDING_COST);
+
+    return res.json(result);
+  } catch (error) {
+    console.error('Error in embed:', error);
+    return res.status(500).json({ error: "AI service error" });
+  }
+});
+
+router.post('/api/search', authenticate, async (req: Request, res: Response) => {
+  const { query, top_k } = req.body;
+  if (!query || !top_k) {
+    return res.status(400).json({ error: "No query or top_k provided" });
+  }
+
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ error: "Could not find user from session token" });
+  }
+
+  // Check token balance
+  const tokenBalance = await db.getUserTokenBalance(user.userId);
+  if (tokenBalance < SEARCH_COST) {
+    return res.status(403).json({ error: "Insufficient tokens" });
+  }
+
+  try {
+    const aiResponse = await fetch(`${AI_SERVICE_URL}/search`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: query, top_k: top_k }),
+    });
+
+    const result = await aiResponse.json();
+
+    // Deduct tokens after successful operation
+    await db.deductTokens(user.userId, SEARCH_COST);
+
+    return res.json(result);
+  } catch (error) {
+    console.error('Error in search:', error);
+    return res.status(500).json({ error: "AI service error" });
+  }
+});
+
+////////////////////////////////////////////////////////////
+// Token transactions
+////////////////////////////////////////////////////////////
+
+router.post('/api/add_tokens', authenticate, async (req: Request, res: Response) => {
+  try {
+    const user = await getUserFromSessionToken(req);
+    if (!user) {
+      return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
+    }
+
+    const { amount } = req.body;
+    if (!amount) {
+      return res.status(400).json({ status: "failed", error: "No amount provided" });
+    }
+
+    await db.addTokens(user.userId, amount);
+    return res.json({ status: "success" });
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ status: "failed", error: error.message });
+    }
+    return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
+  }
+});
+
+router.get('/api/get_token_balance', authenticate, async (req: Request, res: Response) => {
+  try {
+    const user = await getUserFromSessionToken(req);
+    if (!user) {
+      return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
+    }
+
+    const tokenBalance = await db.getUserTokenBalance(user.userId);
+    return res.json({ status: "success", tokenBalance });
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ status: "failed", error: error.message });
+    }
+    return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
+  }
 });
 
 ////////////////////////////////////////////////////////////
@@ -573,7 +710,6 @@ router.post('/api/run_prompt', async (req: Request, res: Response) => {
 ////////////////////////////////////////////////////////////
 
 app.use('/', router);
-app.use('/s', router);
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on port ${port}`);
