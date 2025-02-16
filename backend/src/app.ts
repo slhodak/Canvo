@@ -590,6 +590,11 @@ router.post('/api/run_prompt', async (req: Request, res: Response) => {
 });
 
 router.post('/api/embed', authenticate, async (req: Request, res: Response) => {
+  const { chunks } = req.body;
+  if (!chunks) {
+    return res.status(400).json({ error: "No chunks provided" });
+  }
+
   const user = await getUserFromSessionToken(req);
   if (!user) {
     return res.status(401).json({ error: "Could not find user from session token" });
@@ -603,10 +608,10 @@ router.post('/api/embed', authenticate, async (req: Request, res: Response) => {
 
   try {
     // Forward request to AI service
-    const aiResponse = await fetch(`${AI_SERVICE_URL}/i/embed`, {
+    const aiResponse = await fetch(`${AI_SERVICE_URL}/embed`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(req.body),
+      body: JSON.stringify({ chunks: chunks }),
     });
 
     const result = await aiResponse.json();
@@ -622,6 +627,11 @@ router.post('/api/embed', authenticate, async (req: Request, res: Response) => {
 });
 
 router.post('/api/search', authenticate, async (req: Request, res: Response) => {
+  const { query, top_k } = req.body;
+  if (!query || !top_k) {
+    return res.status(400).json({ error: "No query or top_k provided" });
+  }
+
   const user = await getUserFromSessionToken(req);
   if (!user) {
     return res.status(401).json({ error: "Could not find user from session token" });
@@ -634,10 +644,10 @@ router.post('/api/search', authenticate, async (req: Request, res: Response) => 
   }
 
   try {
-    const aiResponse = await fetch(`${AI_SERVICE_URL}/i/search`, {
+    const aiResponse = await fetch(`${AI_SERVICE_URL}/search`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(req.body),
+      body: JSON.stringify({ query: query, top_k: top_k }),
     });
 
     const result = await aiResponse.json();
@@ -670,6 +680,23 @@ router.post('/api/add_tokens', authenticate, async (req: Request, res: Response)
 
     await db.addTokens(user.userId, amount);
     return res.json({ status: "success" });
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ status: "failed", error: error.message });
+    }
+    return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
+  }
+});
+
+router.get('/api/get_token_balance', authenticate, async (req: Request, res: Response) => {
+  try {
+    const user = await getUserFromSessionToken(req);
+    if (!user) {
+      return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
+    }
+
+    const tokenBalance = await db.getUserTokenBalance(user.userId);
+    return res.json({ status: "success", tokenBalance });
   } catch (error) {
     if (error instanceof Error) {
       return res.status(500).json({ status: "failed", error: error.message });

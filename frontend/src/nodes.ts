@@ -482,18 +482,13 @@ export class EmbedNode extends BaseNode implements AsyncNode {
         this.properties.overlap.value as number
       );
 
-      const documents: Record<string, string> = {};
-      chunks.forEach((chunk, i) => {
-        documents[`chunk_${i}`] = chunk;
-      });
-
       const response = await fetch(`${SERVER_URL}/api/embed`, {
         method: 'POST',
         credentials: 'include', // Important for sending auth cookies
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ documents }),
+        body: JSON.stringify({ chunks }),
       });
 
       if (!response.ok) {
@@ -583,15 +578,15 @@ export class SearchNode extends BaseNode implements AsyncNode {
       const result = await response.json();
 
       // Extract snippets from results
-      const snippets = result.results.map((r: { snippet: string }) => r.snippet);
+      const chunks = result.results.map((r: { chunk: string }) => r.chunk);
 
-      this.properties.status.value = `Found ${snippets.length} results`;
+      this.properties.status.value = `Found ${chunks.length} results`;
 
       // Output the results as a string array
       this.outputState[0] = {
         stringValue: null,
         numberValue: null,
-        stringArrayValue: snippets,
+        stringArrayValue: chunks,
       };
     } catch (error: unknown) {
       console.error('Error in SearchNode:', error);

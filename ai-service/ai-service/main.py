@@ -24,8 +24,8 @@ app.add_middleware(
 search_engine = SemanticSearch()
 
 
-class Documents(BaseModel):
-    documents: Dict[str, str]
+class Document(BaseModel):
+    chunks: list[str]
 
 
 class SearchQuery(BaseModel):
@@ -39,10 +39,10 @@ def read_root():
 
 
 @app.post("/embed")
-def embed(docs: Documents):
+def embed(document: Document):
     try:
-        search_engine.add_documents(docs.documents)
-        return {"message": f"Successfully added {len(docs.documents)} documents"}
+        search_engine.add_chunks(document.chunks)
+        return {"message": f"Successfully added {len(document.chunks)} chunks"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -50,13 +50,13 @@ def embed(docs: Documents):
 @app.post("/search")
 def search(search_query: SearchQuery):
     try:
+        print(search_query)
         results = search_engine.search(search_query.query, search_query.top_k)
         # Convert numpy values to Python native types
         processed_results = [
             {
-                "document": r["document"],
+                "chunk": r["chunk"],
                 "score": float(r["score"]),
-                "snippet": r["snippet"],
             }
             for r in results
         ]
