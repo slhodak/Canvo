@@ -53,6 +53,8 @@ export interface OutputState {
   stringArrayValue: string[] | null;
 }
 
+// cache-expensive: a node will only cache its output state if it is a node that does not run automatically
+// run methods return their output state, and only cache them as a side effect, and only if the node does not run automatically
 export abstract class BaseNode {
   public nodeId: string;
   public projectId: string;

@@ -81,6 +81,7 @@ export const NodeUtils = {
     return null;
   },
 
+  // cache-expensive: will not need this method, because run methods will return their output state to the runNode function directly
   // Read the input values from the corresponding outputs of connected nodes
   readNodeInputs(node: BaseNode, connections: VisualConnection[], nodes: Record<string, VisualNode>): (OutputState | null)[] {
     const connectionsToNode = connections.filter(conn => conn.connection.toNode === node.nodeId);

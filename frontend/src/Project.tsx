@@ -172,6 +172,9 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   // Run & Select Nodes
   //////////////////////////////
 
+  // cache-expensive: runNode will expect output states as one of its parameters
+  // cache-expensive: run node will not need to read node inputs... well...
+  // running a node means executing the "run" algorithm on the DAG that precedes it, since the last checkpoint or root nodes
   const runNode = useCallback(async (node: VisualNode) => {
     if ('run' in node.node && typeof node.node.run === 'function') {
       const inputValues = node.node.inputs > 0 ? nu.readNodeInputs(node.node, connections, nodes) : [];

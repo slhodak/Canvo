@@ -1,6 +1,7 @@
 import { BaseNode, NodeType, SyncNode, AsyncNode, OutputState, Coordinates } from '../../shared/types/src/models/node';
 import { SERVER_URL } from './constants';
 
+// cache-expensive: run methods will return their outputs, and only cache them as a side effect if and only if the node does not run automatically
 export class TextNode extends BaseNode implements SyncNode {
   constructor(
     id: string,
