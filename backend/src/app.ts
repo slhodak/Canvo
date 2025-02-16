@@ -82,6 +82,23 @@ app.use(helmet({
 
 app.use(express.json());
 
+let lastUpdateLog = 0;
+
+// Log endpoint and method for all requests
+app.use((req: Request, res: Response, next: NextFunction) => {
+  // Limit update_nodes request logging to once per 10 seconds
+  if (req.path === '/api/update_nodes') {
+    const now = Date.now();
+    if (now - lastUpdateLog >= 10000) {
+      console.log(`${req.method} ${req.path}`);
+      lastUpdateLog = now;
+    }
+  } else {
+    console.log(`${req.method} ${req.path}`);
+  }
+  next();
+});
+
 ////////////////////////////////////////////////////////////
 // Serve React App
 ////////////////////////////////////////////////////////////
@@ -417,7 +434,7 @@ router.post('/api/add_node', async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Invalid node provided" });
   }
 
-  try { 
+  try {
     await db.insertNode(node);
     await db.updateProjectUpdatedAt(projectId);
 

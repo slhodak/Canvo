@@ -281,23 +281,22 @@ export class SplitNode extends BaseNode implements SyncNode {
     // Split the input text into two parts
     const separator = this.properties.separator.value as string;
     const inputText = inputValues[0]?.stringValue as string;
-    if (!inputText) {
+    if (!inputText || separator === '') {
       return;
     }
 
+    console.debug('Splitting text:', inputText, 'with separator:', separator);
     const parts = inputText.split(separator);
-    // Join all the parts from the second to the end
-    const remainingParts = parts.slice(1).join(separator);
-    this.outputState[0] = {
-      stringValue: parts[0],
-      numberValue: null,
-      stringArrayValue: null,
-    };
-    this.outputState[1] = {
-      stringValue: remainingParts,
-      numberValue: null,
-      stringArrayValue: null,
-    };
+    console.debug('Parts:', parts);
+    this.outputState = [];
+    for (let i = 0; i < parts.length; i++) {
+      this.outputState.push({
+        stringValue: parts[i],
+        numberValue: null,
+        stringArrayValue: null,
+      });
+    }
+    this.outputs = this.outputState.length;
   }
 }
 
