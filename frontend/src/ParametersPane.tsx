@@ -102,7 +102,7 @@ const TextPropertyInput = ({ propertyKey, label, editable, initialValue, node, u
   const handlePropertyChange = (newValue: string) => {
     setValue(newValue);
     node.node.setProperty(propertyKey, newValue);
-    updateNode(node, true);
+    updateNode(node);
   }
 
   return (
@@ -138,7 +138,7 @@ const NumberPropertyInput = ({ propertyKey, label, editable, initialValue, node,
   const handlePropertyChange = (newValue: string) => {
     setValue(Number(newValue));
     node.node.setProperty(propertyKey, Number(newValue));
-    updateNode(node, true);
+    updateNode(node);
   }
 
   return (
@@ -172,7 +172,7 @@ const FilePropertyInput = ({ propertyKey, label, node, updateNode }: FilePropert
     if (!file || !('handleFileSelect' in node.node)) return;
 
     await (node.node as FileNode).handleFileSelect(file);
-    updateNode(node, true);
+    updateNode(node);
   };
 
   return (

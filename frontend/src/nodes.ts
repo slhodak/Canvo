@@ -39,8 +39,6 @@ export class TextNode extends BaseNode implements SyncNode {
 
   // Every node accepts an array of input values, but sometimes that array is empty
   run(inputValues: (OutputState | null)[]): OutputState[] {
-    console.debug('Running TextNode:', this.nodeId);
-
     // Cache because this is a source node
     this.outputState[0] = {
       stringValue: this.properties.text.value as string,

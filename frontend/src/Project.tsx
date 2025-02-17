@@ -242,49 +242,6 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     }
   }, [runNode, syncNodesUpdate, nodes]);
 
-  ///////////////////////////////////////
-  // Node & Connection CRUD Handlers
-  ///////////////////////////////////////
-
-  const addNode = useCallback(async (node: VisualNode) => {
-    setNodes(prevNodes => ({ ...prevNodes, [node.node.nodeId]: node }));
-    await syncNodeAdd(node.node);
-  }, [syncNodeAdd]);
-
-  const updateNode = useCallback(async (node: VisualNode, shouldSync: boolean = true) => {
-    setNodes(prevNodes => ({ ...prevNodes, [node.node.nodeId]: node }));
-    // The updated nodes above may/will not be available immediately for runNode to find the new data
-    if (node.node.nodeRunType === NodeRunType.Run) {
-      await runNode(node);
-    }
-    // When a source node is updated, run it immediately
-    if (node.node.nodeRunType === NodeRunType.Source) {
-      await _runNodeOnInput([], node);
-    }
-    if (shouldSync) {
-      // TODO: Sync only the subgraph that was updated
-      console.debug(`${Date.now()}: Syncing all nodes after update`);
-      await syncNodesUpdate(Object.values(nodes).map(n => n.node));
-    }
-  }, [runNode, syncNodesUpdate, _runNodeOnInput, nodes]);
-
-  const deleteNode = useCallback(async (node: VisualNode) => {
-    const newNodes = { ...nodes };
-    delete newNodes[node.node.nodeId];
-    if (selectedNode?.id === node.id) {
-      setSelectedNode(null);
-    }
-    setNodes(newNodes);
-    await syncNodeDelete(node);
-  }, [nodes, selectedNode, syncNodeDelete]);
-
-  const updateConnections = async (updatedConnections: VisualConnection[], shouldSync: boolean = true) => {
-    setConnections(updatedConnections);
-    if (shouldSync) {
-      await syncConnections(prevConnectionsRef.current, updatedConnections);
-    }
-  }
-
   //////////////////////////////
   // Sync Connections
   //////////////////////////////
@@ -312,6 +269,61 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       setConnections(prevConnections);
     }
   }, [fetchConnectionsForProject, project.projectId]);
+
+  ///////////////////////////////////////
+  // Node & Connection CRUD Handlers
+  // Connections first because node methods may depend on them
+  ///////////////////////////////////////
+
+  const updateConnections = useCallback(async (updatedConnections: VisualConnection[], shouldSync: boolean = true) => {
+    setConnections(updatedConnections);
+    if (shouldSync) {
+      await syncConnections(prevConnectionsRef.current, updatedConnections);
+    }
+  }, [syncConnections]);
+
+  const deleteConnections = useCallback((node: VisualNode) => {
+    // Delete any connections to or from this node
+    const newConnections = connections.filter(conn => conn.connection.fromNode !== node.node.nodeId && conn.connection.toNode !== node.node.nodeId);
+    updateConnections(newConnections);
+  }, [connections, updateConnections]);
+
+  const addNode = useCallback(async (node: VisualNode) => {
+    setNodes(prevNodes => ({ ...prevNodes, [node.node.nodeId]: node }));
+    await syncNodeAdd(node.node);
+  }, [syncNodeAdd]);
+
+  const updateNode = useCallback(async (node: VisualNode, shouldRun: boolean = true, shouldSync: boolean = true) => {
+    setNodes(prevNodes => ({ ...prevNodes, [node.node.nodeId]: node }));
+    // Sometimes the node is only having its coordinates updated, so don't run it
+    if (shouldRun) {
+      // The updated nodes above may/will not be available immediately for runNode to find the new data
+      if (node.node.nodeRunType === NodeRunType.Run) {
+        await runNode(node);
+      }
+      // When a source node is updated, run it immediately
+      if (node.node.nodeRunType === NodeRunType.Source) {
+        console.debug(`${Date.now()}: Running source node: ${node.node.nodeId}`);
+        await _runNodeOnInput([], node);
+      }
+    }
+    if (shouldSync) {
+      // TODO: Sync only the subgraph that was updated
+      console.debug(`${Date.now()}: Syncing all nodes after update`);
+      await syncNodesUpdate(Object.values(nodes).map(n => n.node));
+    }
+  }, [runNode, syncNodesUpdate, _runNodeOnInput, nodes]);
+
+  const deleteNode = useCallback(async (node: VisualNode) => {
+    const newNodes = { ...nodes };
+    delete newNodes[node.node.nodeId];
+    if (selectedNode?.id === node.id) {
+      setSelectedNode(null);
+    }
+    deleteConnections(node);
+    setNodes(newNodes);
+    await syncNodeDelete(node);
+  }, [nodes, selectedNode, syncNodeDelete, deleteConnections]);
 
   //////////////////////////////
   // React Hooks
