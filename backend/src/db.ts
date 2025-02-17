@@ -3,10 +3,8 @@ import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
 import { UserModel, SessionModel } from '../../shared/types/src/models/user';
 import { ProjectModel } from '../../shared/types/src/models/project';
-import {
-  BaseNode,
-  Connection,
-} from '../../shared/types/src/models/node';
+import { BaseNode } from '../../shared/types/src/models/node';
+import { Connection } from '../../shared/types/src/models/connection';
 import { camelizeColumns } from './util';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
