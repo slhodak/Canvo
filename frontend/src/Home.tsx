@@ -45,5 +45,5 @@ export default function Home() {
     return <App user={user} />;
   }
 
-  return <LoginOrSignup isAuthenticated={isAuthenticated} />;
+  return <LoginOrSignup />;
 };
