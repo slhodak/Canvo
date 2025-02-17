@@ -268,7 +268,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       });
       const data = await response.json();
       if (data.status === 'success') {
-        prevConnectionsRef.current = newConnections;
+        prevConnectionsRef.current = { ...connections };
       } else {
         console.error('Server error while updating connections:', data.error);
         setConnections(prevConnectionsRef.current);
@@ -277,7 +277,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       console.error('Could not update connections:', error);
       setConnections(prevConnectionsRef.current);
     }
-  }, [project.projectId]);
+  }, [project.projectId, connections]);
 
   ///////////////////////////////////////
   // Node & Connection CRUD Handlers
