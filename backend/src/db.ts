@@ -56,6 +56,10 @@ export namespace Database {
     await db.none('INSERT INTO sessions (session_token, user_email, session_expiration) VALUES ($1, $2, $3)', values);
   }
 
+  export async function invalidateSession(sessionToken: string) {
+    await db.none('UPDATE sessions SET session_expiration = CURRENT_TIMESTAMP WHERE session_token = $1', [sessionToken]);
+  }
+
   // Projects
 
   export async function getProject(projectId: string, userId: string): Promise<ProjectModel | null> {

@@ -80,6 +80,21 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      // Call our backend logout endpoint
+      await fetch(`${SERVER_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      // Reload the page to return to login
+      window.location.reload();
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+
   useEffect(() => {
     const fetchTokenBalance = async () => {
       const response = await fetch(`${SERVER_URL}/api/get_token_balance`, {
@@ -125,6 +140,7 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
               <p className="menu-user-info">Balance: <span className="menu-user-tokens">{tokenBalance} tokens</span></p>
               <button className="add-token-button" onClick={addTokens}>+1 token</button>
             </div>
+            <button className="logout-button" onClick={handleLogout}>Log Out</button>
           </div>
         </div>
       )}

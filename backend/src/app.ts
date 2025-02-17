@@ -215,7 +215,32 @@ router.get('/auth/check', async (req: Request, res: Response) => {
   } else {
     return res.json({ status: 'success' });
   }
-})
+});
+
+router.post('/auth/logout', authenticate, async (req: Request, res: Response) => {
+  const sessionToken = req.cookies?.session_token;
+  if (!sessionToken) {
+    return res.json({ status: 'failed', error: 'No session token found' });
+  }
+
+  try {
+    // Revoke the session in Stytch
+    await stytchClient.sessions.revoke({ session_token: sessionToken });
+    await db.invalidateSession(sessionToken);
+
+    // Clear the session cookie - fixing the domain issue
+    res.clearCookie(SESSION_TOKEN, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      path: '/'
+    });
+
+    return res.json({ status: 'success' });
+  } catch (error) {
+    console.error('Error logging out:', error);
+    return res.status(500).json({ status: 'failed', error: 'Error logging out' });
+  }
+});
 
 ////////////////////////////////////////////////////////////
 // API Routes
@@ -417,7 +442,7 @@ router.post('/api/add_node', async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Invalid node provided" });
   }
 
-  try { 
+  try {
     await db.insertNode(node);
     await db.updateProjectUpdatedAt(projectId);
 
@@ -714,3 +739,4 @@ app.use('/', router);
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on port ${port}`);
 });
+

@@ -3,11 +3,7 @@ import { Products, OAuthProviders } from '@stytch/vanilla-js';
 import './Login.css';
 import { SERVER_URL } from './constants';
 
-interface LoginOrSignupProps {
-  isAuthenticated: boolean | null
-}
-
-const LoginOrSignup = ({ isAuthenticated }: LoginOrSignupProps) => {
+const LoginOrSignup = () => {
   const config = {
     products: [
       Products.emailMagicLinks,
@@ -32,7 +28,6 @@ const LoginOrSignup = ({ isAuthenticated }: LoginOrSignupProps) => {
   return (
     <div className="login-container">
       <StytchLogin config={config} />
-      {isAuthenticated === false && <p>Credentials are invalid</p>}
     </div>
   );
 };
