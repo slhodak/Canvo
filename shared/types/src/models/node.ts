@@ -52,12 +52,12 @@ export class Connection {
 
 // For nodes whose functions are synchronous
 export interface SyncNode {
-  run(inputValues: (OutputState | null)[]): void;
+  run(inputValues: (OutputState | null)[]): OutputState[];
 }
 
 // For nodes whose functions are asynchronous
 export interface AsyncNode {
-  asyncRun(inputValues: (OutputState | null)[]): Promise<void>;
+  asyncRun(inputValues: (OutputState | null)[]): Promise<OutputState[]>;
 }
 
 export interface OutputState {
@@ -65,6 +65,30 @@ export interface OutputState {
   numberValue: number | null;
   stringArrayValue: string[] | null;
 }
+
+export enum OutputStateType {
+  String = 'string',
+  Number = 'number',
+  StringArray = 'stringArray',
+}
+
+export const defaultOutputStates: Record<OutputStateType, OutputState[]> = {
+  [OutputStateType.String]: [{
+    stringValue: '',
+    numberValue: null,
+    stringArrayValue: null,
+  }],
+  [OutputStateType.Number]: [{
+    stringValue: null,
+    numberValue: null,
+    stringArrayValue: null,
+  }],
+  [OutputStateType.StringArray]: [{
+    stringValue: null,
+    numberValue: null,
+    stringArrayValue: [],
+  }],
+};
 
 // cache-expensive: a node will only cache its output state if it is a node that does not run automatically
 // run methods return their output state, and only cache them as a side effect, and only if the node does not run automatically
