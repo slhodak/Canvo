@@ -109,7 +109,7 @@ export namespace Database {
     const values = [nodeId, userId];
     const node = await db.oneOrNone(`
       SELECT node_id, project_id, author_id, name, type, inputs,
-      outputs, coordinates, runs_automatically, properties, output_state, is_dirty
+      outputs, coordinates, node_run_type, properties, output_state, is_dirty
       FROM nodes
       WHERE node_id = $1 AND author_id = $2
     `, values);
@@ -119,7 +119,7 @@ export namespace Database {
   export async function getNodesForProject(projectId: string, userId: string): Promise<BaseNode[]> {
     const nodes = await db.any(`
       SELECT n.node_id, n.project_id, n.author_id, n.name, n.type, n.inputs, n.outputs,
-      n.coordinates, n.runs_automatically, n.properties, n.output_state, n.is_dirty
+      n.coordinates, n.node_run_type, n.properties, n.output_state, n.is_dirty
       FROM nodes n
       WHERE n.project_id = $1 AND n.author_id = $2
     `, [projectId, userId]);
@@ -137,7 +137,7 @@ export namespace Database {
       node.outputs,
       node.coordinates.x,
       node.coordinates.y,
-      node.runsAutomatically,
+      node.nodeRunType,
       node.properties,
       JSON.stringify(node.outputState),
       node.isDirty,
@@ -146,7 +146,7 @@ export namespace Database {
     await db.none(`
       INSERT INTO nodes (
         node_id, author_id, project_id, name, type, inputs, outputs,
-        coordinates, runs_automatically, properties, output_state, is_dirty
+        coordinates, node_run_type, properties, output_state, is_dirty
       )
       VALUES (
         $1, $2, $3, $4, $5, $6, $7, 
@@ -167,7 +167,7 @@ export namespace Database {
       node.outputs,
       node.coordinates.x,
       node.coordinates.y,
-      node.runsAutomatically,
+      node.nodeRunType,
       node.properties,
       JSON.stringify(node.outputState),
       node.isDirty,
@@ -175,7 +175,7 @@ export namespace Database {
     await db.none(`
       UPDATE nodes 
       SET node_id = $1, author_id = $2, project_id = $3, name = $4, type = $5, inputs = $6, outputs = $7,
-      coordinates = point($8, $9), runs_automatically = $10, properties = $11, output_state = $12::jsonb, is_dirty = $13,
+      coordinates = point($8, $9), node_run_type = $10, properties = $11, output_state = $12::jsonb, is_dirty = $13,
       updated_at = CURRENT_TIMESTAMP
       WHERE node_id = $1
     `, values);

@@ -265,16 +265,13 @@ export class ViewNode extends BaseNode implements SyncNode {
     return new ViewNode(object.nodeId, object.authorId, object.projectId, object.coordinates);
   }
 
-  // Does not need to return anything -- has no outputs
+  // View Node just passes through the input to the output
   run(inputValues: (OutputState | null)[]): OutputState[] {
-    // Copy the input to the content
-    if (inputValues[0]) {
-      this.properties.content.value = inputValues[0].stringValue as string;
-    } else {
-      this.properties.content.value = '';
-    }
-
-    return defaultOutputStates[OutputStateType.String];
+    return [{
+      stringValue: inputValues[0]?.stringValue as string || '',
+      numberValue: null,
+      stringArrayValue: null,
+    }];
   }
 }
 
