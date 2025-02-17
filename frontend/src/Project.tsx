@@ -186,7 +186,6 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   // For each input connection to this node, get or calculate the input from that connection
   // If this node is a Run node, run it once you've gathered all the input values
   const _runPriorDAG = useCallback(async (node: VisualNode): Promise<(OutputState | null)[]> => {
-    console.debug('Running prior DAG for node:', node.node.nodeId);
     const inputConnections = connections.filter(conn => conn.connection.toNode === node.id);
     const inputValues: (OutputState | null)[] = [];
     for (const conn of inputConnections) {
@@ -213,10 +212,9 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
           inputValues.push(outputState);
           break;
         case NodeRunType.Run: {
-          console.debug('Found a run node', inputNode.node.nodeId);
           const priorInputValues = await _runPriorDAG(inputNode);
-          console.debug('Prior input values:', priorInputValues);
-          inputValues.push(...(await _runNodeOnInput(priorInputValues, inputNode)));
+          const calculatedOutputState = await _runNodeOnInput(priorInputValues, inputNode);
+          inputValues.push(...calculatedOutputState);
           break;
         }
         default:
@@ -240,7 +238,6 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     }
     if (node.node.type === NodeType.View) {
       const outputState = await runNode(node);
-      console.debug('Setting view text:', outputState[0]?.stringValue);
       // Set view text from the output state instead of the property value. don't cache view state
       setViewText(outputState[0]?.stringValue || '');
     }
@@ -255,10 +252,10 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     await syncNodeAdd(node.node);
   }, [syncNodeAdd]);
 
-  const updateNode = useCallback(async (node: VisualNode, shouldRun: boolean = true, shouldSync: boolean = true) => {
+  const updateNode = useCallback(async (node: VisualNode, shouldSync: boolean = true) => {
     setNodes(prevNodes => ({ ...prevNodes, [node.node.nodeId]: node }));
     // The updated nodes above may/will not be available immediately for runNode to find the new data
-    if (shouldRun) {
+    if (node.node.nodeRunType === NodeRunType.Run) {
       await runNode(node);
     }
     if (shouldSync) {

@@ -1,5 +1,5 @@
-import { VisualConnection, VisualNode } from "./NetworkTypes";
-import { BaseNode, NodeType, Coordinates, OutputState } from "../../shared/types/src/models/node";
+import { VisualNode } from "./NetworkTypes";
+import { BaseNode, NodeType, Coordinates } from "../../shared/types/src/models/node";
 import { TextNode, PromptNode, SaveNode, MergeNode, ViewNode, SplitNode, FileNode, EditNode, EmbedNode, SearchNode, JoinNode, ReplaceNode } from "./nodes";
 
 export const NetworkEditorUtils = {

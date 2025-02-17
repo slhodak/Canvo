@@ -2,6 +2,7 @@ import { NetworkEditorUtils as neu } from './Utils';
 import { VisualNode, VisualConnection, WireState } from './NetworkTypes';
 import PlayButton from './assets/PlayButton';
 import './Node.css';
+import { NodeRunType, OutputState } from '../../shared/types/src/models/node';
 
 interface NodeProps {
   node: VisualNode;
@@ -12,7 +13,7 @@ interface NodeProps {
   startDrawingWire: (nodeId: string, outputIndex: number, startX: number, startY: number) => void;
   endDrawingWire: (toNodeId: string, inputIndex: number) => void;
   disconnectWire: (connectionId: string) => void;
-  runNode: (node: VisualNode, shouldSync?: boolean) => Promise<void>;
+  runNode: (node: VisualNode, shouldSync?: boolean) => Promise<(OutputState | null)[]>;
 }
 
 export const Node = ({ node, isSelected, connections, wireState, handleMouseDown, startDrawingWire, endDrawingWire, disconnectWire, runNode }: NodeProps) => {
@@ -63,7 +64,7 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
       </text>
 
       {/* Play Button */}
-      {node.node.runsAutomatically == false && (
+      {node.node.nodeRunType === NodeRunType.Cache && (
         <foreignObject
           x={node.x + neu.NODE_WIDTH + 5}
           y={node.y + (neu.NODE_HEIGHT / 2) - 10}

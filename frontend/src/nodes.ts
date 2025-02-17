@@ -519,10 +519,16 @@ export class EmbedNode extends BaseNode implements AsyncNode {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        this.properties.status.value = `Error: ${response.statusText}`;
+        return defaultOutputStates[OutputStateType.StringArray];
       }
 
       const result = await response.json();
+      if (result.status === 'error') {
+        this.properties.status.value = `Error: ${result.error}`;
+        return defaultOutputStates[OutputStateType.StringArray];
+      }
+
       // Set success status with chunk count
       this.properties.status.value = `Success: Created ${chunks.length} embeddings`;
 
@@ -721,7 +727,7 @@ export class ReplaceNode extends BaseNode implements SyncNode {
     const search = this.properties.search.value as string;
     const replace = this.properties.replace.value as string;
 
-    const replacedString = inputValues[0].stringValue.replace(search, replace);
+    const replacedString = inputValues[0].stringValue.replaceAll(search, replace);
 
     return [{
       stringValue: replacedString,

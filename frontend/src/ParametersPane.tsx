@@ -10,7 +10,7 @@ import { FileNode } from './nodes';
 
 interface ParametersPaneProps {
   node: VisualNode | null;
-  updateNode: (updatedNode: VisualNode, shouldRun?: boolean, shouldSync?: boolean) => void;
+  updateNode: (updatedNode: VisualNode, shouldSync?: boolean) => void;
 }
 
 const ParametersPane = ({ node, updateNode }: ParametersPaneProps) => (
@@ -87,7 +87,7 @@ interface PropertyInputProps {
   label: string;
   editable: boolean;
   node: VisualNode;
-  updateNode: (updatedNode: VisualNode, shouldRun?: boolean, shouldSync?: boolean) => void;
+  updateNode: (updatedNode: VisualNode, shouldSync?: boolean) => void;
 }
 
 interface TextPropertyInputProps extends PropertyInputProps {
@@ -104,7 +104,7 @@ const TextPropertyInput = ({ propertyKey, label, editable, initialValue, node, u
   const handlePropertyChange = (newValue: string) => {
     setValue(newValue);
     node.node.setProperty(propertyKey, newValue);
-    updateNode(node, node.node.runsAutomatically, true);
+    updateNode(node, true);
   }
 
   return (
@@ -140,7 +140,7 @@ const NumberPropertyInput = ({ propertyKey, label, editable, initialValue, node,
   const handlePropertyChange = (newValue: string) => {
     setValue(Number(newValue));
     node.node.setProperty(propertyKey, Number(newValue));
-    updateNode(node, node.node.runsAutomatically, true);
+    updateNode(node, true);
   }
 
   return (
