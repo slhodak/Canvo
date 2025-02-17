@@ -228,12 +228,10 @@ router.post('/auth/logout', authenticate, async (req: Request, res: Response) =>
     await stytchClient.sessions.revoke({ session_token: sessionToken });
     await db.invalidateSession(sessionToken);
 
-    // Clear the session cookie
-    // TODO: Ensure this does what you think it does
+    // Clear the session cookie - fixing the domain issue
     res.clearCookie(SESSION_TOKEN, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      domain: FRONTEND_DOMAIN,
       path: '/'
     });
 
