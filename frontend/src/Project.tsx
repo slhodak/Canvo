@@ -2,7 +2,7 @@ import './Project.css';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { VisualNode, VisualConnection } from './NetworkTypes';
-import { BaseNode, Connection, NodeType } from '../../shared/types/src/models/node';
+import { BaseNode, Connection, NodeRunType, NodeType, OutputState } from '../../shared/types/src/models/node';
 import { NodeUtils as nu } from './Utils';
 import NetworkEditor from './NetworkEditor';
 import ParametersPane from './ParametersPane';
@@ -172,40 +172,74 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   // Run & Select Nodes
   //////////////////////////////
 
-  const runNode = useCallback(async (node: VisualNode) => {
+  // cache-expensive: calculate the output state of a node given its input states
+  const _runNodeOnInput = useCallback(async (inputValues: (OutputState | null)[], node: VisualNode): Promise<(OutputState | null)[]> => {
     if ('run' in node.node && typeof node.node.run === 'function') {
-      const inputValues = node.node.inputs > 0 ? nu.readNodeInputs(node.node, connections, nodes) : [];
-      node.node.run(inputValues);
-      // If the node is a View Node, set the view text
-      if (node.node.type === NodeType.View) {
-        console.debug('Setting view text:', node.node.properties['content'].value);
-        setViewText(node.node.properties['content'].value as string);
-      }
+      return node.node.run(inputValues);
     }
-
     if ('asyncRun' in node.node && typeof node.node.asyncRun === 'function') {
-      const inputValues = nu.readNodeInputs(node.node, connections, nodes);
-      await node.node.asyncRun(inputValues);
+      return await node.node.asyncRun(inputValues);
     }
+    return [];
+  }, []);
 
-    // Find this node's connections via its output ports
-    const outputConnections = connections.filter(conn => conn.connection.fromNode === node.id);
-    for (const conn of outputConnections) {
-      const descendent = nodes[conn.connection.toNode];
-      if (!descendent) return;
+  // For each input connection to this node, get or calculate the input from that connection
+  // If this node is a Run node, run it once you've gathered all the input values
+  const _runPriorDAG = useCallback(async (node: VisualNode): Promise<(OutputState | null)[]> => {
+    const inputConnections = connections.filter(conn => conn.connection.toNode === node.id);
+    const inputValues: (OutputState | null)[] = [];
+    for (const conn of inputConnections) {
+      const inputNode = nodes[conn.connection.fromNode];
+      if (!inputNode) {
+        console.warn("Input node not found for connection:", conn.connection.connectionId);
+        continue;
+      };
 
-      if (descendent.node.runsAutomatically) {
-        await runNode(descendent);
+      const outputState = inputNode.node.outputState[conn.connection.fromOutput];
+      if (!outputState) {
+        console.warn("Output state not found for connection:", conn.connection.connectionId);
+        continue;
+      }
+
+      // Read from Cache and Source nodes, run Run nodes
+      switch (inputNode.node.nodeRunType) {
+        case NodeRunType.Source:
+          console.debug('Found a source node', inputNode.node.nodeId);
+          console.debug('Output state:', outputState);
+          inputValues.push(outputState);
+          break;
+        case NodeRunType.Cache:
+          inputValues.push(outputState);
+          break;
+        case NodeRunType.Run: {
+          const priorInputValues = await _runPriorDAG(inputNode);
+          const calculatedOutputState = await _runNodeOnInput(priorInputValues, inputNode);
+          inputValues.push(...calculatedOutputState);
+          break;
+        }
+        default:
+          return [];
       }
     }
-  }, [nodes, connections]);
+    return inputValues;
+  }, [nodes, connections, _runNodeOnInput]);
+
+  const runNode = useCallback(async (node: VisualNode): Promise<(OutputState | null)[]> => {
+    const inputValues = await _runPriorDAG(node);
+    return await _runNodeOnInput(inputValues, node);
+  }, [_runPriorDAG, _runNodeOnInput]);
 
   const selectNode = useCallback(async (node: VisualNode) => {
     setSelectedNode(node);
-    if (node.node.runsAutomatically) {
+    if (node.node.nodeRunType === NodeRunType.Run) {
       await runNode(node);
       // TODO: Sync only the subgraph that was run
       await syncNodesUpdate(Object.values(nodes).map(n => n.node));
+    }
+    if (node.node.type === NodeType.View) {
+      const outputState = await runNode(node);
+      // Set view text from the output state instead of the property value. don't cache view state
+      setViewText(outputState[0]?.stringValue || '');
     }
   }, [runNode, syncNodesUpdate, nodes]);
 
@@ -218,10 +252,10 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     await syncNodeAdd(node.node);
   }, [syncNodeAdd]);
 
-  const updateNode = useCallback(async (node: VisualNode, shouldRun: boolean = true, shouldSync: boolean = true) => {
+  const updateNode = useCallback(async (node: VisualNode, shouldSync: boolean = true) => {
     setNodes(prevNodes => ({ ...prevNodes, [node.node.nodeId]: node }));
     // The updated nodes above may/will not be available immediately for runNode to find the new data
-    if (shouldRun) {
+    if (node.node.nodeRunType === NodeRunType.Run) {
       await runNode(node);
     }
     if (shouldSync) {

@@ -1,6 +1,6 @@
-import { VisualConnection, VisualNode } from "./NetworkTypes";
-import { BaseNode, NodeType, Coordinates, OutputState } from "../../shared/types/src/models/node";
-import { TextNode, PromptNode, SaveNode, MergeNode, ViewNode, SplitNode, FileNode, EditNode, EmbedNode, SearchNode, JoinNode } from "./nodes";
+import { VisualNode } from "./NetworkTypes";
+import { BaseNode, NodeType, Coordinates } from "../../shared/types/src/models/node";
+import { TextNode, PromptNode, SaveNode, MergeNode, ViewNode, SplitNode, FileNode, EditNode, EmbedNode, SearchNode, JoinNode, ReplaceNode } from "./nodes";
 
 export const NetworkEditorUtils = {
   NODE_WIDTH: 100,
@@ -45,6 +45,8 @@ export const NodeUtils = {
         return new SearchNode(nodeId, authorId, projectId, coordinates);
       case NodeType.Join:
         return new JoinNode(nodeId, authorId, projectId, coordinates);
+      case NodeType.Replace:
+        return new ReplaceNode(nodeId, authorId, projectId, coordinates);
       default:
         return null;
     }
@@ -74,37 +76,12 @@ export const NodeUtils = {
         return SearchNode.fromObject(object);
       case NodeType.Join:
         return JoinNode.fromObject(object);
+      case NodeType.Replace:
+        return ReplaceNode.fromObject(object);
       default:
         return null;
     }
 
     return null;
   },
-
-  // Read the input values from the corresponding outputs of connected nodes
-  readNodeInputs(node: BaseNode, connections: VisualConnection[], nodes: Record<string, VisualNode>): (OutputState | null)[] {
-    const connectionsToNode = connections.filter(conn => conn.connection.toNode === node.nodeId);
-    if (connectionsToNode.length === 0) {
-      // Print this warning because the caller should have already confirmed that the node is supposed to have inputs
-      // And readNodeInputs should only be run when the node is part of a DAG, i.e. at least one of the inputs is connected
-      console.warn("No connections to node:", node.nodeId);
-      return [];
-    }
-
-    return connectionsToNode.map(conn => {
-      const fromNode = nodes[conn.connection.fromNode];
-      if (!fromNode) {
-        console.warn("No fromNode found for connection:", conn);
-        return null;
-      }
-
-      const fromNodeOutput = fromNode.node.outputState[conn.connection.fromOutput];
-      if (!fromNodeOutput) {
-        console.warn("No output found for fromNode:", fromNode);
-        return null;
-      }
-
-      return fromNodeOutput;
-    });
-  }
 }
