@@ -84,6 +84,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
           });
         });
         setConnections(visualConnections);
+        prevConnectionsRef.current = visualConnections;
       } else {
         console.error('Error fetching connections for project:', data.error);
       }
@@ -110,7 +111,9 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
         }),
       });
       const data = await response.json();
-      if (data.status !== 'success') {
+      if (data.status === 'success') {
+        prevNodesRef.current = { ...nodes };
+      } else {
         console.error('Server error while updating node:', data.error);
         setNodes(prevNodesRef.current);
       }
@@ -118,7 +121,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       console.error('Could not update node:', error);
       setNodes(prevNodesRef.current);
     }
-  }, [project.projectId]);
+  }, [project.projectId, nodes]);
 
   const syncNodesUpdate = useCallback(async (updatedNodes: BaseNode[]) => {
     try {
@@ -134,7 +137,9 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
         }),
       });
       const data = await response.json();
-      if (data.status !== 'success') {
+      if (data.status === 'success') {
+        prevNodesRef.current = { ...nodes };
+      } else {
         console.error('Server error while updating node:', data.error);
         setNodes(prevNodesRef.current);
       }
@@ -142,7 +147,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       console.error('Could not update node:', error);
       setNodes(prevNodesRef.current);
     }
-  }, [project.projectId]);
+  }, [project.projectId, nodes]);
 
   const syncNodeDelete = useCallback(async (node: VisualNode) => {
     try {
@@ -158,7 +163,9 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
         }),
       });
       const data = await response.json();
-      if (data.status !== 'success') {
+      if (data.status === 'success') {
+        prevNodesRef.current = { ...nodes };
+      } else {
         console.error('Error deleting node:', data.error);
         setNodes(prevNodesRef.current);
       }
@@ -166,7 +173,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       console.error('Error deleting node:', error);
       setNodes(prevNodesRef.current);
     }
-  }, [project.projectId]);
+  }, [project.projectId, nodes]);
 
   //////////////////////////////
   // Run & Select Nodes
@@ -188,6 +195,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   const _runPriorDAG = useCallback(async (node: VisualNode): Promise<(OutputState | null)[]> => {
     const inputConnections = connections.filter(conn => conn.connection.toNode === node.id);
     const inputValues: (OutputState | null)[] = [];
+    console.debug('Found input connections', node.id, inputConnections);
     for (const conn of inputConnections) {
       const inputNode = nodes[conn.connection.fromNode];
       if (!inputNode) {
@@ -204,6 +212,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       // Read from Cache and Source nodes, run Run nodes
       switch (inputNode.node.nodeRunType) {
         case NodeRunType.Source:
+          console.debug('Adding source node output state to input values:', outputState);
           inputValues.push(outputState);
           break;
         case NodeRunType.Cache:
@@ -246,7 +255,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   // Sync Connections
   //////////////////////////////
 
-  const syncConnections = useCallback(async (prevConnections: NetworkConnections, newConnections: NetworkConnections) => {
+  const syncConnections = useCallback(async (newConnections: NetworkConnections) => {
     try {
       const serverConnections = newConnections.map(conn => conn.connection);
       const response = await fetch(`${SERVER_URL}/api/set_connections`, {
@@ -259,16 +268,16 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       });
       const data = await response.json();
       if (data.status === 'success') {
-        fetchConnectionsForProject();
+        prevConnectionsRef.current = newConnections;
       } else {
         console.error('Server error while updating connections:', data.error);
-        setConnections(prevConnections);
+        setConnections(prevConnectionsRef.current);
       }
     } catch (error) {
       console.error('Could not update connections:', error);
-      setConnections(prevConnections);
+      setConnections(prevConnectionsRef.current);
     }
-  }, [fetchConnectionsForProject, project.projectId]);
+  }, [project.projectId]);
 
   ///////////////////////////////////////
   // Node & Connection CRUD Handlers
@@ -278,7 +287,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   const updateConnections = useCallback(async (updatedConnections: VisualConnection[], shouldSync: boolean = true) => {
     setConnections(updatedConnections);
     if (shouldSync) {
-      await syncConnections(prevConnectionsRef.current, updatedConnections);
+      await syncConnections(updatedConnections);
     }
   }, [syncConnections]);
 

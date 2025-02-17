@@ -325,6 +325,7 @@ const NetworkEditor = ({
       ),
     };
 
+    console.debug('Creating new connection:', newConnection);
     updateConnections([...newConnections, newConnection]);
   }, [connections, updateConnections, project.projectId, user.userId]);
 
