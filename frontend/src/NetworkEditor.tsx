@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import './NetworkEditor.css';
 import { VisualNode, VisualConnection, DragState, WireState } from './NetworkTypes';
 import { Node } from './Node';
-import { NetworkEditorUtils as neu } from './Utils';
+import { ConnectionUtils as cu, NetworkEditorUtils as neu } from './Utils';
 import { Connection, Coordinates, NodeType, OutputState } from '../../shared/types/src/models/node';
 import { NodeUtils as nu } from './Utils';
 import { ProjectModel } from '../../shared/types/src/models/project';
@@ -313,7 +313,7 @@ const NetworkEditor = ({
     }
 
     const newConnection: VisualConnection = {
-      id: `${fromNodeId}-${toNodeId}-${fromOutput}-${inputIndex}`,
+      id: cu.visualConnectionId(fromNodeId, fromOutput, toNodeId, inputIndex),
       connection: new Connection(
         crypto.randomUUID(),
         user.userId,
@@ -324,9 +324,9 @@ const NetworkEditor = ({
         inputIndex,
       ),
     };
+    newConnections.push(newConnection);
 
-    console.debug('Creating new connection:', newConnection);
-    updateConnections([...newConnections, newConnection]);
+    updateConnections(newConnections);
   }, [connections, updateConnections, project.projectId, user.userId]);
 
   const connectToViewNode = useCallback((node: VisualNode) => {

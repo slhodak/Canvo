@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { VisualNode, VisualConnection } from './NetworkTypes';
 import { BaseNode, Connection, NodeRunType, NodeType, OutputState } from '../../shared/types/src/models/node';
-import { NodeUtils as nu } from './Utils';
+import { ConnectionUtils as cu, NodeUtils as nu } from './Utils';
 import NetworkEditor from './NetworkEditor';
 import ParametersPane from './ParametersPane';
 import OutputView from "./OutputView";
@@ -79,7 +79,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
         const visualConnections: VisualConnection[] = [];
         data.connections.forEach((object: Connection) => {
           visualConnections.push({
-            id: object.connectionId,
+            id: cu.visualConnectionId(object.fromNode, object.fromOutput, object.toNode, object.toInput),
             connection: object,
           });
         });
@@ -193,9 +193,8 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   // For each input connection to this node, get or calculate the input from that connection
   // If this node is a Run node, run it once you've gathered all the input values
   const _runPriorDAG = useCallback(async (node: VisualNode): Promise<(OutputState | null)[]> => {
-    const inputConnections = connections.filter(conn => conn.connection.toNode === node.id);
+    const inputConnections = connections.filter(conn => conn.connection.toNode === node.node.nodeId);
     const inputValues: (OutputState | null)[] = [];
-    console.debug('Found input connections', node.id, inputConnections);
     for (const conn of inputConnections) {
       const inputNode = nodes[conn.connection.fromNode];
       if (!inputNode) {
@@ -212,7 +211,6 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       // Read from Cache and Source nodes, run Run nodes
       switch (inputNode.node.nodeRunType) {
         case NodeRunType.Source:
-          console.debug('Adding source node output state to input values:', outputState);
           inputValues.push(outputState);
           break;
         case NodeRunType.Cache:
@@ -312,13 +310,11 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       }
       // When a source node is updated, run it immediately
       if (node.node.nodeRunType === NodeRunType.Source) {
-        console.debug(`${Date.now()}: Running source node: ${node.node.nodeId}`);
         await _runNodeOnInput([], node);
       }
     }
     if (shouldSync) {
       // TODO: Sync only the subgraph that was updated
-      console.debug(`${Date.now()}: Syncing all nodes after update`);
       await syncNodesUpdate(Object.values(nodes).map(n => n.node));
     }
   }, [runNode, syncNodesUpdate, _runNodeOnInput, nodes]);

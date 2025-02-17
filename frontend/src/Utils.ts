@@ -85,3 +85,9 @@ export const NodeUtils = {
     return null;
   },
 }
+
+export const ConnectionUtils = {
+  visualConnectionId(fromNodeId: string, fromOutput: number, toNodeId: string, toInput: number): string {
+    return `${fromNodeId}-${toNodeId}-${fromOutput}-${toInput}`;
+  }
+}
