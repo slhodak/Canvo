@@ -1,4 +1,5 @@
-import { BaseNode, Connection } from '../../shared/types/src/models/node';
+import { BaseNode } from '../../shared/types/src/models/node';
+import { Connection } from '../../shared/types/src/models/connection';
 
 export interface VisualNode {
   id: string;
