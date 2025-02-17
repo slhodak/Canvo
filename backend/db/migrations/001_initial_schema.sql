@@ -51,7 +51,6 @@ CREATE TABLE IF NOT EXISTS nodes (
     node_run_type TEXT NOT NULL,
     properties JSONB NOT NULL,
     output_state JSONB NOT NULL DEFAULT '{}',
-    is_dirty BOOLEAN NOT NULL DEFAULT FALSE,
 
     FOREIGN KEY (author_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (project_id) REFERENCES projects(project_id) ON DELETE CASCADE,

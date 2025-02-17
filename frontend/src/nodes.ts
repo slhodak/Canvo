@@ -39,8 +39,6 @@ export class TextNode extends BaseNode implements SyncNode {
 
   // Every node accepts an array of input values, but sometimes that array is empty
   run(inputValues: (OutputState | null)[]): OutputState[] {
-    if (!this.isDirty) return defaultOutputStates[OutputStateType.String];
-
     console.debug('Running TextNode:', this.nodeId);
 
     // Cache because this is a source node
@@ -50,7 +48,6 @@ export class TextNode extends BaseNode implements SyncNode {
       stringArrayValue: null,
     };
 
-    this.setClean();
     return this.outputState;
   }
 }
@@ -410,13 +407,11 @@ export class EditNode extends BaseNode implements SyncNode {
   }
 
   run(inputValues: (OutputState | null)[]): OutputState[] {
-    // If there's no input or the node isn't dirty, don't update the content
-    if (!inputValues[0] && !this.isDirty) return defaultOutputStates[OutputStateType.String];
-
-    // If there's new input and the content hasn't been edited yet, copy the input
-    if (inputValues[0] && !this.isDirty) {
-      this.properties.content.value = inputValues[0].stringValue as string;
+    if (!inputValues[0]) {
+      return defaultOutputStates[OutputStateType.String];
     }
+
+    this.properties.content.value = inputValues[0].stringValue as string;
 
     // Cache the output because this is a cache node
     this.outputState[0] = {
@@ -425,7 +420,6 @@ export class EditNode extends BaseNode implements SyncNode {
       stringArrayValue: null,
     };
 
-    this.setClean();
     return this.outputState;
   }
 }

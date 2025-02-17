@@ -39,5 +39,3 @@ fi
 echo "Running migrations..."
 rm ./db/db_version.txt
 ./db/run_migrations.sh dev
-
-echo "Be sure to delete the old invite codes in the invite_codes.csv file and issue new invites."

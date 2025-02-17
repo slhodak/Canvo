@@ -25,11 +25,11 @@ export const formatStateArray = (state: OutputState) => {
 export const validateNode = (node: BaseNode): boolean => {
   const {
     nodeId, projectId, name, type, inputs, outputs, coordinates,
-    nodeRunType, properties, outputState, isDirty } = node;
+    nodeRunType, properties, outputState } = node;
   try {
     checkAnyNullOrUndefined({
       nodeId, projectId, name, type, inputs, outputs, coordinates,
-      nodeRunType, properties, outputState, isDirty
+      nodeRunType, properties, outputState
     });
   } catch (error) {
     console.error(`A required field is missing from the node: ${error}`);

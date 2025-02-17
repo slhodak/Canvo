@@ -111,7 +111,6 @@ export abstract class BaseNode {
   public coordinates: Coordinates;
   public nodeRunType: NodeRunType;
   public properties: Record<string, NodeProperty> = {};
-  public isDirty = false;
 
   constructor(
     nodeId: string,
@@ -154,17 +153,8 @@ export abstract class BaseNode {
     throw new Error('Not implemented');
   }
 
-  public setDirty() {
-    this.isDirty = true;
-  }
-
-  public setClean() {
-    this.isDirty = false;
-  }
-
   public setProperty(key: string, value: string | number) {
     this.properties[key].value = value;
-    this.setDirty();
     // TODO: Work out how to change size of output array
   }
 }
