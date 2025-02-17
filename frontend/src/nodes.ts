@@ -1,19 +1,19 @@
 import {
-  BaseNode,
   NodeType,
   NodeRunType,
-  SyncNode,
-  AsyncNode,
+  BaseNode,
+  BaseSyncNode,
+  BaseAsyncNode,
   OutputState,
   Coordinates,
   OutputStateType,
   defaultOutputStates,
-  NodePropertyType
+  NodePropertyType,
 } from '../../shared/types/src/models/node';
 import { SERVER_URL } from './constants';
 
 // cache-expensive: run methods will return their outputs, and only cache them as a side effect if and only if the node does not run automatically
-export class TextNode extends BaseNode implements SyncNode {
+export class TextNode extends BaseSyncNode {
   constructor(
     id: string,
     authorId: string,
@@ -38,19 +38,16 @@ export class TextNode extends BaseNode implements SyncNode {
   }
 
   // Every node accepts an array of input values, but sometimes that array is empty
-  run(inputValues: (OutputState | null)[]): OutputState[] {
-    // Cache because this is a source node
-    this.outputState[0] = {
+  _run(inputValues: (OutputState | null)[]): OutputState[] {
+    return [{
       stringValue: this.properties.text.value as string,
       numberValue: null,
       stringArrayValue: null,
-    };
-
-    return this.outputState;
+    }];
   }
 }
 
-export class PromptNode extends BaseNode implements AsyncNode {
+export class PromptNode extends BaseAsyncNode {
   constructor(
     id: string,
     authorId: string,
@@ -61,7 +58,7 @@ export class PromptNode extends BaseNode implements AsyncNode {
   ) {
     super(id, authorId, projectId, 'Prompt', NodeType.Prompt, 1, 1, coordinates, NodeRunType.Cache, {
       prompt: {
-        type: 'string',
+        type: NodePropertyType.String,
         label: 'Prompt',
         value: prompt,
         editable: true,
@@ -76,7 +73,7 @@ export class PromptNode extends BaseNode implements AsyncNode {
       object.properties.prompt.value as string, object.outputState);
   }
 
-  async asyncRun(inputValues: (OutputState | null)[]): Promise<OutputState[]> {
+  async _run(inputValues: (OutputState | null)[]): Promise<OutputState[]> {
     if (!inputValues[0]) return defaultOutputStates[OutputStateType.String];
 
     if (!this.properties.prompt.value || this.properties.prompt.value === '') {
@@ -117,7 +114,7 @@ export class PromptNode extends BaseNode implements AsyncNode {
   }
 }
 
-export class SaveNode extends BaseNode implements AsyncNode {
+export class SaveNode extends BaseAsyncNode {
   constructor(
     id: string,
     authorId: string,
@@ -155,7 +152,7 @@ export class SaveNode extends BaseNode implements AsyncNode {
     );
   }
 
-  async asyncRun(inputValues: (OutputState | null)[]): Promise<OutputState[]> {
+  async _run(inputValues: (OutputState | null)[]): Promise<OutputState[]> {
     const inputText = inputValues[0]?.stringValue;
     if (!inputText) {
       this.properties.status.value = 'No input to save';
@@ -191,7 +188,7 @@ export class SaveNode extends BaseNode implements AsyncNode {
   }
 }
 
-export class MergeNode extends BaseNode implements SyncNode {
+export class MergeNode extends BaseSyncNode {
   constructor(
     id: string,
     authorId: string,
@@ -215,7 +212,7 @@ export class MergeNode extends BaseNode implements SyncNode {
     return new MergeNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.properties.separator.value as string, object.outputState);
   }
 
-  run(inputValues: (OutputState | null)[]): OutputState[] {
+  _run(inputValues: (OutputState | null)[]): OutputState[] {
     // Merge the input texts into a single output text
     let mergedResult = '';
     let i = 0;
@@ -239,7 +236,7 @@ export class MergeNode extends BaseNode implements SyncNode {
 
 // There can only be one view node
 // Connect an output port to the view node to display the output in the OutputView
-export class ViewNode extends BaseNode implements SyncNode {
+export class ViewNode extends BaseSyncNode {
   constructor(
     id: string,
     authorId: string,
@@ -262,7 +259,7 @@ export class ViewNode extends BaseNode implements SyncNode {
   }
 
   // View Node just passes through the input to the output
-  run(inputValues: (OutputState | null)[]): OutputState[] {
+  _run(inputValues: (OutputState | null)[]): OutputState[] {
     return [{
       stringValue: inputValues[0]?.stringValue as string || '',
       numberValue: null,
@@ -271,7 +268,7 @@ export class ViewNode extends BaseNode implements SyncNode {
   }
 }
 
-export class SplitNode extends BaseNode implements SyncNode {
+export class SplitNode extends BaseSyncNode {
   constructor(
     id: string,
     authorId: string,
@@ -295,7 +292,7 @@ export class SplitNode extends BaseNode implements SyncNode {
     return new SplitNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.properties.separator.value as string, object.outputState);
   }
 
-  run(inputValues: (OutputState | null)[]): OutputState[] {
+  _run(inputValues: (OutputState | null)[]): OutputState[] {
     // Split the input text into two parts
     const separator = this.properties.separator.value as string;
     const inputText = inputValues[0]?.stringValue as string;
@@ -306,22 +303,19 @@ export class SplitNode extends BaseNode implements SyncNode {
     const parts = inputText.split(separator);
     // Join all the parts from the second to the end
     const remainingParts = parts.slice(1).join(separator);
-    this.outputState[0] = {
+    return [{
       stringValue: parts[0],
       numberValue: null,
       stringArrayValue: null,
-    };
-    this.outputState[1] = {
+    }, {
       stringValue: remainingParts,
       numberValue: null,
       stringArrayValue: null,
-    };
-
-    return this.outputState;
+    }];
   }
 }
 
-export class FileNode extends BaseNode implements SyncNode {
+export class FileNode extends BaseSyncNode {
   constructor(
     id: string,
     authorId: string,
@@ -359,10 +353,12 @@ export class FileNode extends BaseNode implements SyncNode {
     );
   }
 
-  run(inputValues: (OutputState | null)[]): OutputState[] {
+  _run(inputValues: (OutputState | null)[]): OutputState[] {
     return this.outputState;
   }
 
+  // Kind of unusual behavior to have the input computed here instead of '_run',
+  // but I don't want to save the File object to a property so 'runNode' can access it later.
   async handleFileSelect(file: File) {
     this.outputState[0] = {
       stringValue: await file.text(),
@@ -373,7 +369,7 @@ export class FileNode extends BaseNode implements SyncNode {
   }
 }
 
-export class EditNode extends BaseNode implements SyncNode {
+export class EditNode extends BaseSyncNode {
   constructor(
     id: string,
     authorId: string,
@@ -404,25 +400,21 @@ export class EditNode extends BaseNode implements SyncNode {
     );
   }
 
-  run(inputValues: (OutputState | null)[]): OutputState[] {
+  _run(inputValues: (OutputState | null)[]): OutputState[] {
     if (!inputValues[0]) {
       return defaultOutputStates[OutputStateType.String];
     }
 
     this.properties.content.value = inputValues[0].stringValue as string;
-
-    // Cache the output because this is a cache node
-    this.outputState[0] = {
+    return [{
       stringValue: this.properties.content.value as string,
       numberValue: null,
       stringArrayValue: null,
-    };
-
-    return this.outputState;
+    }];
   }
 }
 
-export class EmbedNode extends BaseNode implements AsyncNode {
+export class EmbedNode extends BaseAsyncNode {
   constructor(
     id: string,
     authorId: string,
@@ -485,7 +477,7 @@ export class EmbedNode extends BaseNode implements AsyncNode {
     return chunks;
   }
 
-  async asyncRun(inputValues: (OutputState | null)[]): Promise<OutputState[]> {
+  async _run(inputValues: (OutputState | null)[]): Promise<OutputState[]> {
     if (!inputValues[0]?.stringValue) return defaultOutputStates[OutputStateType.StringArray];
 
     try {
@@ -521,25 +513,20 @@ export class EmbedNode extends BaseNode implements AsyncNode {
       this.properties.status.value = `Success: Created ${chunks.length} embeddings`;
 
       // Output the chunks array
-      this.outputState[0] = {
+      return [{
         stringValue: null,
         numberValue: null,
         stringArrayValue: chunks,
-      };
-
-      return this.outputState;
+      }];
     } catch (error: unknown) {
       console.error('Error in EmbedNode:', error);
       this.properties.status.value = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
-
-      // Clear output on error
-      this.outputState = defaultOutputStates[OutputStateType.StringArray];
-      return this.outputState;
+      return defaultOutputStates[OutputStateType.StringArray];
     }
   }
 }
 
-export class SearchNode extends BaseNode implements AsyncNode {
+export class SearchNode extends BaseAsyncNode {
   constructor(
     id: string,
     authorId: string,
@@ -577,7 +564,7 @@ export class SearchNode extends BaseNode implements AsyncNode {
     );
   }
 
-  async asyncRun(inputValues: (OutputState | null)[]): Promise<OutputState[]> {
+  async _run(inputValues: (OutputState | null)[]): Promise<OutputState[]> {
     try {
       this.properties.status.value = 'Searching...';
 
@@ -605,25 +592,20 @@ export class SearchNode extends BaseNode implements AsyncNode {
       this.properties.status.value = `Found ${chunks.length} results`;
 
       // Output the results as a string array
-      this.outputState[0] = {
+      return [{
         stringValue: null,
         numberValue: null,
         stringArrayValue: chunks,
-      };
-
-      return this.outputState;
+      }];
     } catch (error: unknown) {
       console.error('Error in SearchNode:', error);
       this.properties.status.value = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
-
-      // Clear output on error
-      this.outputState = defaultOutputStates[OutputStateType.StringArray];
-      return this.outputState;
+      return defaultOutputStates[OutputStateType.StringArray];
     }
   }
 }
 
-export class JoinNode extends BaseNode implements SyncNode {
+export class JoinNode extends BaseSyncNode {
   constructor(
     id: string,
     authorId: string,
@@ -654,7 +636,7 @@ export class JoinNode extends BaseNode implements SyncNode {
     );
   }
 
-  run(inputValues: (OutputState | null)[]): OutputState[] {
+  _run(inputValues: (OutputState | null)[]): OutputState[] {
     if (!inputValues[0]?.stringArrayValue) {
       return defaultOutputStates[OutputStateType.String];
     }
@@ -673,7 +655,7 @@ export class JoinNode extends BaseNode implements SyncNode {
 }
 
 // Write a Replace node that finds and replaces all elements of a string in an input
-export class ReplaceNode extends BaseNode implements SyncNode {
+export class ReplaceNode extends BaseSyncNode {
   constructor(
     id: string,
     authorId: string,
@@ -709,7 +691,7 @@ export class ReplaceNode extends BaseNode implements SyncNode {
     );
   }
 
-  run(inputValues: (OutputState | null)[]): OutputState[] {
+  _run(inputValues: (OutputState | null)[]): OutputState[] {
     if (!inputValues[0]?.stringValue) return defaultOutputStates[OutputStateType.String];
 
     const search = this.properties.search.value as string;
@@ -721,7 +703,7 @@ export class ReplaceNode extends BaseNode implements SyncNode {
       stringValue: replacedString,
       numberValue: null,
       stringArrayValue: null,
-    }]; 
+    }];
   }
 }
 

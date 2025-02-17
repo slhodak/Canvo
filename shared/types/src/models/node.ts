@@ -45,16 +45,6 @@ export interface Coordinates {
   y: number;
 }
 
-// For nodes whose functions are synchronous
-export interface SyncNode {
-  run(inputValues: (OutputState | null)[]): OutputState[];
-}
-
-// For nodes whose functions are asynchronous
-export interface AsyncNode {
-  asyncRun(inputValues: (OutputState | null)[]): Promise<OutputState[]>;
-}
-
 export interface OutputState {
   stringValue: string | null;
   numberValue: number | null;
@@ -146,6 +136,33 @@ export abstract class BaseNode {
     // TODO: Work out how to change size of output array
   }
 
-  public run(): OutputState[] {
+  public cacheOutputStateIfNecessary(runResult: OutputState[]) {
+    switch (this.nodeRunType) {
+      case (NodeRunType.Source, NodeRunType.Cache):
+        this.outputState = runResult;
+        break;
+      case (NodeRunType.Run, NodeRunType.Cache):
+        break;
+    }
   }
+}
+
+export abstract class BaseSyncNode extends BaseNode {
+  public run(inputValues: (OutputState | null)[]): OutputState[] {
+    const runResult = this._run(inputValues);
+    this.cacheOutputStateIfNecessary(runResult);
+    return runResult;
+  }
+
+  public abstract _run(inputValues: (OutputState | null)[]): OutputState[];
+}
+
+export abstract class BaseAsyncNode extends BaseNode {
+  public async run(inputValues: (OutputState | null)[]): Promise<OutputState[]> {
+    const runResult = await this._run(inputValues);
+    this.cacheOutputStateIfNecessary(runResult);
+    return runResult;
+  }
+
+  public abstract _run(inputValues: (OutputState | null)[]): Promise<OutputState[]>;
 }
