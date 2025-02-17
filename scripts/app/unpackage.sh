@@ -55,7 +55,7 @@ mkdir ~/canvo/ai-service
 
 # Unpack
 cd ~/canvo
-tar -xzf bundle.tar.gz
+tar --warning=no-unknown-keyword -xzf bundle.tar.gz
 
 # Restore the db_version.txt file
 mv ~/db_version.txt ~/canvo/backend/db/db_version.txt
