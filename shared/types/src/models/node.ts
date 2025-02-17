@@ -10,6 +10,7 @@ export enum NodeType {
   Embed = 'embed',
   Search = 'search',
   Join = 'join',
+  Replace = 'replace',
 }
 
 // A source node is not dependent on other nodes, and will cache its output state

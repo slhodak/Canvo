@@ -678,6 +678,59 @@ export class JoinNode extends BaseNode implements SyncNode {
   }
 }
 
+// Write a Replace node that finds and replaces all elements of a string in an input
+export class ReplaceNode extends BaseNode implements SyncNode {
+  constructor(
+    id: string,
+    authorId: string,
+    projectId: string,
+    coordinates: Coordinates,
+    outputState: OutputState[] = [],
+  ) {
+    super(id, authorId, projectId, 'Replace', NodeType.Replace, 1, 1, coordinates, NodeRunType.Run, {
+      search: {
+        type: 'string',
+        label: 'Search',
+        value: '',
+        editable: true,
+        displayed: true,
+      },
+      replace: {
+        type: 'string',
+        label: 'Replace',
+        value: '',
+        editable: true,
+        displayed: true,
+      }
+    }, outputState);
+  }
+
+  public static fromObject(object: BaseNode): BaseNode {
+    return new ReplaceNode(
+      object.nodeId,
+      object.authorId,
+      object.projectId,
+      object.coordinates,
+      object.outputState
+    );
+  }
+
+  run(inputValues: (OutputState | null)[]): OutputState[] {
+    if (!inputValues[0]?.stringValue) return defaultOutputStates[OutputStateType.String];
+
+    const search = this.properties.search.value as string;
+    const replace = this.properties.replace.value as string;
+
+    const replacedString = inputValues[0].stringValue.replace(search, replace);
+
+    return [{
+      stringValue: replacedString,
+      numberValue: null,
+      stringArrayValue: null,
+    }]; 
+  }
+}
+
 type LLMResponse = {
   status: 'success' | 'error';
   result: string;
