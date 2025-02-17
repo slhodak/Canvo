@@ -45,18 +45,6 @@ export interface Coordinates {
   y: number;
 }
 
-export class Connection {
-  constructor(
-    public connectionId: string,
-    public authorId: string,
-    public projectId: string,
-    public fromNode: string,
-    public fromOutput: number,
-    public toNode: string,
-    public toInput: number,
-  ) { }
-}
-
 // For nodes whose functions are synchronous
 export interface SyncNode {
   run(inputValues: (OutputState | null)[]): OutputState[];
@@ -156,5 +144,8 @@ export abstract class BaseNode {
   public setProperty(key: string, value: string | number) {
     this.properties[key].value = value;
     // TODO: Work out how to change size of output array
+  }
+
+  public run(): OutputState[] {
   }
 }
