@@ -7,7 +7,8 @@ import {
   OutputState,
   Coordinates,
   OutputStateType,
-  defaultOutputStates
+  defaultOutputStates,
+  NodePropertyType
 } from '../../shared/types/src/models/node';
 import { SERVER_URL } from './constants';
 
@@ -23,7 +24,7 @@ export class TextNode extends BaseNode implements SyncNode {
   ) {
     super(id, authorId, projectId, 'Text', NodeType.Text, 0, 1, coordinates, NodeRunType.Source, {
       text: {
-        type: 'string',
+        type: NodePropertyType.String,
         label: 'Text',
         value: text,
         editable: true,
@@ -132,14 +133,14 @@ export class SaveNode extends BaseNode implements AsyncNode {
   ) {
     super(id, authorId, projectId, 'Save', NodeType.Save, 1, 0, coordinates, NodeRunType.None, {
       filename: {
-        type: 'string',
+        type: NodePropertyType.String,
         label: 'Filename',
         value: filename,
         editable: true,
         displayed: true,
       },
       status: {
-        type: 'string',
+        type: NodePropertyType.String,
         label: 'Status',
         value: '',
         editable: false,
@@ -206,7 +207,7 @@ export class MergeNode extends BaseNode implements SyncNode {
   ) {
     super(id, authorId, projectId, 'Merge', NodeType.Merge, 2, 1, coordinates, NodeRunType.Run, {
       separator: {
-        type: 'string',
+        type: NodePropertyType.String,
         label: 'Separator',
         value: separator,
         editable: true,
@@ -252,7 +253,7 @@ export class ViewNode extends BaseNode implements SyncNode {
   ) {
     super(id, authorId, projectId, 'View', NodeType.View, 1, 0, coordinates, NodeRunType.None, {
       content: {
-        type: 'string',
+        type: NodePropertyType.String,
         label: 'Content',
         value: '',
         editable: false,
@@ -286,7 +287,7 @@ export class SplitNode extends BaseNode implements SyncNode {
   ) {
     super(id, authorId, projectId, 'Split', NodeType.Split, 1, 2, coordinates, NodeRunType.Run, {
       separator: {
-        type: 'string',
+        type: NodePropertyType.String,
         label: 'Separator',
         value: separator,
         editable: true,
@@ -331,20 +332,20 @@ export class FileNode extends BaseNode implements SyncNode {
     authorId: string,
     projectId: string,
     coordinates: Coordinates,
-    content: string = '',
+    filename: string = '',
     outputState: OutputState[] = [],
   ) {
     super(id, authorId, projectId, 'File', NodeType.File, 0, 1, coordinates, NodeRunType.Source, {
-      content: {
-        type: 'string',
-        label: 'Content',
-        value: content,
+      filename: {
+        type: NodePropertyType.String,
+        label: 'Filename',
+        value: filename,
         editable: false,
         displayed: true,
       },
-      filename: {
-        type: 'string',
-        label: 'Filename',
+      file: {
+        type: NodePropertyType.File,
+        label: 'File',
         value: '',
         editable: false,
         displayed: true,
@@ -358,27 +359,22 @@ export class FileNode extends BaseNode implements SyncNode {
       object.authorId,
       object.projectId,
       object.coordinates,
-      object.properties.content.value as string,
+      object.properties.filename.value as string,
       object.outputState
     );
   }
 
   run(inputValues: (OutputState | null)[]): OutputState[] {
-    this.outputState[0] = {
-      stringValue: this.properties.content.value as string,
-      numberValue: null,
-      stringArrayValue: null,
-    };
-
     return this.outputState;
   }
 
   async handleFileSelect(file: File) {
-    const content = await file.text();
-    this.properties.content.value = content;
+    this.outputState[0] = {
+      stringValue: await file.text(),
+      numberValue: null,
+      stringArrayValue: null,
+    };
     this.properties.filename.value = file.name;
-    this.setDirty();
-    this.run([]);
   }
 }
 
@@ -393,7 +389,7 @@ export class EditNode extends BaseNode implements SyncNode {
   ) {
     super(id, authorId, projectId, 'Edit', NodeType.Edit, 1, 1, coordinates, NodeRunType.Cache, {
       content: {
-        type: 'string',
+        type: NodePropertyType.String,
         label: 'Content',
         value: content,
         editable: true,
@@ -446,21 +442,21 @@ export class EmbedNode extends BaseNode implements AsyncNode {
   ) {
     super(id, authorId, projectId, 'Embed', NodeType.Embed, 1, 1, coordinates, NodeRunType.Cache, {
       chunkSize: {
-        type: 'number',
+        type: NodePropertyType.Number,
         label: 'Chunk Size',
         value: chunkSize,
         editable: true,
         displayed: true,
       },
       overlap: {
-        type: 'number',
+        type: NodePropertyType.Number,
         label: 'Overlap',
         value: overlap,
         editable: true,
         displayed: true,
       },
       status: {
-        type: 'string',
+        type: NodePropertyType.String,
         label: 'Status',
         value: '',
         editable: false,
@@ -563,14 +559,14 @@ export class SearchNode extends BaseNode implements AsyncNode {
     // we currently use a pretty low-dimension embedding model.
     super(id, authorId, projectId, 'Search', NodeType.Search, 1, 1, coordinates, NodeRunType.Cache, {
       status: {
-        type: 'string',
+        type: NodePropertyType.String,
         label: 'Status',
         value: '',
         editable: false,
         displayed: true,
       },
       query: {
-        type: 'string',
+        type: NodePropertyType.String,
         label: 'Query',
         value: '',
         editable: true,
@@ -646,7 +642,7 @@ export class JoinNode extends BaseNode implements SyncNode {
   ) {
     super(id, authorId, projectId, 'Join', NodeType.Join, 1, 1, coordinates, NodeRunType.Run, {
       separator: {
-        type: 'string',
+        type: NodePropertyType.String,
         label: 'Separator',
         value: separator,
         editable: true,
@@ -695,14 +691,14 @@ export class ReplaceNode extends BaseNode implements SyncNode {
   ) {
     super(id, authorId, projectId, 'Replace', NodeType.Replace, 1, 1, coordinates, NodeRunType.Run, {
       search: {
-        type: 'string',
+        type: NodePropertyType.String,
         label: 'Search',
         value: '',
         editable: true,
         displayed: true,
       },
       replace: {
-        type: 'string',
+        type: NodePropertyType.String,
         label: 'Replace',
         value: '',
         editable: true,

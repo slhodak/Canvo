@@ -204,8 +204,6 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       // Read from Cache and Source nodes, run Run nodes
       switch (inputNode.node.nodeRunType) {
         case NodeRunType.Source:
-          console.debug('Found a source node', inputNode.node.nodeId);
-          console.debug('Output state:', outputState);
           inputValues.push(outputState);
           break;
         case NodeRunType.Cache:
@@ -238,6 +236,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     }
     if (node.node.type === NodeType.View) {
       const outputState = await runNode(node);
+      console.debug('Setting view text:', outputState);
       // Set view text from the output state instead of the property value. don't cache view state
       setViewText(outputState[0]?.stringValue || '');
     }
@@ -258,12 +257,16 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     if (node.node.nodeRunType === NodeRunType.Run) {
       await runNode(node);
     }
+    // When a source node is updated, run it immediately
+    if (node.node.nodeRunType === NodeRunType.Source) {
+      await _runNodeOnInput([], node);
+    }
     if (shouldSync) {
       // TODO: Sync only the subgraph that was updated
       console.debug(`${Date.now()}: Syncing all nodes after update`);
       await syncNodesUpdate(Object.values(nodes).map(n => n.node));
     }
-  }, [runNode, syncNodesUpdate, nodes]);
+  }, [runNode, syncNodesUpdate, _runNodeOnInput, nodes]);
 
   const deleteNode = useCallback(async (node: VisualNode) => {
     const newNodes = { ...nodes };

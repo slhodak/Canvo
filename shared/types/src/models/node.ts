@@ -26,8 +26,14 @@ export enum NodeRunType {
   None = 'none',
 }
 
+export enum NodePropertyType {
+  String = 'string',
+  Number = 'number',
+  File = 'file',
+}
+
 export interface NodeProperty {
-  type: 'string' | 'number';
+  type: NodePropertyType;
   label: string;
   value: string | number;
   editable: boolean;
