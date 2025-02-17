@@ -1,4 +1,4 @@
-import { BaseNode, NodeType, SyncNode, AsyncNode, OutputState, Coordinates } from '../../shared/types/src/models/node';
+import { BaseNode, NodeType, NodeRunType, SyncNode, AsyncNode, OutputState, Coordinates } from '../../shared/types/src/models/node';
 import { SERVER_URL } from './constants';
 
 // cache-expensive: run methods will return their outputs, and only cache them as a side effect if and only if the node does not run automatically
@@ -11,7 +11,7 @@ export class TextNode extends BaseNode implements SyncNode {
     text: string = '',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Text', NodeType.Text, 0, 1, coordinates, true, {
+    super(id, authorId, projectId, 'Text', NodeType.Text, 0, 1, coordinates, NodeRunType.Source, {
       text: {
         type: 'string',
         label: 'Text',
@@ -50,7 +50,7 @@ export class PromptNode extends BaseNode implements AsyncNode {
     prompt: string = '',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Prompt', NodeType.Prompt, 1, 1, coordinates, false, {
+    super(id, authorId, projectId, 'Prompt', NodeType.Prompt, 1, 1, coordinates, NodeRunType.Cache, {
       prompt: {
         type: 'string',
         label: 'Prompt',
@@ -111,7 +111,7 @@ export class SaveNode extends BaseNode implements AsyncNode {
     filename: string = 'output.txt',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Save', NodeType.Save, 1, 0, coordinates, false, {
+    super(id, authorId, projectId, 'Save', NodeType.Save, 1, 0, coordinates, NodeRunType.None, {
       filename: {
         type: 'string',
         label: 'Filename',
@@ -183,7 +183,7 @@ export class MergeNode extends BaseNode implements SyncNode {
     separator: string = ' ',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Merge', NodeType.Merge, 2, 1, coordinates, true, {
+    super(id, authorId, projectId, 'Merge', NodeType.Merge, 2, 1, coordinates, NodeRunType.Run, {
       separator: {
         type: 'string',
         label: 'Separator',
@@ -229,7 +229,7 @@ export class ViewNode extends BaseNode implements SyncNode {
     projectId: string,
     coordinates: Coordinates,
   ) {
-    super(id, authorId, projectId, 'View', NodeType.View, 1, 0, coordinates, true, {
+    super(id, authorId, projectId, 'View', NodeType.View, 1, 0, coordinates, NodeRunType.None, {
       content: {
         type: 'string',
         label: 'Content',
@@ -263,7 +263,7 @@ export class SplitNode extends BaseNode implements SyncNode {
     separator: string = ' ',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Split', NodeType.Split, 1, 2, coordinates, true, {
+    super(id, authorId, projectId, 'Split', NodeType.Split, 1, 2, coordinates, NodeRunType.Run, {
       separator: {
         type: 'string',
         label: 'Separator',
@@ -311,7 +311,7 @@ export class FileNode extends BaseNode implements SyncNode {
     content: string = '',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'File', NodeType.File, 0, 1, coordinates, true, {
+    super(id, authorId, projectId, 'File', NodeType.File, 0, 1, coordinates, NodeRunType.Source, {
       content: {
         type: 'string',
         label: 'Content',
@@ -366,7 +366,7 @@ export class EditNode extends BaseNode implements SyncNode {
     content: string = '',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Edit', NodeType.Edit, 1, 1, coordinates, true, {
+    super(id, authorId, projectId, 'Edit', NodeType.Edit, 1, 1, coordinates, NodeRunType.Cache, {
       content: {
         type: 'string',
         label: 'Content',
@@ -418,7 +418,7 @@ export class EmbedNode extends BaseNode implements AsyncNode {
     overlap: number = 20,
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Embed', NodeType.Embed, 1, 1, coordinates, false, {
+    super(id, authorId, projectId, 'Embed', NodeType.Embed, 1, 1, coordinates, NodeRunType.Cache, {
       chunkSize: {
         type: 'number',
         label: 'Chunk Size',
@@ -528,7 +528,9 @@ export class SearchNode extends BaseNode implements AsyncNode {
     coordinates: Coordinates,
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Search', NodeType.Search, 1, 1, coordinates, false, {
+    // Actually this is not expensive and perhaps should be a Run node. But that's just because
+    // we currently use a pretty low-dimension embedding model.
+    super(id, authorId, projectId, 'Search', NodeType.Search, 1, 1, coordinates, NodeRunType.Cache, {
       status: {
         type: 'string',
         label: 'Status',
@@ -612,7 +614,7 @@ export class JoinNode extends BaseNode implements SyncNode {
     separator: string = '\n',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Join', NodeType.Join, 1, 1, coordinates, true, {
+    super(id, authorId, projectId, 'Join', NodeType.Join, 1, 1, coordinates, NodeRunType.Run, {
       separator: {
         type: 'string',
         label: 'Separator',

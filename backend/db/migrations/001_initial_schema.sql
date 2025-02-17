@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS nodes (
     type TEXT NOT NULL,
     inputs INTEGER NOT NULL,
     outputs INTEGER NOT NULL,
-    runs_automatically BOOLEAN NOT NULL,
+    node_run_type TEXT NOT NULL,
     properties JSONB NOT NULL,
     output_state JSONB NOT NULL DEFAULT '{}',
     is_dirty BOOLEAN NOT NULL DEFAULT FALSE,

@@ -2,7 +2,7 @@ import './Project.css';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { VisualNode, VisualConnection } from './NetworkTypes';
-import { BaseNode, Connection, NodeType } from '../../shared/types/src/models/node';
+import { BaseNode, Connection, NodeRunType, NodeType, OutputState } from '../../shared/types/src/models/node';
 import { NodeUtils as nu } from './Utils';
 import NetworkEditor from './NetworkEditor';
 import ParametersPane from './ParametersPane';
@@ -172,36 +172,50 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   // Run & Select Nodes
   //////////////////////////////
 
-  // cache-expensive: runNode will expect output states as one of its parameters
-  // cache-expensive: run node will not need to read node inputs... well...
-  // running a node means executing the "run" algorithm on the DAG that precedes it, since the last checkpoint or root nodes
-  const runNode = useCallback(async (node: VisualNode) => {
+  // cache-expensive: calculate the output state of a node given its input states
+  const _runNodeOnInput = useCallback(async (inputValues: (OutputState | null)[], node: VisualNode): Promise<OutputState | null> => {
     if ('run' in node.node && typeof node.node.run === 'function') {
-      const inputValues = node.node.inputs > 0 ? nu.readNodeInputs(node.node, connections, nodes) : [];
-      node.node.run(inputValues);
-      // If the node is a View Node, set the view text
-      if (node.node.type === NodeType.View) {
-        console.debug('Setting view text:', node.node.properties['content'].value);
-        setViewText(node.node.properties['content'].value as string);
-      }
+      return node.node.run(inputValues);
     }
-
     if ('asyncRun' in node.node && typeof node.node.asyncRun === 'function') {
-      const inputValues = nu.readNodeInputs(node.node, connections, nodes);
-      await node.node.asyncRun(inputValues);
+      return await node.node.asyncRun(inputValues);
     }
+    return null;
+  }, []);
 
-    // Find this node's connections via its output ports
-    const outputConnections = connections.filter(conn => conn.connection.fromNode === node.id);
-    for (const conn of outputConnections) {
-      const descendent = nodes[conn.connection.toNode];
-      if (!descendent) return;
+  // For each input connection to this node, get or calculate the input from that connection
+  const _runPriorDAG = useCallback(async (node: VisualNode): Promise<OutputState | null> => {
+    const inputConnections = connections.filter(conn => conn.connection.toNode === node.id);
+    for (const conn of inputConnections) {
+      const inputNode = nodes[conn.connection.fromNode];
+      if (!inputNode) {
+        console.warn("Input node not found for connection:", conn.connection.connectionId);
+        continue;
+      };
 
-      if (descendent.node.runsAutomatically) {
-        await runNode(descendent);
+      // Read from Cache and Source nodes, run Run nodes
+      switch (inputNode.node.nodeRunType) {
+        case NodeRunType.Source:
+          return await _runNodeOnInput(inputNode.node.outputState, inputNode);
+        case NodeRunType.Cache:
+          return await _runNodeOnInput(inputNode.node.outputState, inputNode);
+        case NodeRunType.Run:
+          return await _runPriorDAG(inputNode);
+        default:
+          return null;
       }
     }
-  }, [nodes, connections]);
+    return null;
+  }, [nodes, connections, _runNodeOnInput]);
+
+  const runNode = useCallback(async (node: VisualNode) => {
+    const inputState = await _runPriorDAG(node);
+    if (node.node.type === NodeType.View) {
+      console.debug('Setting view text:', inputState?.stringValue);
+      // Set view text from the output state instead of the property value. don't cache view state
+      setViewText(inputState?.stringValue || '');
+    }
+  }, [_runPriorDAG]);
 
   const selectNode = useCallback(async (node: VisualNode) => {
     setSelectedNode(node);

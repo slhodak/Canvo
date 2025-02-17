@@ -12,6 +12,19 @@ export enum NodeType {
   Join = 'join',
 }
 
+// A source node is not dependent on other nodes, and will cache its output state
+// A cache node runs an expensive or non-deterministic function, and will cache its output state
+// A run node runs a cheap and deterministic function, and will not cache its output state
+// A None node has no outputs, like a Save node
+// When traversing the DAG, read from Cache and Source nodes, and run Run nodes
+// Cache nodes can only be run manually
+export enum NodeRunType {
+  Source = 'source',
+  Cache = 'cache',
+  Run = 'run',
+  None = 'none',
+}
+
 export interface NodeProperty {
   type: 'string' | 'number';
   label: string;
@@ -65,7 +78,7 @@ export abstract class BaseNode {
   public outputs: number;
   public outputState: OutputState[] = [];
   public coordinates: Coordinates;
-  public runsAutomatically: boolean;
+  public nodeRunType: NodeRunType;
   public properties: Record<string, NodeProperty> = {};
   public isDirty = false;
 
@@ -78,7 +91,7 @@ export abstract class BaseNode {
     inputs: number,
     outputs: number,
     coordinates: Coordinates,
-    runsAutomatically: boolean,
+    nodeRunType: NodeRunType,
     properties: Record<string, NodeProperty> = {},
     outputState: OutputState[] = [],
   ) {
@@ -90,7 +103,7 @@ export abstract class BaseNode {
     this.inputs = inputs;
     this.outputs = outputs;
     this.coordinates = coordinates;
-    this.runsAutomatically = runsAutomatically;
+    this.nodeRunType = nodeRunType;
     this.properties = properties;
     this.outputState = outputState;
 
