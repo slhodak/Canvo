@@ -614,9 +614,9 @@ router.post('/api/run_prompt', async (req: Request, res: Response) => {
 });
 
 router.post('/api/embed', authenticate, async (req: Request, res: Response) => {
-  const { chunks } = req.body;
-  if (!chunks) {
-    return res.status(400).json({ error: "No chunks provided" });
+  const { text } = req.body;
+  if (!text) {
+    return res.status(400).json({ error: "No text provided" });
   }
 
   const user = await getUserFromSessionToken(req);
@@ -635,7 +635,7 @@ router.post('/api/embed', authenticate, async (req: Request, res: Response) => {
     const aiResponse = await fetch(`${AI_SERVICE_URL}/embed`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chunks: chunks }),
+      body: JSON.stringify({ text: text }),
     });
 
     const result = await aiResponse.json();

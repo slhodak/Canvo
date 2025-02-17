@@ -425,6 +425,13 @@ export class EmbedNode extends BaseAsyncNode {
     outputState: OutputState[] = [],
   ) {
     super(id, authorId, projectId, 'Embed', NodeType.Embed, 1, 1, coordinates, NodeRunType.Cache, {
+      documentId: {
+        type: NodePropertyType.String,
+        label: 'Document ID',
+        value: '',
+        editable: false,
+        displayed: true,
+      },
       chunkSize: {
         type: NodePropertyType.Number,
         label: 'Chunk Size',
@@ -461,67 +468,48 @@ export class EmbedNode extends BaseAsyncNode {
     );
   }
 
-  private chunkText(text: string, chunkSize: number, overlap: number): string[] {
-    const chunks: string[] = [];
-    let i = 0;
-
-    while (i < text.length) {
-      // Get chunk with specified size
-      const chunk = text.slice(i, i + chunkSize);
-      chunks.push(chunk);
-
-      // Move forward by chunkSize - overlap
-      i += chunkSize - overlap;
-    }
-
-    return chunks;
-  }
-
   async _run(inputValues: (OutputState | null)[]): Promise<OutputState[]> {
-    if (!inputValues[0]?.stringValue) return defaultOutputStates[OutputStateType.StringArray];
+    if (!inputValues[0]?.stringValue) return defaultOutputStates[OutputStateType.String];
 
     try {
       this.properties.status.value = 'Processing...';
 
-      const chunks = this.chunkText(
-        inputValues[0].stringValue,
-        this.properties.chunkSize.value as number,
-        this.properties.overlap.value as number
-      );
-
       const response = await fetch(`${SERVER_URL}/api/embed`, {
         method: 'POST',
-        credentials: 'include', // Important for sending auth cookies
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ chunks }),
+        body: JSON.stringify({ text: inputValues[0].stringValue }),
       });
 
       if (!response.ok) {
         this.properties.status.value = `Error: ${response.statusText}`;
-        return defaultOutputStates[OutputStateType.StringArray];
+        return defaultOutputStates[OutputStateType.String];
       }
 
       const result = await response.json();
       if (result.status === 'error') {
         this.properties.status.value = `Error: ${result.error}`;
-        return defaultOutputStates[OutputStateType.StringArray];
+        return defaultOutputStates[OutputStateType.String];
       }
+      console.debug('EmbedNode result:', result);
 
       // Set success status with chunk count
-      this.properties.status.value = `Success: Created ${chunks.length} embeddings`;
+      this.properties.documentId.value = result.document_id;
+      this.properties.status.value = `Success: Created ${result.num_embeddings} embeddings`;
 
-      // Output the chunks array
+      // Pass on the document ID to the next node
       return [{
-        stringValue: null,
+        stringValue: this.properties.documentId.value as string,
         numberValue: null,
-        stringArrayValue: chunks,
+        stringArrayValue: null,
       }];
     } catch (error: unknown) {
       console.error('Error in EmbedNode:', error);
       this.properties.status.value = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
-      return defaultOutputStates[OutputStateType.StringArray];
+      this.properties.documentId.value = '';
+      return defaultOutputStates[OutputStateType.String];
     }
   }
 }
@@ -537,6 +525,13 @@ export class SearchNode extends BaseAsyncNode {
     // Actually this is not expensive and perhaps should be a Run node. But that's just because
     // we currently use a pretty low-dimension embedding model.
     super(id, authorId, projectId, 'Search', NodeType.Search, 1, 1, coordinates, NodeRunType.Cache, {
+      documentId: {
+        type: NodePropertyType.String,
+        label: 'Document ID',
+        value: '',
+        editable: false,
+        displayed: true,
+      },
       status: {
         type: NodePropertyType.String,
         label: 'Status',
@@ -565,37 +560,38 @@ export class SearchNode extends BaseAsyncNode {
   }
 
   async _run(inputValues: (OutputState | null)[]): Promise<OutputState[]> {
+    if (!inputValues[0]?.stringValue) return defaultOutputStates[OutputStateType.StringArray];
+
+    this.properties.documentId.value = inputValues[0].stringValue as string;
     try {
       this.properties.status.value = 'Searching...';
 
-      const response = await fetch(`${SERVER_URL}/api/search`, {
+      const aiResponse = await fetch(`${SERVER_URL}/api/search`, {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          document_id: this.properties.documentId.value as string,
           query: this.properties.query.value as string,
           top_k: 3
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!aiResponse.ok) {
+        this.properties.status.value = `Error: ${aiResponse.statusText}`;
+        return defaultOutputStates[OutputStateType.StringArray];
       }
 
-      const result = await response.json();
-
-      // Extract snippets from results
-      const chunks = result.results.map((r: { chunk: string }) => r.chunk);
-
-      this.properties.status.value = `Found ${chunks.length} results`;
+      const result = await aiResponse.json();
+      this.properties.status.value = `Found ${result.search_results.length} results`;
 
       // Output the results as a string array
       return [{
         stringValue: null,
         numberValue: null,
-        stringArrayValue: chunks,
+        stringArrayValue: result.search_results,
       }];
     } catch (error: unknown) {
       console.error('Error in SearchNode:', error);

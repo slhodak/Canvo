@@ -1,7 +1,7 @@
 #! /bin/bash
 
-DB_NAME="canvo"
-DB_USER="canvo_app"
+DB_NAME="canvo_ai_db"
+DB_USER="canvo_ai_user"
 
 echo "Resetting database $DB_NAME..."
 
@@ -12,9 +12,9 @@ if [ "$confirm" != "y" ]; then
   exit 1
 fi
 
-# Ensure this script is run from the backend/ directory
-if [[ $(basename $(pwd)) != "backend" ]]; then
-  echo "This script must be run from the backend/ directory. Is currently run from $(basename $(dirname $(pwd)))"
+# Ensure this script is run from the ai-service/ directory
+if [[ $(basename $(pwd)) != "ai-service" ]]; then
+  echo "This script must be run from the ai-service/ directory. Is currently run from $(basename $(dirname $(pwd)))"
   exit 1
 fi
 
