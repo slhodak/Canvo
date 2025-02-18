@@ -5,8 +5,8 @@
 ################################################################################
 
 ENVIRONMENT=$1
-DB_USER=$2
-DB_NAME=$3
+DB_NAME=$2
+DB_USER=$3
 DB_DIR=$4
 
 if [[ -z "$ENVIRONMENT" ]]; then
@@ -47,7 +47,7 @@ if [[ ! -f "$DB_DIR/db_version.txt" ]]; then
 fi
 
 # For every file in ./db/migrations, run it
-for file in "$DB_DIR/migrations/*.sql"; do
+for file in $DB_DIR/migrations/*.sql; do
   FILE_NAME=$(basename "$file")
 
   # If the migration has already been run, skip it

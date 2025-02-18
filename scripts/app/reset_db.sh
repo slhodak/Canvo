@@ -57,14 +57,14 @@ fi
 USER_EXIST=$(psql -d postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='$DB_USER'")
 DB_EXIST=$(psql -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'")
 
-# Delete the user if it exists
-if [ "$USER_EXIST" = "1" ]; then
-  dropuser $DB_USER
-fi
-
 # Drop database if it exists
 if [ "$DB_EXIST" = "1" ]; then
   dropdb $DB_NAME
+fi
+
+# Delete the user if it exists
+if [ "$USER_EXIST" = "1" ]; then
+  dropuser $DB_USER
 fi
 
 ################################################################################

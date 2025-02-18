@@ -26,8 +26,6 @@ else
   exit 1
 fi
 
-echo "Environment argument '$ENVIRONMENT' is valid."
-
 ################################################################################
 # Confirm and set up the variables
 ################################################################################
@@ -62,7 +60,7 @@ else
   echo "User '$DB_USER' does not exist. Creating user..."
   # Request a new password for the app user
   read -s -p "Enter the app user password: " APP_USER_PASSWORD
-  psql -U $DB_ADMIN_USER -c "CREATE USER $DB_USER WITH PASSWORD '$APP_USER_PASSWORD';"
+  psql -U $DB_ADMIN_USER -d postgres -c "CREATE USER $DB_USER WITH PASSWORD '$APP_USER_PASSWORD';"
 fi
 
 if [ "$DB_EXIST" == "1" ]; then
@@ -73,13 +71,13 @@ if [ "$DB_EXIST" == "1" ]; then
   psql -U $DB_ADMIN_USER -d $DB_NAME -c "GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO $DB_USER;"
 else
   echo "Database '$DB_NAME' does not exist. Creating database..."
-  psql -U $DB_ADMIN_USER -c "CREATE DATABASE $DB_NAME;"
+  psql -U $DB_ADMIN_USER -d postgres -c "CREATE DATABASE $DB_NAME;"
 fi
 
 # Revoke connect on the database from the public role
-psql -U $DB_ADMIN_USER -c "REVOKE CONNECT ON DATABASE $DB_NAME FROM PUBLIC;"
+psql -U $DB_ADMIN_USER -d $DB_NAME -c "REVOKE CONNECT ON DATABASE $DB_NAME FROM PUBLIC;"
 # Grant connect on the database to the app user
-psql -U $DB_ADMIN_USER -c "GRANT CONNECT ON DATABASE $DB_NAME TO $DB_USER;"
+psql -U $DB_ADMIN_USER -d $DB_NAME -c "GRANT CONNECT ON DATABASE $DB_NAME TO $DB_USER;"
 # Grant usage on the schema to the app user
 psql -U $DB_ADMIN_USER -d $DB_NAME -c "GRANT USAGE ON SCHEMA public TO $DB_USER;"
 psql -U $DB_ADMIN_USER -d $DB_NAME -c "GRANT CREATE ON SCHEMA public TO $DB_USER;"
