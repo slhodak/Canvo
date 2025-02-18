@@ -1,5 +1,4 @@
 import psycopg
-from psycopg.extras import RealDictCursor
 from typing import List, Dict, Any, Optional
 import numpy as np
 from pgvector.psycopg import register_vector
@@ -15,7 +14,7 @@ class Database:
         """Create database connection"""
         if not self._connection:
             self._connection = psycopg.connect(self.connection_string)
-            self._cursor = self._connection.cursor(cursor_factory=RealDictCursor)
+            self._cursor = self._connection.cursor()
             register_vector(self._connection)
         return self._connection
 
@@ -91,23 +90,25 @@ class Database:
                 JOIN chunks c ON c.id = e.chunk_id
                 JOIN documents d ON d.id = c.document_id
                 """
-            
+
             params = [query_embedding.tolist()]
-            
+
             if document_id:
                 query += " WHERE d.document_id = %s"
                 params.append(document_id)
-            
+
             query += """
                 ORDER BY distance ASC
                 LIMIT %s
             """
             params.append(top_k)
-            
+
             self._cursor.execute(query, params)
             results = self._cursor.fetchall()
+            self._connection.commit()
             return [dict(r) for r in results]
         except Exception as e:
+            self._connection.rollback()
             raise e
 
     def get_document_chunks(self, document_id: str) -> List[str]:
@@ -125,6 +126,8 @@ class Database:
                 (document_id,)
             )
             results = self._cursor.fetchall()
+            self._connection.commit()
             return [r['text'] for r in results]
         except Exception as e:
-            raise e 
+            self._connection.rollback()
+            raise e
