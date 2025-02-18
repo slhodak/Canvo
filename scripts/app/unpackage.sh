@@ -20,6 +20,8 @@ fi
 ### Redeployment
 ########################################################
 
+echo "Erasing existing directories and backing up certain files..."
+
 # If the backend directory doesn't exist, check if the app is running
 if [ ! -d ~/canvo/backend ]; then
     echo "No canvo/backend directory. If no app is running, press y to continue."
@@ -30,18 +32,26 @@ if [ ! -d ~/canvo/backend ]; then
 else
     # If the backend directory exists
     # Stop the app
+    echo "Stopping the backend..."
     cd ~/canvo/backend
     yarn stop
 
     # Save the db_version.txt file
     if [[ -f ~/canvo/backend/db/db_version.txt ]]; then
-        mv db/db_version.txt ~/
+        mv db/db_version.txt ~/backend-db-version.txt
     else
-        echo "No db_version.txt file found to backup"
+        echo "No backend db_version.txt file found to backup"
     fi;
 
     cd $HOME
 fi
+
+# If the ai-service directory exists, save its db_version.txt file
+if [[ -f ~/canvo/ai-service/db/db_version.txt ]]; then
+    mv db/db_version.txt ~/ai-service-db-version.txt
+else
+    echo "No AI service db_version.txt file found to backup"
+fi;
 
 # Erase everything and remake the folder structure
 rm -r ~/canvo/shared
@@ -53,17 +63,21 @@ mkdir ~/canvo/backend
 mkdir ~/canvo/frontend
 mkdir ~/canvo/ai-service
 
+echo "Unpacking the bundle..."
 # Unpack
 cd ~/canvo
 tar --warning=no-unknown-keyword -xzf bundle.tar.gz
 
-# Restore the db_version.txt file
-mv ~/db_version.txt ~/canvo/backend/db/db_version.txt
+echo "Restoring the db_version.txt file(s)..."
+# Restore the db_version.txt file(s)
+mv ~/backend-db-version.txt ~/canvo/backend/db/db_version.txt
+mv ~/ai-service-db-version.txt ~/canvo/ai-service/db/db_version.txt
 
 ########################################################
 ### Build the backend & start
 ########################################################
 
+echo "Building & starting the backend..."
 cd ~/canvo/backend/
 yarn
 yarn start
@@ -72,6 +86,7 @@ yarn start
 ### Build the ai-service
 ########################################################
 
+echo "Restarting the AI service..."
 # Only reinstall the python dependencies if the pyproject.toml file has changed
 COMPARISON_RESULT=$(~/compare_files.sh ~/canvo/ai-service/pyproject.toml ~/pyproject_prev.toml)
 
@@ -97,5 +112,4 @@ fi
 cp ~/canvo/ai-service/.env.production ~/canvo/ai-service/.env
 
 # There must be an canvo-ai.service file in /etc/systemd/system/
-echo "Restarting canvo-ai..."
 sudo systemctl restart canvo-ai
