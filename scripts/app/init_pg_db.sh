@@ -8,6 +8,7 @@
 ENVIRONMENT=$1
 DB_NAME=$2
 DB_USER=$3
+DB_PORT=${4:-"5432"}
 
 if [ "$ENVIRONMENT" == "prod" ]; then
   # If the machine is not using the AL2023 operating system, exit with a warning
@@ -25,6 +26,8 @@ else
   echo "Invalid environment provided. Please provide an environment (dev or prod)."
   exit 1
 fi
+
+export PGPORT=$DB_PORT
 
 ################################################################################
 # Confirm and set up the variables
@@ -91,3 +94,5 @@ unset DB_ADMIN_USER
 unset DB_ADMIN_PASSWORD
 unset PGPASSWORD
 unset APP_USER_PASSWORD
+unset PGHOST
+unset PGPORT

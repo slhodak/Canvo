@@ -31,4 +31,5 @@ CREATE TABLE embeddings (
 CREATE INDEX ON chunks(document_id);
 CREATE INDEX ON embeddings(document_id);
 CREATE INDEX ON embeddings(chunk_id);
-CREATE INDEX embeddings_vector_idx ON embeddings USING ivfflat (vector vector_cosine_ops);
+-- Do not create a vector index while the table has little data
+-- CREATE INDEX embeddings_vector_idx ON embeddings USING ivfflat (vector vector_cosine_ops);

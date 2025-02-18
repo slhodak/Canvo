@@ -7,6 +7,7 @@
 ENVIRONMENT=$1
 DB_NAME=$2
 DB_USER=$3
+DB_PORT=${4:-"5432"}
 
 if [ -z "$ENVIRONMENT" ]; then
   echo "No environment provided. Please provide an environment (dev or prod)."
@@ -30,6 +31,8 @@ if [ "$confirm_db_dir" != "y" ]; then
   echo "Exiting..."
   exit 1
 fi
+
+export PGPORT=$DB_PORT
 
 ################################################################################
 # Confirm with the user if they want to reset the database
@@ -78,6 +81,6 @@ elif [ "$ENVIRONMENT" = "prod" ]; then
   SCRIPTS_DIR="."
 fi
 
-$SCRIPTS_DIR/init_pg_db.sh $ENVIRONMENT $DB_NAME $DB_USER
+$SCRIPTS_DIR/init_pg_db.sh $ENVIRONMENT $DB_NAME $DB_USER $DB_PORT
 rm $DB_DIR/db_version.txt
-$SCRIPTS_DIR/run_migrations.sh $ENVIRONMENT $DB_USER $DB_NAME $DB_DIR
+$SCRIPTS_DIR/run_migrations.sh $ENVIRONMENT $DB_USER $DB_NAME $DB_DIR $DB_PORT
