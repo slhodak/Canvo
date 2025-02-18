@@ -32,6 +32,7 @@ if [ "$confirm_db_dir" != "y" ]; then
   exit 1
 fi
 
+export PGHOST="localhost" # Will get an error if you specify only PGPORT
 export PGPORT=$DB_PORT
 
 ################################################################################

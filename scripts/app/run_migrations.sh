@@ -35,6 +35,7 @@ echo "Please enter the database password for $DB_USER to run migrations:"
 read -s DB_PASSWORD
 export PGPASSWORD=$DB_PASSWORD # Hide the password from the command history
 
+export PGHOST="localhost" # Will get an error if you specify only PGPORT
 export PGPORT=$DB_PORT
 
 ################################################################################
@@ -72,4 +73,4 @@ done
 
 unset PGPASSWORD
 unset DB_PASSWORD
-unset PGHOST
+unset PGPORT
