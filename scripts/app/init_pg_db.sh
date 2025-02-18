@@ -9,6 +9,9 @@ ENVIRONMENT=$1
 DB_NAME=$2
 DB_USER=$3
 DB_PORT=${4:-"5432"}
+# Optional parameters, will be supplied by parent scripts like reset_db.sh
+DB_ADMIN_USER=$5
+DB_ADMIN_PASSWORD=$6
 
 if [ "$ENVIRONMENT" == "prod" ]; then
   # If the machine is not using the AL2023 operating system, exit with a warning
@@ -46,17 +49,21 @@ if [ "$CONFIRM" != "y" ]; then
   exit 1
 fi
 
-# Request the database admin username
-read -p "Enter the database admin username: " DB_ADMIN_USER
-read -s -p "Enter the database admin password: " DB_ADMIN_PASSWORD
+if [ -z "$DB_ADMIN_USER" ]; then
+  # Request the database admin username
+  read -p "Enter the database admin username: " DB_ADMIN_USER
+  read -s -p "Enter the database admin password: " DB_ADMIN_PASSWORD
+fi
+
+export PGUSER=$DB_ADMIN_USER
 export PGPASSWORD=$DB_ADMIN_PASSWORD
 
 ################################################################################
 # Initialize the database
 ################################################################################
 
-USER_EXIST=$(psql -U $DB_ADMIN_USER -d postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='$DB_USER'")
-DB_EXIST=$(psql -U $DB_ADMIN_USER -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'")
+USER_EXIST=$(psql -d postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='$DB_USER'")
+DB_EXIST=$(psql -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'")
 
 if [ "$USER_EXIST" == "1" ]; then
   echo "User '$DB_USER' already exists."
@@ -64,31 +71,31 @@ else
   echo "User '$DB_USER' does not exist. Creating user..."
   # Request a new password for the app user
   read -s -p "Enter the app user password: " APP_USER_PASSWORD
-  psql -U $DB_ADMIN_USER -d postgres -c "CREATE USER $DB_USER WITH PASSWORD '$APP_USER_PASSWORD';"
+  psql -d postgres -c "CREATE USER $DB_USER WITH PASSWORD '$APP_USER_PASSWORD';"
 fi
 
 if [ "$DB_EXIST" == "1" ]; then
   echo "Database '$DB_NAME' already exists."
   # Grant privileges on existing tables, sequences, and functions
-  psql -U $DB_ADMIN_USER -d $DB_NAME -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO $DB_USER;"
-  psql -U $DB_ADMIN_USER -d $DB_NAME -c "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO $DB_USER;"
-  psql -U $DB_ADMIN_USER -d $DB_NAME -c "GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO $DB_USER;"
+  psql -d $DB_NAME -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO $DB_USER;"
+  psql -d $DB_NAME -c "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO $DB_USER;"
+  psql -d $DB_NAME -c "GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO $DB_USER;"
 else
   echo "Database '$DB_NAME' does not exist. Creating database..."
-  psql -U $DB_ADMIN_USER -d postgres -c "CREATE DATABASE $DB_NAME;"
+  psql -d postgres -c "CREATE DATABASE $DB_NAME;"
 fi
 
 # Revoke connect on the database from the public role
-psql -U $DB_ADMIN_USER -d $DB_NAME -c "REVOKE CONNECT ON DATABASE $DB_NAME FROM PUBLIC;"
+psql -d $DB_NAME -c "REVOKE CONNECT ON DATABASE $DB_NAME FROM PUBLIC;"
 # Grant connect on the database to the app user
-psql -U $DB_ADMIN_USER -d $DB_NAME -c "GRANT CONNECT ON DATABASE $DB_NAME TO $DB_USER;"
+psql -d $DB_NAME -c "GRANT CONNECT ON DATABASE $DB_NAME TO $DB_USER;"
 # Grant usage on the schema to the app user
-psql -U $DB_ADMIN_USER -d $DB_NAME -c "GRANT USAGE ON SCHEMA public TO $DB_USER;"
-psql -U $DB_ADMIN_USER -d $DB_NAME -c "GRANT CREATE ON SCHEMA public TO $DB_USER;"
+psql -d $DB_NAME -c "GRANT USAGE ON SCHEMA public TO $DB_USER;"
+psql -d $DB_NAME -c "GRANT CREATE ON SCHEMA public TO $DB_USER;"
 # Grant privileges by default on all tables, sequences, and functions in the public schema to the app user
-psql -U $DB_ADMIN_USER -d $DB_NAME -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO $DB_USER;"
-psql -U $DB_ADMIN_USER -d $DB_NAME -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO $DB_USER;"
-psql -U $DB_ADMIN_USER -d $DB_NAME -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO $DB_USER;"
+psql -d $DB_NAME -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO $DB_USER;"
+psql -d $DB_NAME -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO $DB_USER;"
+psql -d $DB_NAME -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO $DB_USER;"
 
 # Unset the variables and environment variables
 unset DB_ADMIN_USER

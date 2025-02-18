@@ -31,8 +31,7 @@ if [[ -z "$DB_DIR" ]]; then
 fi
 
 # Request the database password
-echo "Please enter the database password for $DB_USER to run migrations:"
-read -s DB_PASSWORD
+read -s -p "Please enter the database password for $DB_USER to run migrations:" DB_PASSWORD
 export PGPASSWORD=$DB_PASSWORD # Hide the password from the command history
 
 export PGHOST="localhost" # Will get an error if you specify only PGPORT

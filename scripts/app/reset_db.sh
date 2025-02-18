@@ -35,6 +35,11 @@ fi
 export PGHOST="localhost" # Will get an error if you specify only PGPORT
 export PGPORT=$DB_PORT
 
+read -p "Enter the database admin username: " DB_ADMIN_USER
+export PGUSER=$DB_ADMIN_USER
+read -s -p "Enter the database admin password: " DB_ADMIN_PASSWORD
+export PGPASSWORD=$DB_ADMIN_PASSWORD
+
 ################################################################################
 # Confirm with the user if they want to reset the database
 ################################################################################
@@ -82,6 +87,6 @@ elif [ "$ENVIRONMENT" = "prod" ]; then
   SCRIPTS_DIR="."
 fi
 
-$SCRIPTS_DIR/init_pg_db.sh $ENVIRONMENT $DB_NAME $DB_USER $DB_PORT
+$SCRIPTS_DIR/init_pg_db.sh $ENVIRONMENT $DB_NAME $DB_USER $DB_PORT $DB_ADMIN_USER $DB_ADMIN_PASSWORD
 rm $DB_DIR/db_version.txt
-$SCRIPTS_DIR/run_migrations.sh $ENVIRONMENT $DB_USER $DB_NAME $DB_DIR $DB_PORT
+$SCRIPTS_DIR/run_migrations.sh $ENVIRONMENT $DB_NAME $DB_USER $DB_DIR $DB_PORT
