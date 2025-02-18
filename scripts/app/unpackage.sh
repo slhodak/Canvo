@@ -73,7 +73,7 @@ yarn start
 ########################################################
 
 # Only reinstall the python dependencies if the pyproject.toml file has changed
-COMPARISON_RESULT=$(~/compare.sh ~/canvo/ai-service/pyproject.toml ~/pyproject_prev.toml)
+COMPARISON_RESULT=$(~/compare_files.sh ~/canvo/ai-service/pyproject.toml ~/pyproject_prev.toml)
 
 if [[ $COMPARISON_RESULT == "y" ]]; then
     echo "Python dependencies have not changed, will keep the last pyproject.toml and poetry.lock"
