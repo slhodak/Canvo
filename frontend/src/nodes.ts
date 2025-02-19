@@ -12,7 +12,6 @@ import {
 } from '../../shared/types/src/models/node';
 import { SERVER_URL } from './constants';
 
-// cache-expensive: run methods will return their outputs, and only cache them as a side effect if and only if the node does not run automatically
 export class TextNode extends BaseSyncNode {
   constructor(
     id: string,
@@ -33,8 +32,17 @@ export class TextNode extends BaseSyncNode {
     }, outputState);
   }
 
-  public static fromObject(object: BaseNode): BaseNode {
+  public static override fromObject(object: BaseNode): BaseNode {
     return new TextNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.properties.text.value as string, object.outputState);
+  }
+
+  public override setProperty(key: string, value: string | number) {
+    this.properties[key].value = value;
+    this.outputState = [{
+      stringValue: value as string,
+      numberValue: null,
+      stringArrayValue: null,
+    }];
   }
 
   // Every node accepts an array of input values, but sometimes that array is empty
@@ -67,7 +75,7 @@ export class PromptNode extends BaseAsyncNode {
     }, outputState);
   }
 
-  public static fromObject(object: BaseNode): BaseNode {
+  public static override fromObject(object: BaseNode): BaseNode {
     return new PromptNode(
       object.nodeId, object.authorId, object.projectId, object.coordinates,
       object.properties.prompt.value as string, object.outputState);
@@ -97,12 +105,11 @@ export class PromptNode extends BaseAsyncNode {
       });
       const data: LLMResponse = await response.json() as LLMResponse;
       if (data.status === 'success') {
-        this.outputState[0] = {
+        return [{
           stringValue: data.result,
           numberValue: null,
           stringArrayValue: null,
-        };
-        return this.outputState;
+        }];
       } else {
         console.error('Error running prompt:', data.error);
         return defaultOutputStates[OutputStateType.String];
@@ -141,7 +148,7 @@ export class SaveNode extends BaseAsyncNode {
     }, outputState);
   }
 
-  public static fromObject(object: BaseNode): BaseNode {
+  public static override fromObject(object: BaseNode): BaseNode {
     return new SaveNode(
       object.nodeId,
       object.authorId,
@@ -208,7 +215,7 @@ export class MergeNode extends BaseSyncNode {
     }, outputState);
   }
 
-  public static fromObject(object: BaseNode): BaseNode {
+  public static override fromObject(object: BaseNode): BaseNode {
     return new MergeNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.properties.separator.value as string, object.outputState);
   }
 
@@ -254,7 +261,7 @@ export class ViewNode extends BaseSyncNode {
     });
   }
 
-  public static fromObject(object: BaseNode): BaseNode {
+  public static override fromObject(object: BaseNode): BaseNode {
     return new ViewNode(object.nodeId, object.authorId, object.projectId, object.coordinates);
   }
 
@@ -288,7 +295,7 @@ export class SplitNode extends BaseSyncNode {
     }, outputState);
   }
 
-  public static fromObject(object: BaseNode): BaseNode {
+  public static override fromObject(object: BaseNode): BaseNode {
     return new SplitNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.properties.separator.value as string, object.outputState);
   }
 
@@ -342,7 +349,7 @@ export class FileNode extends BaseSyncNode {
     }, outputState);
   }
 
-  public static fromObject(object: BaseNode): BaseNode {
+  public static override fromObject(object: BaseNode): BaseNode {
     return new FileNode(
       object.nodeId,
       object.authorId,
@@ -389,7 +396,7 @@ export class EditNode extends BaseSyncNode {
     }, outputState);
   }
 
-  public static fromObject(object: BaseNode): BaseNode {
+  public static override fromObject(object: BaseNode): BaseNode {
     return new EditNode(
       object.nodeId,
       object.authorId,
@@ -456,7 +463,7 @@ export class EmbedNode extends BaseAsyncNode {
     }, outputState);
   }
 
-  public static fromObject(object: BaseNode): BaseNode {
+  public static override fromObject(object: BaseNode): BaseNode {
     return new EmbedNode(
       object.nodeId,
       object.authorId,
@@ -549,7 +556,7 @@ export class SearchNode extends BaseAsyncNode {
     }, outputState);
   }
 
-  public static fromObject(object: BaseNode): BaseNode {
+  public static override fromObject(object: BaseNode): BaseNode {
     return new SearchNode(
       object.nodeId,
       object.authorId,
@@ -621,7 +628,7 @@ export class JoinNode extends BaseSyncNode {
     }, outputState);
   }
 
-  public static fromObject(object: BaseNode): BaseNode {
+  public static override fromObject(object: BaseNode): BaseNode {
     return new JoinNode(
       object.nodeId,
       object.authorId,
@@ -677,7 +684,7 @@ export class ReplaceNode extends BaseSyncNode {
     }, outputState);
   }
 
-  public static fromObject(object: BaseNode): BaseNode {
+  public static override fromObject(object: BaseNode): BaseNode {
     return new ReplaceNode(
       object.nodeId,
       object.authorId,

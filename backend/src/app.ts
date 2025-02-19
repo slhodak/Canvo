@@ -605,7 +605,7 @@ router.post('/api/run_prompt', async (req: Request, res: Response) => {
   // Should we just get the prompt node info from the backend assuming it was already synced, or expect it in the request?
   const { projectId, nodeId, prompt, input } = req.body;
   if (!projectId || !nodeId || !prompt || !input) {
-    return res.status(400).json({ status: "failed", error: "No projectId or nodeId or prompt provided" });
+    return res.status(400).json({ status: "failed", error: "No projectId or nodeId or prompt or input provided" });
   }
 
   const result = await runPrompt(prompt, input);
