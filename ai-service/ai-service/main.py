@@ -3,7 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from .semantic_search import SemanticSearch
 from .database import Database
+from dotenv import load_dotenv
 import os
+
+# Load environment variables
+load_dotenv()
 
 # Initiate app with proper root path
 app = FastAPI()
