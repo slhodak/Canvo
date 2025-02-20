@@ -133,7 +133,6 @@ export abstract class BaseNode {
 
   public setProperty(key: string, value: string | number) {
     this.properties[key].value = value;
-    // TODO: Work out how to change size of output array
   }
 
   public cacheOutputStateIfNecessary(runResult: OutputState[]) {

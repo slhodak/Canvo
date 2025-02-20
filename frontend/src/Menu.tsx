@@ -56,7 +56,7 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
 
   const addTokens = async () => {
     try {
-      const response = await fetch(`${SERVER_URL}/api/add_tokens`, {
+      const response = await fetch(`${SERVER_URL}/token/add`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -67,7 +67,7 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
       const data = await response.json();
       if (data.status === 'success') {
         // Refresh token balance
-        const balanceResponse = await fetch(`${SERVER_URL}/api/get_token_balance`, {
+        const balanceResponse = await fetch(`${SERVER_URL}/token/get_balance`, {
           credentials: 'include',
         });
         const balanceData = await balanceResponse.json();
@@ -97,7 +97,7 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
 
   useEffect(() => {
     const fetchTokenBalance = async () => {
-      const response = await fetch(`${SERVER_URL}/api/get_token_balance`, {
+      const response = await fetch(`${SERVER_URL}/token/get_balance`, {
         credentials: 'include',
       });
       const data = await response.json();

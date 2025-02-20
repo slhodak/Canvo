@@ -10,9 +10,10 @@ import {
   defaultOutputStates,
   NodePropertyType,
 } from '../../shared/types/src/models/node';
+import { LLMResponse } from '../../shared/types/src/models/LLMResponse';
+import NodesAPI from './api';
 import { SERVER_URL } from './constants';
 
-// cache-expensive: run methods will return their outputs, and only cache them as a side effect if and only if the node does not run automatically
 export class TextNode extends BaseSyncNode {
   constructor(
     id: string,
@@ -33,8 +34,18 @@ export class TextNode extends BaseSyncNode {
     }, outputState);
   }
 
-  public static fromObject(object: BaseNode): BaseNode {
+  public static override fromObject(object: BaseNode): BaseNode {
     return new TextNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.properties.text.value as string, object.outputState);
+  }
+
+  public override setProperty(key: string, value: string | number) {
+    this.properties[key].value = value;
+    this.outputState = [{
+      stringValue: value as string,
+      numberValue: null,
+      stringArrayValue: null,
+    }];
+    NodesAPI.updateNode(this.projectId, this);
   }
 
   // Every node accepts an array of input values, but sometimes that array is empty
@@ -67,7 +78,7 @@ export class PromptNode extends BaseAsyncNode {
     }, outputState);
   }
 
-  public static fromObject(object: BaseNode): BaseNode {
+  public static override fromObject(object: BaseNode): BaseNode {
     return new PromptNode(
       object.nodeId, object.authorId, object.projectId, object.coordinates,
       object.properties.prompt.value as string, object.outputState);
@@ -82,7 +93,7 @@ export class PromptNode extends BaseAsyncNode {
 
     // Call the LLM with the prompt and the input text
     try {
-      const response = await fetch(`${SERVER_URL}/api/run_prompt`, {
+      const response = await fetch(`${SERVER_URL}/ai/run_prompt`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -97,12 +108,11 @@ export class PromptNode extends BaseAsyncNode {
       });
       const data: LLMResponse = await response.json() as LLMResponse;
       if (data.status === 'success') {
-        this.outputState[0] = {
+        return [{
           stringValue: data.result,
           numberValue: null,
           stringArrayValue: null,
-        };
-        return this.outputState;
+        }];
       } else {
         console.error('Error running prompt:', data.error);
         return defaultOutputStates[OutputStateType.String];
@@ -141,7 +151,7 @@ export class SaveNode extends BaseAsyncNode {
     }, outputState);
   }
 
-  public static fromObject(object: BaseNode): BaseNode {
+  public static override fromObject(object: BaseNode): BaseNode {
     return new SaveNode(
       object.nodeId,
       object.authorId,
@@ -208,7 +218,7 @@ export class MergeNode extends BaseSyncNode {
     }, outputState);
   }
 
-  public static fromObject(object: BaseNode): BaseNode {
+  public static override fromObject(object: BaseNode): BaseNode {
     return new MergeNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.properties.separator.value as string, object.outputState);
   }
 
@@ -254,7 +264,7 @@ export class ViewNode extends BaseSyncNode {
     });
   }
 
-  public static fromObject(object: BaseNode): BaseNode {
+  public static override fromObject(object: BaseNode): BaseNode {
     return new ViewNode(object.nodeId, object.authorId, object.projectId, object.coordinates);
   }
 
@@ -288,7 +298,7 @@ export class SplitNode extends BaseSyncNode {
     }, outputState);
   }
 
-  public static fromObject(object: BaseNode): BaseNode {
+  public static override fromObject(object: BaseNode): BaseNode {
     return new SplitNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.properties.separator.value as string, object.outputState);
   }
 
@@ -342,7 +352,7 @@ export class FileNode extends BaseSyncNode {
     }, outputState);
   }
 
-  public static fromObject(object: BaseNode): BaseNode {
+  public static override fromObject(object: BaseNode): BaseNode {
     return new FileNode(
       object.nodeId,
       object.authorId,
@@ -389,7 +399,7 @@ export class EditNode extends BaseSyncNode {
     }, outputState);
   }
 
-  public static fromObject(object: BaseNode): BaseNode {
+  public static override fromObject(object: BaseNode): BaseNode {
     return new EditNode(
       object.nodeId,
       object.authorId,
@@ -425,6 +435,13 @@ export class EmbedNode extends BaseAsyncNode {
     outputState: OutputState[] = [],
   ) {
     super(id, authorId, projectId, 'Embed', NodeType.Embed, 1, 1, coordinates, NodeRunType.Cache, {
+      documentId: {
+        type: NodePropertyType.String,
+        label: 'Document ID',
+        value: '',
+        editable: false,
+        displayed: true,
+      },
       chunkSize: {
         type: NodePropertyType.Number,
         label: 'Chunk Size',
@@ -449,7 +466,7 @@ export class EmbedNode extends BaseAsyncNode {
     }, outputState);
   }
 
-  public static fromObject(object: BaseNode): BaseNode {
+  public static override fromObject(object: BaseNode): BaseNode {
     return new EmbedNode(
       object.nodeId,
       object.authorId,
@@ -461,67 +478,53 @@ export class EmbedNode extends BaseAsyncNode {
     );
   }
 
-  private chunkText(text: string, chunkSize: number, overlap: number): string[] {
-    const chunks: string[] = [];
-    let i = 0;
-
-    while (i < text.length) {
-      // Get chunk with specified size
-      const chunk = text.slice(i, i + chunkSize);
-      chunks.push(chunk);
-
-      // Move forward by chunkSize - overlap
-      i += chunkSize - overlap;
-    }
-
-    return chunks;
-  }
-
   async _run(inputValues: (OutputState | null)[]): Promise<OutputState[]> {
-    if (!inputValues[0]?.stringValue) return defaultOutputStates[OutputStateType.StringArray];
+    if (!inputValues[0]?.stringValue) return defaultOutputStates[OutputStateType.String];
 
     try {
       this.properties.status.value = 'Processing...';
 
-      const chunks = this.chunkText(
-        inputValues[0].stringValue,
-        this.properties.chunkSize.value as number,
-        this.properties.overlap.value as number
-      );
-
-      const response = await fetch(`${SERVER_URL}/api/embed`, {
+      const response = await fetch(`${SERVER_URL}/ai/embed`, {
         method: 'POST',
-        credentials: 'include', // Important for sending auth cookies
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ chunks }),
+        body: JSON.stringify({
+          document_text: inputValues[0].stringValue,
+          chunk_size: this.properties.chunkSize.value as number,
+          chunk_overlap: this.properties.overlap.value as number,
+        }),
       });
 
       if (!response.ok) {
         this.properties.status.value = `Error: ${response.statusText}`;
-        return defaultOutputStates[OutputStateType.StringArray];
+        return defaultOutputStates[OutputStateType.String];
       }
 
       const result = await response.json();
-      if (result.status === 'error') {
+      if (result.status === 'failed') {
         this.properties.status.value = `Error: ${result.error}`;
-        return defaultOutputStates[OutputStateType.StringArray];
+        return defaultOutputStates[OutputStateType.String];
       }
 
       // Set success status with chunk count
-      this.properties.status.value = `Success: Created ${chunks.length} embeddings`;
+      this.properties.documentId.value = result.document_id;
+      this.properties.status.value = result.message;
 
-      // Output the chunks array
-      return [{
-        stringValue: null,
+      // Pass on the document ID to the next node
+      const outputState = [{
+        stringValue: this.properties.documentId.value as string,
         numberValue: null,
-        stringArrayValue: chunks,
+        stringArrayValue: null,
       }];
+      NodesAPI.updateNode(this.projectId, this);
+      return outputState;
     } catch (error: unknown) {
       console.error('Error in EmbedNode:', error);
       this.properties.status.value = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
-      return defaultOutputStates[OutputStateType.StringArray];
+      this.properties.documentId.value = '';
+      return defaultOutputStates[OutputStateType.String];
     }
   }
 }
@@ -537,6 +540,13 @@ export class SearchNode extends BaseAsyncNode {
     // Actually this is not expensive and perhaps should be a Run node. But that's just because
     // we currently use a pretty low-dimension embedding model.
     super(id, authorId, projectId, 'Search', NodeType.Search, 1, 1, coordinates, NodeRunType.Cache, {
+      documentId: {
+        type: NodePropertyType.String,
+        label: 'Document ID',
+        value: '',
+        editable: false,
+        displayed: true,
+      },
       status: {
         type: NodePropertyType.String,
         label: 'Status',
@@ -554,7 +564,7 @@ export class SearchNode extends BaseAsyncNode {
     }, outputState);
   }
 
-  public static fromObject(object: BaseNode): BaseNode {
+  public static override fromObject(object: BaseNode): BaseNode {
     return new SearchNode(
       object.nodeId,
       object.authorId,
@@ -565,37 +575,40 @@ export class SearchNode extends BaseAsyncNode {
   }
 
   async _run(inputValues: (OutputState | null)[]): Promise<OutputState[]> {
+    if (!inputValues[0]?.stringValue) return defaultOutputStates[OutputStateType.StringArray];
+
+    this.properties.documentId.value = inputValues[0].stringValue as string;
     try {
       this.properties.status.value = 'Searching...';
+      console.debug(`Searching for ${this.properties.query.value} in document ${this.properties.documentId.value}`);
 
-      const response = await fetch(`${SERVER_URL}/api/search`, {
+      const aiResponse = await fetch(`${SERVER_URL}/ai/search`, {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          document_id: this.properties.documentId.value as string,
           query: this.properties.query.value as string,
           top_k: 3
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!aiResponse.ok) {
+        this.properties.status.value = `Error: ${aiResponse.statusText}`;
+        return defaultOutputStates[OutputStateType.StringArray];
       }
 
-      const result = await response.json();
-
-      // Extract snippets from results
-      const chunks = result.results.map((r: { chunk: string }) => r.chunk);
-
-      this.properties.status.value = `Found ${chunks.length} results`;
+      const result = await aiResponse.json();
+      console.debug(`SearchNode result: ${JSON.stringify(result)}`);
+      this.properties.status.value = `Found ${result.search_results.length} results`;
 
       // Output the results as a string array
       return [{
         stringValue: null,
         numberValue: null,
-        stringArrayValue: chunks,
+        stringArrayValue: result.search_results,
       }];
     } catch (error: unknown) {
       console.error('Error in SearchNode:', error);
@@ -625,7 +638,7 @@ export class JoinNode extends BaseSyncNode {
     }, outputState);
   }
 
-  public static fromObject(object: BaseNode): BaseNode {
+  public static override fromObject(object: BaseNode): BaseNode {
     return new JoinNode(
       object.nodeId,
       object.authorId,
@@ -681,7 +694,7 @@ export class ReplaceNode extends BaseSyncNode {
     }, outputState);
   }
 
-  public static fromObject(object: BaseNode): BaseNode {
+  public static override fromObject(object: BaseNode): BaseNode {
     return new ReplaceNode(
       object.nodeId,
       object.authorId,
@@ -706,10 +719,3 @@ export class ReplaceNode extends BaseSyncNode {
     }];
   }
 }
-
-type LLMResponse = {
-  status: 'success' | 'error';
-  result: string;
-  error?: string;
-}
-

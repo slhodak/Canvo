@@ -216,9 +216,9 @@ const NetworkEditor = ({
 
     const svgRect = svgRef.current?.getBoundingClientRect();
     if (svgRect && wireState.isDrawing) {
-      // Get SVG coordinates and adjust for panning
-      const x = e.clientX - svgRect.left - panOffset.x;
-      const y = e.clientY - svgRect.top - panOffset.y;
+      // Get SVG coordinates, adjust for panning and zoom
+      const x = (e.clientX - svgRect.left - panOffset.x) / zoom;
+      const y = (e.clientY - svgRect.top - panOffset.y) / zoom;
 
       setWireState(prev => ({
         ...prev,
@@ -235,10 +235,10 @@ const NetworkEditor = ({
 
   const startDrawingWire = (nodeId: string, outputIndex: number, startX: number, startY: number) => {
     if (svgRef.current) {
-      // Get SVG coordinates
+      // Get SVG coordinates and adjust for pan offset and zoom
       const svgRect = svgRef.current.getBoundingClientRect();
-      const x = startX - svgRect.left - panOffset.x;  // Adjust for pan offset
-      const y = startY - svgRect.top - panOffset.y;   // Adjust for pan offset
+      const x = (startX - svgRect.left - panOffset.x) / zoom;
+      const y = (startY - svgRect.top - panOffset.y) / zoom;
 
       setWireState({
         isDrawing: true,

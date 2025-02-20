@@ -195,6 +195,11 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   // If this node is a Run node, run it once you've gathered all the input values
   const _runPriorDAG = useCallback(async (node: VisualNode): Promise<(OutputState | null)[]> => {
     const inputConnections = connections.filter(conn => conn.connection.toNode === node.node.nodeId);
+    if (inputConnections.length === 0) {
+      console.debug('Node has no input connections');
+      return [];
+    }
+
     const inputValues: (OutputState | null)[] = [];
     for (const conn of inputConnections) {
       const inputNode = nodes[conn.connection.fromNode];
@@ -224,7 +229,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
           break;
         }
         default:
-          return [];
+          break;
       }
     }
     return inputValues;

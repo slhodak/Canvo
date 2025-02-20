@@ -1,8 +1,15 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Dict
 from .semantic_search import SemanticSearch
+from .database import Database
+from dotenv import load_dotenv
+import os
+import traceback
+import hashlib
+
+# Load environment variables
+load_dotenv()
 
 # Initiate app with proper root path
 app = FastAPI()
@@ -21,14 +28,25 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
+# Initialize database connection
+DATABASE_URL = os.getenv('DATABASE_URL')
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL is not set")
+
+db = Database(DATABASE_URL)
+
+# Initialize semantic search with database
 search_engine = SemanticSearch()
 
 
 class Document(BaseModel):
-    chunks: list[str]
+    document_text: str
+    chunk_size: int = 100
+    chunk_overlap: int = 20
 
 
 class SearchQuery(BaseModel):
+    document_id: str
     query: str
     top_k: int = 5
 
@@ -41,25 +59,69 @@ def read_root():
 @app.post("/embed")
 def embed(document: Document):
     try:
-        search_engine.add_chunks(document.chunks)
-        return {"message": f"Successfully added {len(document.chunks)} chunks"}
+        document_hash = hashlib.sha256(
+            document.document_text.encode()).hexdigest()
+
+        # Get the document ID from the database if it was already added
+        document_id = db.get_document_id_by_hash(document_hash)
+
+        if document_id and db.has_embeddings(document_id):
+            # Document already exists and has embeddings
+            return {
+                "status": "success",
+                "document_id": document_id,
+                "message": "Document already processed"
+            }
+
+        # If document doesn't exist, create it
+        if not document_id:
+            document_id = db.add_document(
+                document.document_text, document_hash)
+
+        # Create the document chunks and embeddings
+        num_embeddings = search_engine.embed(
+            db=db,
+            document_id=document_id,
+            text=document.document_text,
+            chunk_size=document.chunk_size,
+            chunk_overlap=document.chunk_overlap
+        )
+        return {
+            "status": "success",
+            "document_id": document_id,
+            "num_embeddings": num_embeddings,
+            "message": "Document processed successfully"
+        }
     except Exception as e:
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/search")
 def search(search_query: SearchQuery):
     try:
-        print(search_query)
-        results = search_engine.search(search_query.query, search_query.top_k)
-        # Convert numpy values to Python native types
-        processed_results = [
-            {
-                "chunk": r["chunk"],
-                "score": float(r["score"]),
-            }
-            for r in results
-        ]
-        return {"results": processed_results}
+        print(
+            f"Searching for {search_query.query} in document {search_query.document_id}")
+        search_results = search_engine.search(
+            db=db,
+            document_id=search_query.document_id,
+            query=search_query.query,
+            top_k=search_query.top_k
+        )
+        # Return only the text of the search results
+        result_strings = [result[0] for result in search_results]
+        return {"status": "success", "search_results": result_strings}
     except Exception as e:
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# Add cleanup on shutdown
+@app.on_event("startup")
+async def startup_event():
+    db.connect()
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    db.close()
