@@ -4,6 +4,7 @@ import PlayButton from './assets/PlayButton';
 import './Node.css';
 import { NodeRunType, OutputState } from '../../shared/types/src/models/node';
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { updateNode } from './api';
 
 interface NodeProps {
   node: VisualNode;
@@ -15,13 +16,12 @@ interface NodeProps {
   endDrawingWire: (toNodeId: string, inputIndex: number) => void;
   disconnectWire: (connectionId: string) => void;
   runNode: (node: VisualNode, shouldSync?: boolean) => Promise<(OutputState | null)[]>;
-  updateNodeLabel: (nodeId: string, label: string) => void;
 }
 
-export const Node = ({ node, isSelected, connections, wireState, handleMouseDown, startDrawingWire, endDrawingWire, disconnectWire, runNode, updateNodeLabel }: NodeProps) => {
+export const Node = ({ node, isSelected, connections, wireState, handleMouseDown, startDrawingWire, endDrawingWire, disconnectWire, runNode }: NodeProps) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(node.node.label || '');
-  const foreignObjectRef = useRef<SVGForeignObjectElement>(null);
+  const [nodeLabel, setNodeLabel] = useState('');
+  const labelInputRef = useRef<SVGForeignObjectElement>(null);
 
   const handleConnectionClick = (e: React.MouseEvent, isInputPort: boolean, connectionId: string | null = null, nodeId: string, inputIndex: number) => {
     if (connectionId) {
@@ -47,26 +47,31 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
   // Handle edit completion
   const handleEditComplete = useCallback(() => {
     setIsEditing(false);
-    if (editValue !== node.node.label) {
-      updateNodeLabel(node.node.nodeId, editValue);
+    if (nodeLabel !== node.node.label) {
+      node.node.label = nodeLabel;
+      updateNode(node.node.projectId, node.node);
     }
-  }, [node, editValue, updateNodeLabel]);
+  }, [node, nodeLabel]);
 
-  // Handle click outside
+  // Handle click outside label input
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (foreignObjectRef.current && !foreignObjectRef.current.contains(event.target as Node)) {
+    const handleClickOutsideLabel = (event: MouseEvent) => {
+      if (labelInputRef.current && !labelInputRef.current.contains(event.target as Node)) {
         handleEditComplete();
       }
     };
 
     if (isEditing) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutsideLabel);
     }
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutsideLabel);
     };
-  }, [isEditing, editValue, handleEditComplete]);
+  }, [isEditing, nodeLabel, handleEditComplete]);
+
+  useEffect(() => {
+    setNodeLabel(node.node.label || 'unlabeled');
+  }, [node]);
 
   return (
     <g
@@ -87,11 +92,11 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
             setIsEditing(true);
           }}
         >
-          {node.node.label || 'unlabeled'}
+          {nodeLabel}
         </text>
       ) : (
         <foreignObject
-          ref={foreignObjectRef}
+          ref={labelInputRef}
           x={node.x - 100}
           y={node.y + neu.NODE_HEIGHT / 2 - 12}
           width="80"
@@ -99,8 +104,8 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
         >
           <input
             type="text"
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
+            value={nodeLabel}
+            onChange={(e) => setNodeLabel(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 handleEditComplete();

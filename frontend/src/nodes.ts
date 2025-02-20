@@ -11,7 +11,7 @@ import {
   NodePropertyType,
 } from '../../shared/types/src/models/node';
 import { LLMResponse } from '../../shared/types/src/models/LLMResponse';
-import NodesAPI from './api';
+import { updateNode } from './api';
 import { SERVER_URL } from './constants';
 
 export class TextNode extends BaseSyncNode {
@@ -54,7 +54,7 @@ export class TextNode extends BaseSyncNode {
       numberValue: null,
       stringArrayValue: null,
     }];
-    NodesAPI.updateNode(this.projectId, this);
+    updateNode(this.projectId, this);
   }
 
   // Every node accepts an array of input values, but sometimes that array is empty
@@ -552,7 +552,7 @@ export class EmbedNode extends BaseAsyncNode {
         numberValue: null,
         stringArrayValue: null,
       }];
-      NodesAPI.updateNode(this.projectId, this);
+      updateNode(this.projectId, this);
       return outputState;
     } catch (error: unknown) {
       console.error('Error in EmbedNode:', error);
