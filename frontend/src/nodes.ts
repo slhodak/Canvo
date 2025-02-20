@@ -503,14 +503,14 @@ export class EmbedNode extends BaseAsyncNode {
       }
 
       const result = await response.json();
-      if (result.status === 'error') {
+      if (result.status === 'failed') {
         this.properties.status.value = `Error: ${result.error}`;
         return defaultOutputStates[OutputStateType.String];
       }
 
       // Set success status with chunk count
       this.properties.documentId.value = result.document_id;
-      this.properties.status.value = `Success: Created ${result.num_embeddings} embeddings`;
+      this.properties.status.value = result.message;
 
       // Pass on the document ID to the next node
       const outputState = [{

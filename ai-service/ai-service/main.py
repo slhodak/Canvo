@@ -61,8 +61,19 @@ def embed(document: Document):
     try:
         document_hash = hashlib.sha256(
             document.document_text.encode()).hexdigest()
+
         # Get the document ID from the database if it was already added
         document_id = db.get_document_id_by_hash(document_hash)
+
+        if document_id and db.has_embeddings(document_id):
+            # Document already exists and has embeddings
+            return {
+                "status": "success",
+                "document_id": document_id,
+                "message": "Document already processed"
+            }
+
+        # If document doesn't exist, create it
         if not document_id:
             document_id = db.add_document(
                 document.document_text, document_hash)
@@ -75,7 +86,12 @@ def embed(document: Document):
             chunk_size=document.chunk_size,
             chunk_overlap=document.chunk_overlap
         )
-        return {"status": "success", "document_id": document_id, "num_embeddings": num_embeddings}
+        return {
+            "status": "success",
+            "document_id": document_id,
+            "num_embeddings": num_embeddings,
+            "message": "Document processed successfully"
+        }
     except Exception as e:
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
@@ -84,7 +100,8 @@ def embed(document: Document):
 @app.post("/search")
 def search(search_query: SearchQuery):
     try:
-        print(f"Searching for {search_query.query} in document {search_query.document_id}")
+        print(
+            f"Searching for {search_query.query} in document {search_query.document_id}")
         search_results = search_engine.search(
             db=db,
             document_id=search_query.document_id,

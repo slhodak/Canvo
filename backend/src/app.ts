@@ -652,18 +652,18 @@ aiRouter.post('/run_prompt', async (req: Request, res: Response) => {
 aiRouter.post('/embed', async (req: Request, res: Response) => {
   const { document_text, chunk_size, chunk_overlap } = req.body;
   if (!document_text) {
-    return res.status(400).json({ error: "No document_text provided" });
+    return res.status(400).json({ status: "failed", error: "No document_text provided" });
   }
 
   const user = await getUserFromSessionToken(req);
   if (!user) {
-    return res.status(401).json({ error: "Could not find user from session token" });
+    return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
   }
 
   // Check token balance
   const tokenBalance = await db.getUserTokenBalance(user.userId);
   if (tokenBalance < EMBEDDING_COST) {
-    return res.status(403).json({ error: "Insufficient tokens" });
+    return res.status(403).json({ status: "failed", error: "Insufficient tokens" });
   }
 
   try {
@@ -682,7 +682,7 @@ aiRouter.post('/embed', async (req: Request, res: Response) => {
     return res.json(result);
   } catch (error) {
     console.error('Error in embed:', error);
-    return res.status(500).json({ error: "AI service error" });
+    return res.status(500).json({ status: "failed", error: "AI service error" });
   }
 });
 
@@ -700,7 +700,7 @@ aiRouter.post('/search', async (req: Request, res: Response) => {
   // Check token balance
   const tokenBalance = await db.getUserTokenBalance(user.userId);
   if (tokenBalance < SEARCH_COST) {
-    return res.status(403).json({ error: "Insufficient tokens" });
+    return res.status(403).json({ status: "failed", error: "Insufficient tokens" });
   }
 
   try {

@@ -113,7 +113,8 @@ class Database:
                 ORDER BY distance ASC
                 LIMIT %s
                 """
-            params = [self.format_pgvector(query_embedding), document_id, top_k]
+            params = [self.format_pgvector(
+                query_embedding), document_id, top_k]
 
             with self._connection.cursor() as cursor:
                 cursor.execute(query, params)
@@ -149,3 +150,25 @@ class Database:
     def format_pgvector(self, vector: np.ndarray) -> str:
         """Format a numpy array as a PostgreSQL vector string"""
         return '[' + ', '.join(str(x) for x in vector.tolist()) + ']'
+
+    def has_embeddings(self, document_id: str) -> bool:
+        """Check if a document already has embeddings"""
+        try:
+            self.connect()
+            with self._connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT EXISTS (
+                        SELECT 1 
+                        FROM embeddings e
+                        JOIN chunks c ON c.chunk_id = e.chunk_id
+                        WHERE e.document_id = %s
+                    )
+                    """,
+                    (document_id,)
+                )
+                result = cursor.fetchone()
+                return result[0] if result else False
+        except Exception as e:
+            self._connection.rollback()
+            raise e
