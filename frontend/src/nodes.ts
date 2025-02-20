@@ -90,7 +90,7 @@ export class PromptNode extends BaseAsyncNode {
 
     // Call the LLM with the prompt and the input text
     try {
-      const response = await fetch(`${SERVER_URL}/api/run_prompt`, {
+      const response = await fetch(`${SERVER_URL}/ai/run_prompt`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -481,7 +481,7 @@ export class EmbedNode extends BaseAsyncNode {
     try {
       this.properties.status.value = 'Processing...';
 
-      const response = await fetch(`${SERVER_URL}/api/embed`, {
+      const response = await fetch(`${SERVER_URL}/ai/embed`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -510,6 +510,7 @@ export class EmbedNode extends BaseAsyncNode {
       this.properties.status.value = `Success: Created ${result.num_embeddings} embeddings`;
 
       // Pass on the document ID to the next node
+      // This outputState[] is not automatically persisted to the database
       return [{
         stringValue: this.properties.documentId.value as string,
         numberValue: null,
@@ -570,13 +571,15 @@ export class SearchNode extends BaseAsyncNode {
   }
 
   async _run(inputValues: (OutputState | null)[]): Promise<OutputState[]> {
+    console.debug(`SearchNode inputValues: ${JSON.stringify(inputValues)}`);
     if (!inputValues[0]?.stringValue) return defaultOutputStates[OutputStateType.StringArray];
 
     this.properties.documentId.value = inputValues[0].stringValue as string;
     try {
       this.properties.status.value = 'Searching...';
+      console.debug(`Searching for ${this.properties.query.value} in document ${this.properties.documentId.value}`);
 
-      const aiResponse = await fetch(`${SERVER_URL}/api/search`, {
+      const aiResponse = await fetch(`${SERVER_URL}/ai/search`, {
         method: 'POST',
         credentials: 'include',
         headers: {

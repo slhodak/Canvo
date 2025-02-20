@@ -150,8 +150,10 @@ async function getUserFromSessionToken(req: Request): Promise<UserModel | null> 
   return await db.getUser(session.userEmail);
 }
 
+const authRouter = Router();
+
 // Redirects from stytch to this endpoint will include an oauth token in the query parameters
-router.get('/auth/authenticate', async (req: Request, res: Response) => {
+authRouter.get('/authenticate', async (req: Request, res: Response) => {
   try {
     const oauthToken = req.query.token as string;
     if (oauthToken === undefined || oauthToken === '') {
@@ -202,7 +204,7 @@ router.get('/auth/authenticate', async (req: Request, res: Response) => {
 });
 
 // The frontend SPA will check the validity of its session token when it first opens
-router.get('/auth/check', async (req: Request, res: Response) => {
+authRouter.get('/check', async (req: Request, res: Response) => {
   const sessionToken = req.cookies?.session_token;
   if (sessionToken === undefined) {
     // This prevents the frontend from showing a 'failed' message if there was no session token to check
@@ -217,7 +219,7 @@ router.get('/auth/check', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/auth/logout', authenticate, async (req: Request, res: Response) => {
+authRouter.post('/logout', authenticate, async (req: Request, res: Response) => {
   const sessionToken = req.cookies?.session_token;
   if (!sessionToken) {
     return res.json({ status: 'failed', error: 'No session token found' });
@@ -246,9 +248,10 @@ router.post('/auth/logout', authenticate, async (req: Request, res: Response) =>
 ////////////////////////////////////////////////////////////
 
 // Middleware to guard the /api/* routes
-app.use('/api', authenticate);
+const apiRouter = Router();
+apiRouter.use('/', authenticate);
 
-router.get('/api/get_user', async (req: Request, res: Response) => {
+apiRouter.get('/get_user', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
   if (!user) {
     return res.status(401).json({ error: "Could not find user email from session token" });
@@ -261,7 +264,7 @@ router.get('/api/get_user', async (req: Request, res: Response) => {
 // Projects
 ////////////////////////////////////////////////////////////
 
-router.get('/api/get_latest_project', async (req: Request, res: Response) => {
+apiRouter.get('/get_latest_project', async (req: Request, res: Response) => {
   try {
     const user = await getUserFromSessionToken(req);
     if (!user) {
@@ -282,7 +285,7 @@ router.get('/api/get_latest_project', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/api/get_all_projects', async (req: Request, res: Response) => {
+apiRouter.get('/get_all_projects', async (req: Request, res: Response) => {
   try {
     const user = await getUserFromSessionToken(req);
     if (!user) {
@@ -304,7 +307,7 @@ router.get('/api/get_all_projects', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/api/new_project', async (req: Request, res: Response) => {
+apiRouter.post('/new_project', async (req: Request, res: Response) => {
   try {
     const user = await getUserFromSessionToken(req);
     if (!user) {
@@ -333,7 +336,7 @@ router.post('/api/new_project', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/api/update_project_title', async (req: Request, res: Response) => {
+apiRouter.post('/update_project_title', async (req: Request, res: Response) => {
   const { projectId, title } = req.body;
   try {
     const result = await db.updateProjectTitle(projectId, title);
@@ -353,7 +356,7 @@ router.post('/api/update_project_title', async (req: Request, res: Response) => 
   }
 });
 
-router.delete('/api/delete_project/:projectId', async (req: Request, res: Response) => {
+apiRouter.delete('/delete_project/:projectId', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
   if (!user) {
     return res.status(401).json({ error: "Could not find user email from session token" });
@@ -380,7 +383,7 @@ router.delete('/api/delete_project/:projectId', async (req: Request, res: Respon
 // Nodes
 ////////////////////////////////////////////////////////////
 
-router.get('/api/get_node/:nodeId', async (req: Request, res: Response) => {
+apiRouter.get('/get_node/:nodeId', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
   if (!user) {
     return res.status(401).json({ error: "Could not find user email from session token" });
@@ -402,7 +405,7 @@ router.get('/api/get_node/:nodeId', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/api/get_nodes_for_project/:projectId', async (req: Request, res: Response) => {
+apiRouter.get('/get_nodes_for_project/:projectId', async (req: Request, res: Response) => {
   const projectId = req.params.projectId;
   try {
     const user = await getUserFromSessionToken(req);
@@ -426,7 +429,7 @@ router.get('/api/get_nodes_for_project/:projectId', async (req: Request, res: Re
 });
 
 // Add new node
-router.post('/api/add_node', async (req: Request, res: Response) => {
+apiRouter.post('/add_node', async (req: Request, res: Response) => {
   const { projectId, node } = req.body;
   if (!projectId || !node) {
     return res.status(400).json({ error: "No projectId or node provided" });
@@ -454,7 +457,7 @@ router.post('/api/add_node', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/api/update_nodes', async (req: Request, res: Response) => {
+apiRouter.post('/update_nodes', async (req: Request, res: Response) => {
   const { nodes } = req.body;
   if (!nodes) {
     return res.status(400).json({ error: "No nodes provided" });
@@ -486,7 +489,7 @@ router.post('/api/update_nodes', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/api/delete_node', async (req: Request, res: Response) => {
+apiRouter.post('/delete_node', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
   if (!user) {
     return res.status(401).json({ error: "Could not find user email from session token" });
@@ -518,7 +521,7 @@ router.post('/api/delete_node', async (req: Request, res: Response) => {
 // Connections
 ////////////////////////////////////////////////////////////
 
-router.get('/api/get_connections_for_project/:projectId', async (req: Request, res: Response) => {
+apiRouter.get('/get_connections_for_project/:projectId', async (req: Request, res: Response) => {
   const projectId = req.params.projectId;
   try {
     const user = await getUserFromSessionToken(req);
@@ -536,7 +539,7 @@ router.get('/api/get_connections_for_project/:projectId', async (req: Request, r
   }
 });
 
-router.post('/api/set_connections', async (req: Request, res: Response) => {
+apiRouter.post('/set_connections', async (req: Request, res: Response) => {
   // Overwrite all the connections for a project
   const { projectId, connections } = req.body;
   if (!projectId || !connections) {
@@ -563,7 +566,7 @@ router.post('/api/set_connections', async (req: Request, res: Response) => {
   }
 });
 
-router.delete('/api/delete_connection/:connectionId', async (req: Request, res: Response) => {
+apiRouter.delete('/delete_connection/:connectionId', async (req: Request, res: Response) => {
   const connectionId = req.params.connectionId;
   try {
     const user = await getUserFromSessionToken(req);
@@ -589,7 +592,14 @@ router.delete('/api/delete_connection/:connectionId', async (req: Request, res: 
 // AI Functions
 ////////////////////////////////////////////////////////////
 
-router.post('/api/run_prompt', async (req: Request, res: Response) => {
+const aiRouter = Router();
+aiRouter.use('/', authenticate);
+aiRouter.use('/', (req: Request, res: Response, next: NextFunction) => {
+  console.debug(`Request: ${req.method} ${req.url}`);
+  next();
+});
+
+aiRouter.post('/run_prompt', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
   if (!user) {
     return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
@@ -613,7 +623,7 @@ router.post('/api/run_prompt', async (req: Request, res: Response) => {
   return res.json({ status: "success", result });
 });
 
-router.post('/api/embed', authenticate, async (req: Request, res: Response) => {
+aiRouter.post('/embed', async (req: Request, res: Response) => {
   const { document_text, chunk_size, chunk_overlap } = req.body;
   if (!document_text) {
     return res.status(400).json({ error: "No document_text provided" });
@@ -650,10 +660,10 @@ router.post('/api/embed', authenticate, async (req: Request, res: Response) => {
   }
 });
 
-router.post('/api/search', authenticate, async (req: Request, res: Response) => {
-  const { query, top_k } = req.body;
-  if (!query || !top_k) {
-    return res.status(400).json({ error: "No query or top_k provided" });
+aiRouter.post('/search', async (req: Request, res: Response) => {
+  const { document_id, query, top_k } = req.body;
+  if (!document_id || !query || !top_k) {
+    return res.status(400).json({ error: "No document_id or query or top_k provided" });
   }
 
   const user = await getUserFromSessionToken(req);
@@ -671,7 +681,7 @@ router.post('/api/search', authenticate, async (req: Request, res: Response) => 
     const aiResponse = await fetch(`${AI_SERVICE_URL}/search`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: query, top_k: top_k }),
+      body: JSON.stringify({ document_id, query, top_k }),
     });
 
     const result = await aiResponse.json();
@@ -690,7 +700,10 @@ router.post('/api/search', authenticate, async (req: Request, res: Response) => 
 // Token transactions
 ////////////////////////////////////////////////////////////
 
-router.post('/api/add_tokens', authenticate, async (req: Request, res: Response) => {
+const tokenRouter = Router();
+tokenRouter.use('/', authenticate);
+
+tokenRouter.post('/add', authenticate, async (req: Request, res: Response) => {
   try {
     const user = await getUserFromSessionToken(req);
     if (!user) {
@@ -712,7 +725,7 @@ router.post('/api/add_tokens', authenticate, async (req: Request, res: Response)
   }
 });
 
-router.get('/api/get_token_balance', authenticate, async (req: Request, res: Response) => {
+tokenRouter.get('/get_balance', authenticate, async (req: Request, res: Response) => {
   try {
     const user = await getUserFromSessionToken(req);
     if (!user) {
@@ -733,7 +746,11 @@ router.get('/api/get_token_balance', authenticate, async (req: Request, res: Res
 // Start Server
 ////////////////////////////////////////////////////////////
 
-app.use('/', router);
+// Routes
+app.use('/auth', authRouter);
+app.use('/api', apiRouter);
+app.use('/ai', aiRouter);
+app.use('/token', tokenRouter);
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on port ${port}`);
