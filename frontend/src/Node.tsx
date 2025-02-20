@@ -80,10 +80,18 @@ export const Node = ({ node, isSelected, isDisplaying, connections, wireState, u
     setNodeLabel(node.node.label || 'unlabeled');
   }, [node]);
 
+  const handleNodeMouseDown = (e: React.MouseEvent, nodeId: string) => {
+    // Don't select the node if clicking on the display flag
+    if ((e.target as SVGElement).classList.contains('node-display-flag')) {
+      return;
+    }
+    handleMouseDown(e, nodeId);
+  };
+
   return (
     <g
       key={node.node.nodeId}
-      onMouseDown={(e) => handleMouseDown(e, node.node.nodeId)}
+      onMouseDown={(e) => handleNodeMouseDown(e, node.node.nodeId)}
       className="node-g">
 
       {/* Node Label */}
