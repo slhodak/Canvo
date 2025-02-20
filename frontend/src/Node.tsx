@@ -22,6 +22,7 @@ interface NodeProps {
 export const Node = ({ node, isSelected, connections, wireState, updateViewText, handleMouseDown, startDrawingWire, endDrawingWire, disconnectWire, runNode }: NodeProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [nodeLabel, setNodeLabel] = useState('');
+  const [displaying, setDisplaying] = useState(false);
   const labelInputRef = useRef<SVGForeignObjectElement>(null);
 
   const handleConnectionClick = (e: React.MouseEvent, isInputPort: boolean, connectionId: string | null = null, nodeId: string, inputIndex: number) => {
@@ -48,6 +49,9 @@ export const Node = ({ node, isSelected, connections, wireState, updateViewText,
   const handleDisplayFlagClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     console.log('Display flag clicked for node:', node.node.nodeId);
+    node.node.display = !node.node.display;
+    setDisplaying(node.node.display);
+    updateNode(node.node.projectId, node.node);
     updateViewText(node);
   };
 
@@ -77,6 +81,7 @@ export const Node = ({ node, isSelected, connections, wireState, updateViewText,
   }, [isEditing, nodeLabel, handleEditComplete]);
 
   useEffect(() => {
+    setDisplaying(node.node.display);
     setNodeLabel(node.node.label || 'unlabeled');
   }, [node]);
 
@@ -140,7 +145,7 @@ export const Node = ({ node, isSelected, connections, wireState, updateViewText,
         y={node.y}
         width={14}
         height={neu.NODE_HEIGHT}
-        className={`node-display-flag ${node.node.display ? "displaying" : ""}`}
+        className={`node-display-flag ${displaying ? "displaying" : ""}`}
         onClick={handleDisplayFlagClick}
       />
 

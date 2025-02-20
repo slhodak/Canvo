@@ -279,43 +279,6 @@ export class MergeNode extends BaseSyncNode {
   }
 }
 
-// There can only be one view node
-// Connect an output port to the view node to display the output in the OutputView
-export class ViewNode extends BaseSyncNode {
-  constructor(
-    id: string,
-    authorId: string,
-    projectId: string,
-    coordinates: Coordinates,
-    label: string = 'view',
-    display: boolean = false,
-    outputState: OutputState[] = [],
-  ) {
-    super(id, authorId, projectId, 'View', label, display, NodeType.View, 1, 0, coordinates, NodeRunType.None, {
-      content: {
-        type: NodePropertyType.String,
-        label: 'Content',
-        value: '',
-        editable: false,
-        displayed: false,
-      },
-    });
-  }
-
-  public static override fromObject(object: BaseNode): BaseNode {
-    return new ViewNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.label, object.display, object.outputState);
-  }
-
-  // View Node just passes through the input to the output
-  _run(inputValues: (OutputState | null)[]): OutputState[] {
-    return [{
-      stringValue: inputValues[0]?.stringValue as string || '',
-      numberValue: null,
-      stringArrayValue: null,
-    }];
-  }
-}
-
 export class SplitNode extends BaseSyncNode {
   constructor(
     id: string,
