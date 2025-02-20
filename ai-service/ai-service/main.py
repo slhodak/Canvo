@@ -84,10 +84,12 @@ def embed(document: Document):
 @app.post("/search")
 def search(search_query: SearchQuery):
     try:
+        print(f"Searching for {search_query.query} in document {search_query.document_id}")
         search_results = search_engine.search(
-            search_query.query,
-            search_query.top_k,
-            search_query.document_id
+            db=db,
+            query=search_query.query,
+            top_k=search_query.top_k,
+            document_id=search_query.document_id
         )
         return {"status": "success", "search_results": search_results}
     except Exception as e:

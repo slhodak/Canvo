@@ -21,7 +21,7 @@ class SemanticSearch:
 
     def search(self, db: Database, query: str, top_k: int = 5, document_id: Optional[str] = None) -> List[Dict[str, Any]]:
         # Generate embedding for the query
-        query_embedding = self.model.encode([query])[0]
+        query_embedding = self.model.encode(query)
         # Search database for similar chunks
         results = db.search_similar(query_embedding, top_k, document_id)
         return results
