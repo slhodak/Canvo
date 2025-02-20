@@ -124,23 +124,23 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
         </foreignObject>
       )}
 
-      {/* Left Segment */}
+      {/* Node Rectangle - adjusted x position */}
       <rect
         x={node.x}
         y={node.y}
-        width={10}
+        width={neu.NODE_WIDTH}
+        height={neu.NODE_HEIGHT}
+        className={`node-rectangle ${isSelected ? "selected" : ""}`}
+      />
+
+      {/* Left Segment - in front of the rectangle */}
+      <rect
+        x={node.x}
+        y={node.y}
+        width={14}
         height={neu.NODE_HEIGHT}
         className="node-left-segment"
         onClick={handleSegmentClick}
-      />
-
-      {/* Node Rectangle - adjusted x position */}
-      <rect
-        x={node.x + 10}
-        y={node.y}
-        width={neu.NODE_WIDTH - 10}
-        height={neu.NODE_HEIGHT}
-        className={`node-rectangle ${isSelected ? "selected" : ""}`}
       />
 
       {/* Node Name - adjusted x position */}
