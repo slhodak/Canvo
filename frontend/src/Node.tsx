@@ -48,7 +48,6 @@ export const Node = ({ node, isSelected, connections, wireState, updateViewText,
 
   const handleDisplayFlagClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log('Display flag clicked for node:', node.node.nodeId);
     node.node.display = !node.node.display;
     setDisplaying(node.node.display);
     updateNode(node.node.projectId, node.node);
@@ -136,7 +135,7 @@ export const Node = ({ node, isSelected, connections, wireState, updateViewText,
         y={node.y}
         width={neu.NODE_WIDTH}
         height={neu.NODE_HEIGHT}
-        className={`node-rectangle ${isSelected ? "selected" : ""}`}
+        className={`node-rectangle ${isSelected === true ? "selected" : ""}`}
       />
 
       {/* Display Flag - in front of the rectangle */}
@@ -145,7 +144,7 @@ export const Node = ({ node, isSelected, connections, wireState, updateViewText,
         y={node.y}
         width={14}
         height={neu.NODE_HEIGHT}
-        className={`node-display-flag ${displaying ? "displaying" : ""}`}
+        className={`node-display-flag ${displaying === true ? "displaying" : ""}`}
         onClick={handleDisplayFlagClick}
       />
 

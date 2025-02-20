@@ -2,7 +2,7 @@ import './Project.css';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { VisualNode, VisualConnection } from './NetworkTypes';
-import { BaseNode, NodeRunType, NodeType, OutputState } from '../../shared/types/src/models/node';
+import { BaseNode, NodeRunType, OutputState } from '../../shared/types/src/models/node';
 import { Connection } from '../../shared/types/src/models/connection';
 import { ConnectionUtils as cu, NodeUtils as nu } from './Utils';
 import NetworkEditor from './NetworkEditor';
@@ -249,11 +249,11 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     }
   }, [runNode, syncNodesUpdate, nodes]);
 
-  const updateViewText = useCallback((node: VisualNode) => {
+  const updateViewText = (node: VisualNode) => {
     if (node.node.outputState[0]?.stringValue) {
       setViewText(node.node.outputState[0]?.stringValue || '');
     }
-  }, []);
+  }
 
   //////////////////////////////
   // Sync Connections
