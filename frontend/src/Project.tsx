@@ -2,7 +2,7 @@ import './Project.css';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { VisualNode, VisualConnection } from './NetworkTypes';
-import { BaseNode, NodeRunType, NodeType, OutputState } from '../../shared/types/src/models/node';
+import { BaseNode, NodeRunType, OutputState } from '../../shared/types/src/models/node';
 import { Connection } from '../../shared/types/src/models/connection';
 import { ConnectionUtils as cu, NodeUtils as nu } from './Utils';
 import NetworkEditor from './NetworkEditor';
@@ -27,7 +27,6 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   const prevConnectionsRef = useRef<NetworkConnections>([]);
   const [selectedNode, setSelectedNode] = useState<VisualNode | null>(null);
   const [viewText, setViewText] = useState<string>('');
-
   //////////////////////////////
   // Fetch Nodes & Connections
   //////////////////////////////
@@ -247,13 +246,25 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       // TODO: Sync only the subgraph that was run
       await syncNodesUpdate(Object.values(nodes).map(n => n.node));
     }
-    if (node.node.type === NodeType.View) {
-      const outputState = await runNode(node);
-      console.debug('Setting view text:', outputState);
-      // Set view text from the output state instead of the property value. don't cache view state
-      setViewText(outputState[0]?.stringValue || '');
-    }
   }, [runNode, syncNodesUpdate, nodes]);
+
+  const updateDisplayedNode = (node: VisualNode) => {
+    node.node.display = !node.node.display;
+    // If this node is being displayed, undisplay all other nodes
+    if (node.node.display) {
+      const newNodes = { ...nodes };
+      Object.values(newNodes).forEach(n => {
+        if (n.node.display && n.node.nodeId !== node.node.nodeId) {
+          n.node.display = false;
+        }
+      });
+      setNodes(newNodes);
+      syncNodesUpdate(Object.values(nodes).map(n => n.node));
+      if (node.node.outputState[0]?.stringValue) {
+        setViewText(node.node.outputState[0]?.stringValue || '');
+      }
+    }
+  }
 
   //////////////////////////////
   // Sync Connections
@@ -367,6 +378,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
               nodes={nodes}
               selectedNode={selectedNode}
               selectNode={selectNode}
+              updateDisplayedNode={updateDisplayedNode}
               addNode={addNode}
               updateNode={updateNode}
               deleteNode={deleteNode}

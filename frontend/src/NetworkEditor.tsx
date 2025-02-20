@@ -15,6 +15,7 @@ interface NetworkEditorProps {
   nodes: Record<string, VisualNode>;
   selectedNode: VisualNode | null;
   selectNode: (node: VisualNode) => void;
+  updateDisplayedNode: (node: VisualNode) => void;
   addNode: (node: VisualNode) => void;
   updateNode: (node: VisualNode, shouldRun?: boolean, shouldSync?: boolean) => Promise<void>;
   deleteNode: (node: VisualNode) => void;
@@ -29,6 +30,7 @@ const NetworkEditor = ({
   nodes,
   selectedNode,
   selectNode,
+  updateDisplayedNode,
   addNode,
   updateNode,
   deleteNode,
@@ -330,15 +332,6 @@ const NetworkEditor = ({
     updateConnections(newConnections);
   }, [connections, updateConnections, project.projectId, user.userId]);
 
-  const connectToViewNode = useCallback((node: VisualNode) => {
-    if (node.node.outputs < 1) return;
-
-    const viewNode = Object.values(nodes).find(n => n.node.type === NodeType.View);
-    if (viewNode) {
-      createNewConnection(node.id, 0, viewNode.id, 0);
-    }
-  }, [nodes, createNewConnection]);
-
   //////////////////////////////
   // React Hooks
   //////////////////////////////
@@ -376,18 +369,13 @@ const NetworkEditor = ({
         });
         return;
       }
-
-      if (event.key === 't' && isHoveringEditor && selectedNode) {
-        connectToViewNode(selectedNode);
-        return;
-      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [selectedNode, nodes, isHoveringEditor, mousePosition, connectToViewNode, deleteNode]);
+  }, [selectedNode, nodes, isHoveringEditor, mousePosition, deleteNode]);
 
   const handleSearchKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && searchTerm !== '') {
@@ -454,14 +442,17 @@ const NetworkEditor = ({
           {/* Nodes */}
           {Object.values(nodes).map(node => {
             const isSelected = selectedNode?.id === node.id;
+            const isDisplaying = node.node.display;
 
             return (
               <Node
                 key={node.id}
                 node={node}
                 isSelected={isSelected}
+                isDisplaying={isDisplaying}
                 connections={connections}
                 wireState={wireState}
+                updateDisplayedNode={updateDisplayedNode}
                 handleMouseDown={handleMouseDownInNode}
                 startDrawingWire={startDrawingWire}
                 endDrawingWire={endDrawingWire}

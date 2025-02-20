@@ -6,12 +6,10 @@
   fill: white;
   stroke: black;
   stroke-width: 1;
-  rx: 5;
 }
 
 .node-rectangle.selected {
-  outline: 2px solid #ffffff;
-  border-radius: 3px;
+  outline: 1px solid #ffffff;
 }
 
 .node-name {
@@ -86,4 +84,35 @@
 
 .node-play-button svg:hover {
   fill: rgb(0, 255, 0);
+}
+
+.node-label {
+  fill: black;
+  font-size: 12px;
+  user-select: none;
+  cursor: text;
+}
+
+.node-label-input {
+  background: var(--input-background-color);
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-size: 12px;
+  width: 100%;
+  height: 100%;
+  outline: none;
+}
+
+.node-label-input:focus {
+  border-color: #666;
+}
+
+.node-display-flag {
+  fill: #808080;
+  cursor: pointer;
+}
+
+.node-display-flag.displaying {
+  fill: #258bff;
 }

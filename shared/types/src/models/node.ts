@@ -2,7 +2,6 @@ export enum NodeType {
   Text = 'text',
   Prompt = 'prompt',
   Save = 'save',
-  View = 'view',
   Merge = 'merge',
   Split = 'split',
   File = 'file',
@@ -82,6 +81,8 @@ export abstract class BaseNode {
   public projectId: string;
   public authorId: string;
   public name: string;
+  public label: string;
+  public display: boolean;
   public type: NodeType;
   public inputs: number;
   public outputs: number;
@@ -95,6 +96,8 @@ export abstract class BaseNode {
     authorId: string,
     projectId: string,
     name: string,
+    label: string,
+    display: boolean,
     type: NodeType,
     inputs: number,
     outputs: number,
@@ -107,6 +110,8 @@ export abstract class BaseNode {
     this.authorId = authorId;
     this.projectId = projectId;
     this.name = name;
+    this.label = label;
+    this.display = display;
     this.type = type;
     this.inputs = inputs;
     this.outputs = outputs;
