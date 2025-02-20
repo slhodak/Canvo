@@ -44,6 +44,12 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
     }
   }
 
+  const handleSegmentClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log('Segment clicked for node:', node.node.nodeId);
+    // Add your click handling logic here
+  };
+
   // Handle edit completion
   const handleEditComplete = useCallback(() => {
     setIsEditing(false);
@@ -118,19 +124,28 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
         </foreignObject>
       )}
 
-      {/* Node Rectangle */}
+      {/* Left Segment */}
       <rect
         x={node.x}
         y={node.y}
-        width={neu.NODE_WIDTH}
+        width={10}
         height={neu.NODE_HEIGHT}
-        className={`node-rectangle ${isSelected ? "selected" : ""}`}
-      // className={`node-rectangle`}
+        className="node-left-segment"
+        onClick={handleSegmentClick}
       />
 
-      {/* Node Name */}
+      {/* Node Rectangle - adjusted x position */}
+      <rect
+        x={node.x + 10}
+        y={node.y}
+        width={neu.NODE_WIDTH - 10}
+        height={neu.NODE_HEIGHT}
+        className={`node-rectangle ${isSelected ? "selected" : ""}`}
+      />
+
+      {/* Node Name - adjusted x position */}
       <text
-        x={node.x + neu.NODE_WIDTH / 2}
+        x={node.x + 10 + (neu.NODE_WIDTH - 10) / 2}
         y={node.y + neu.NODE_HEIGHT / 2}
         className="node-name"
       >
