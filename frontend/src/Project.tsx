@@ -27,6 +27,21 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   const prevConnectionsRef = useRef<NetworkConnections>([]);
   const [selectedNode, setSelectedNode] = useState<VisualNode | null>(null);
   const [viewText, setViewText] = useState<string>('');
+
+  const updateViewText = (node: VisualNode) => {
+    // Notice that this only displays the first output state
+    if (node.node.outputState[0]?.stringValue) {
+      setViewText(node.node.outputState[0]?.stringValue || '');
+    } else if (node.node.outputState[0]?.numberValue) {
+      setViewText(node.node.outputState[0]?.numberValue.toString() || '');
+    } else if (node.node.outputState[0]?.stringArrayValue) {
+      setViewText(node.node.outputState[0]?.stringArrayValue.join("\n") || '');
+    } else {
+      console.debug('Displayed node has no output state');
+      setViewText('');
+    }
+  }
+
   //////////////////////////////
   // Fetch Nodes & Connections
   //////////////////////////////
@@ -58,6 +73,13 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
         setNodes(visualNodes);
         // Cache this initial state so you can revert to it if a future update fails
         prevNodesRef.current = visualNodes;
+        // If any node is displaying, update the view text
+        for (const node of Object.values(visualNodes)) {
+          if (node.node.display) {
+            updateViewText(node);
+            break;
+          }
+        }
       } else {
         console.error('Error fetching nodes for project:', data.error);
       }
@@ -260,9 +282,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       });
       setNodes(newNodes);
       syncNodesUpdate(Object.values(nodes).map(n => n.node));
-      if (node.node.outputState[0]?.stringValue) {
-        setViewText(node.node.outputState[0]?.stringValue || '');
-      }
+      updateViewText(node);
     } else {
       setViewText('');
     }
