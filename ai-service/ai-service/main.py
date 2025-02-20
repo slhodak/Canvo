@@ -5,6 +5,7 @@ from .semantic_search import SemanticSearch
 from .database import Database
 from dotenv import load_dotenv
 import os
+import traceback
 
 # Load environment variables
 load_dotenv()
@@ -34,36 +35,42 @@ if not DATABASE_URL:
 db = Database(DATABASE_URL)
 
 # Initialize semantic search with database
-search_engine = SemanticSearch(db)
+search_engine = SemanticSearch()
+
 
 class Document(BaseModel):
     document_text: str
     chunk_size: int = 100
     chunk_overlap: int = 20
 
+
 class SearchQuery(BaseModel):
     document_id: str
     query: str
     top_k: int = 5
 
+
 @app.get("/")
 def read_root():
     return {"message": "Canvo AI Service API"}
 
+
 @app.post("/embed")
 def embed(document: Document):
     try:
-        document_id = search_engine.add_document(
-            text=document.document_text,
-        )
+        document_id = db.add_document(document.document_text)
         num_embeddings = search_engine.embed(
+            db=db,
             document_id=document_id,
+            text=document.document_text,
             chunk_size=document.chunk_size,
             chunk_overlap=document.chunk_overlap
         )
         return {"status": "success", "document_id": document_id, "num_embeddings": num_embeddings}
     except Exception as e:
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/search")
 def search(search_query: SearchQuery):
@@ -75,9 +82,16 @@ def search(search_query: SearchQuery):
         )
         return {"status": "success", "search_results": search_results}
     except Exception as e:
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
+
 # Add cleanup on shutdown
+@app.on_event("startup")
+async def startup_event():
+    db.connect()
+
+
 @app.on_event("shutdown")
 async def shutdown_event():
     db.close()

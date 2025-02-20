@@ -487,7 +487,11 @@ export class EmbedNode extends BaseAsyncNode {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ text: inputValues[0].stringValue }),
+        body: JSON.stringify({
+          document_text: inputValues[0].stringValue,
+          chunk_size: this.properties.chunkSize.value as number,
+          chunk_overlap: this.properties.overlap.value as number,
+        }),
       });
 
       if (!response.ok) {

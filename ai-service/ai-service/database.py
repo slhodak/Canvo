@@ -2,79 +2,82 @@ import psycopg
 from typing import List, Dict, Any, Optional
 import numpy as np
 from pgvector.psycopg import register_vector
+import uuid
+
 
 class Database:
     def __init__(self, connection_string: str):
         """Initialize database connection"""
         self.connection_string = connection_string
         self._connection = None
-        self._cursor = None
 
     def connect(self):
         """Create database connection"""
         if not self._connection:
             self._connection = psycopg.connect(self.connection_string)
-            self._cursor = self._connection.cursor()
             register_vector(self._connection)
         return self._connection
 
     def close(self):
         """Close database connection"""
-        if self._cursor:
-            self._cursor.close()
         if self._connection:
             self._connection.close()
             self._connection = None
-            self._cursor = None
 
-    def add_document(self, document_id: str, text: str) -> int:
+    def add_document(self, text: str) -> str:
         """Add a document to the database and return its ID"""
         try:
+            document_id = str(uuid.uuid4())
             self.connect()
-            self._cursor.execute(
-                "INSERT INTO documents (document_id, text) VALUES (%s, %s) RETURNING id",
-                (document_id, text)
-            )
-            document_db_id = self._cursor.fetchone()['id']
-            self._connection.commit()
-            return document_db_id
+            with self._connection.cursor() as cursor:
+                cursor.execute(
+                    "INSERT INTO documents (document_id, text) VALUES (%s, %s) RETURNING id",
+                    (document_id, text)
+                )
+                self._connection.commit()
+                return document_id
         except Exception as e:
             self._connection.rollback()
             raise e
 
-    def add_chunks(self, document_db_id: int, chunks: List[str]) -> List[int]:
+    def add_chunks(self, document_id: str, chunks: List[str]) -> List[str]:
         """Add chunks for a document and return their IDs"""
         try:
             self.connect()
             chunk_ids = []
             for idx, chunk in enumerate(chunks):
-                self._cursor.execute(
-                    """
-                    INSERT INTO chunks (document_id, text, chunk_index)
-                    VALUES (%s, %s, %s)
-                    RETURNING id
-                    """,
-                    (document_db_id, chunk, idx)
-                )
-                chunk_ids.append(self._cursor.fetchone()['id'])
+                chunk_id = str(uuid.uuid4())
+                with self._connection.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        INSERT INTO chunks (chunk_id, document_id, text, chunk_index)
+                        VALUES (%s, %s, %s, %s)
+                        RETURNING id
+                        """,
+                        (chunk_id, document_id, chunk, idx)
+                    )
+                    chunk_ids.append(chunk_id)
             self._connection.commit()
             return chunk_ids
         except Exception as e:
             self._connection.rollback()
             raise e
 
-    def add_embeddings(self, document_db_id: int, chunk_ids: List[int], embeddings: np.ndarray):
+    def add_embeddings(self, document_id: str, chunk_ids: List[str], embeddings: np.ndarray):
         """Add embeddings for chunks"""
         try:
             self.connect()
             for chunk_id, embedding in zip(chunk_ids, embeddings):
-                self._cursor.execute(
-                    """
-                    INSERT INTO embeddings (document_id, chunk_id, vector)
-                    VALUES (%s, %s, %s)
-                    """,
-                    (document_db_id, chunk_id, embedding.tolist())
-                )
+                vector_str = '[' + ', '.join(str(x)
+                                             for x in embedding.tolist()) + ']'
+                with self._connection.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        INSERT INTO embeddings (document_id, chunk_id, vector)
+                        VALUES (%s, %s, %s)
+                        """,
+                        (document_id, chunk_id, vector_str)
+                    )
             self._connection.commit()
         except Exception as e:
             self._connection.rollback()
@@ -103,10 +106,11 @@ class Database:
             """
             params.append(top_k)
 
-            self._cursor.execute(query, params)
-            results = self._cursor.fetchall()
-            self._connection.commit()
-            return [dict(r) for r in results]
+            with self._connection.cursor() as cursor:
+                cursor.execute(query, params)
+                results = cursor.fetchall()
+                self._connection.commit()
+                return [dict(r) for r in results]
         except Exception as e:
             self._connection.rollback()
             raise e
@@ -115,19 +119,20 @@ class Database:
         """Retrieve all chunks for a given document_id"""
         try:
             self.connect()
-            self._cursor.execute(
-                """
-                SELECT c.text
-                FROM chunks c
-                JOIN documents d ON d.id = c.document_id
-                WHERE d.document_id = %s
-                ORDER BY c.chunk_index
-                """,
-                (document_id,)
-            )
-            results = self._cursor.fetchall()
-            self._connection.commit()
-            return [r['text'] for r in results]
+            with self._connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT c.text
+                    FROM chunks c
+                    JOIN documents d ON d.id = c.document_id
+                    WHERE d.document_id = %s
+                    ORDER BY c.chunk_index
+                    """,
+                    (document_id,)
+                )
+                results = cursor.fetchall()
+                self._connection.commit()
+                return [r['text'] for r in results]
         except Exception as e:
             self._connection.rollback()
             raise e
