@@ -16,7 +16,6 @@ class SemanticSearch:
         chunk_ids = db.add_chunks(document_id, chunks)
         # Generate and store embeddings
         embeddings = self.model.encode(chunks)
-        print(embeddings.shape)
         db.add_embeddings(document_id, chunk_ids, embeddings)
         return len(embeddings)
 
@@ -28,5 +27,6 @@ class SemanticSearch:
         return results
 
     def split_text(self, text: str, chunk_size: int, chunk_overlap: int) -> List[str]:
-        # Split the text into chunks with the given chunk size and overlap
-        return textwrap.fill(text, width=chunk_size, break_long_words=False, break_on_hyphens=False)
+        # TODO: chunk_overlap
+        # Split the text into chunks with the given chunk size
+        return textwrap.wrap(text, width=chunk_size, break_long_words=False, break_on_hyphens=False)

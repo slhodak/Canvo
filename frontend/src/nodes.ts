@@ -504,7 +504,6 @@ export class EmbedNode extends BaseAsyncNode {
         this.properties.status.value = `Error: ${result.error}`;
         return defaultOutputStates[OutputStateType.String];
       }
-      console.debug('EmbedNode result:', result);
 
       // Set success status with chunk count
       this.properties.documentId.value = result.document_id;
