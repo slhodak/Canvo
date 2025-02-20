@@ -1,5 +1,5 @@
 from sentence_transformers import SentenceTransformer
-from typing import List, Dict, Any, Optional
+from typing import List, Tuple
 from .database import Database
 import textwrap
 
@@ -19,7 +19,7 @@ class SemanticSearch:
         db.add_embeddings(document_id, chunk_ids, embeddings)
         return len(embeddings)
 
-    def search(self, db: Database, query: str, top_k: int = 5, document_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    def search(self, db: Database, document_id: str, query: str, top_k: int = 5) -> List[Tuple[str, float]]:
         # Generate embedding for the query
         query_embedding = self.model.encode(query)
         # Search database for similar chunks

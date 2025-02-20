@@ -1,5 +1,5 @@
 import psycopg
-from typing import List, Dict, Any, Optional
+from typing import List, Tuple
 import numpy as np
 from pgvector.psycopg import register_vector
 import uuid
@@ -86,8 +86,7 @@ class Database:
         try:
             self.connect()
             for chunk_id, embedding in zip(chunk_ids, embeddings):
-                vector_str = '[' + ', '.join(str(x)
-                                             for x in embedding.tolist()) + ']'
+                vector_str = self.format_pgvector(embedding)
                 with self._connection.cursor() as cursor:
                     cursor.execute(
                         """
@@ -101,34 +100,26 @@ class Database:
             self._connection.rollback()
             raise e
 
-    def search_similar(self, query_embedding: np.ndarray, top_k: int, document_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    def search_similar(self, query_embedding: np.ndarray, top_k: int, document_id: str) -> List[Tuple[str, float]]:
         """Search for similar chunks using vector similarity"""
         try:
             self.connect()
             query = """
                 SELECT c.text, e.vector <=> %s AS distance
                 FROM embeddings e
-                JOIN chunks c ON c.id = e.chunk_id
-                JOIN documents d ON d.id = c.document_id
-                """
-
-            params = [query_embedding.tolist()]
-
-            if document_id:
-                query += " WHERE d.document_id = %s"
-                params.append(document_id)
-
-            query += """
+                JOIN chunks c ON c.chunk_id = e.chunk_id
+                JOIN documents d ON d.document_id = c.document_id
+                WHERE d.document_id = %s
                 ORDER BY distance ASC
                 LIMIT %s
-            """
-            params.append(top_k)
+                """
+            params = [self.format_pgvector(query_embedding), document_id, top_k]
 
             with self._connection.cursor() as cursor:
                 cursor.execute(query, params)
                 results = cursor.fetchall()
                 self._connection.commit()
-                return [dict(r) for r in results]
+                return results
         except Exception as e:
             self._connection.rollback()
             raise e
@@ -154,3 +145,7 @@ class Database:
         except Exception as e:
             self._connection.rollback()
             raise e
+
+    def format_pgvector(self, vector: np.ndarray) -> str:
+        """Format a numpy array as a PostgreSQL vector string"""
+        return '[' + ', '.join(str(x) for x in vector.tolist()) + ']'

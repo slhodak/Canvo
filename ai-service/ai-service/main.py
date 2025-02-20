@@ -87,11 +87,13 @@ def search(search_query: SearchQuery):
         print(f"Searching for {search_query.query} in document {search_query.document_id}")
         search_results = search_engine.search(
             db=db,
+            document_id=search_query.document_id,
             query=search_query.query,
-            top_k=search_query.top_k,
-            document_id=search_query.document_id
+            top_k=search_query.top_k
         )
-        return {"status": "success", "search_results": search_results}
+        # Return only the text of the search results
+        result_strings = [result[0] for result in search_results]
+        return {"status": "success", "search_results": result_strings}
     except Exception as e:
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
