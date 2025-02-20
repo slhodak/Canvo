@@ -263,6 +263,8 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       if (node.node.outputState[0]?.stringValue) {
         setViewText(node.node.outputState[0]?.stringValue || '');
       }
+    } else {
+      setViewText('');
     }
   }
 
