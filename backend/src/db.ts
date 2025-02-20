@@ -22,8 +22,9 @@ if (!process.env.DATABASE_URL) {
 const db = pgp(process.env.DATABASE_URL);
 
 export namespace Database {
-
+  ////////////////////////////////////////////////////////////////////////////////
   // Users
+  ////////////////////////////////////////////////////////////////////////////////
 
   export async function insertUser(email: string) {
     const userId = uuidv4();
@@ -40,7 +41,9 @@ export namespace Database {
     return user;
   }
 
+  ////////////////////////////////////////////////////////////////////////////////
   // Sessions
+  ////////////////////////////////////////////////////////////////////////////////
 
   export async function getSession(sessionToken: string): Promise<SessionModel | null> {
     const session = await db.oneOrNone(`
@@ -60,7 +63,9 @@ export namespace Database {
     await db.none('UPDATE sessions SET session_expiration = CURRENT_TIMESTAMP WHERE session_token = $1', [sessionToken]);
   }
 
+  ////////////////////////////////////////////////////////////////////////////////
   // Projects
+  ////////////////////////////////////////////////////////////////////////////////
 
   export async function getProject(projectId: string, userId: string): Promise<ProjectModel | null> {
     const values = [projectId, userId];
@@ -105,12 +110,14 @@ export namespace Database {
     return result;
   }
 
+  ////////////////////////////////////////////////////////////////////////////////
   // Nodes
+  ////////////////////////////////////////////////////////////////////////////////
 
   export async function getNode(nodeId: string, userId: string): Promise<BaseNode | null> {
     const values = [nodeId, userId];
     const node = await db.oneOrNone(`
-      SELECT node_id, project_id, author_id, name, type, inputs,
+      SELECT node_id, project_id, author_id, name, label, type, inputs,
       outputs, coordinates, node_run_type, properties, output_state
       FROM nodes
       WHERE node_id = $1 AND author_id = $2
@@ -120,7 +127,7 @@ export namespace Database {
 
   export async function getNodesForProject(projectId: string, userId: string): Promise<BaseNode[]> {
     const nodes = await db.any(`
-      SELECT n.node_id, n.project_id, n.author_id, n.name, n.type, n.inputs, n.outputs,
+      SELECT n.node_id, n.project_id, n.author_id, n.name, n.label, n.type, n.inputs, n.outputs,
       n.coordinates, n.node_run_type, n.properties, n.output_state
       FROM nodes n
       WHERE n.project_id = $1 AND n.author_id = $2
@@ -134,6 +141,7 @@ export namespace Database {
       node.authorId,
       node.projectId,
       node.name,
+      node.label,
       node.type,
       node.inputs,
       node.outputs,
@@ -146,13 +154,12 @@ export namespace Database {
 
     await db.none(`
       INSERT INTO nodes (
-        node_id, author_id, project_id, name, type, inputs, outputs,
+        node_id, author_id, project_id, name, label, type, inputs, outputs,
         coordinates, node_run_type, properties, output_state
       )
       VALUES (
-        $1, $2, $3, $4, $5, $6, $7, 
-        point($8, $9), $10, $11, 
-        $12::jsonb
+        $1, $2, $3, $4, $5, $6, $7, $8,
+        point($9, $10), $11, $12::jsonb
       )
     `, values);
   }
@@ -163,6 +170,7 @@ export namespace Database {
       node.authorId,
       node.projectId,
       node.name,
+      node.label,
       node.type,
       node.inputs,
       node.outputs,
@@ -174,8 +182,8 @@ export namespace Database {
     ];
     await db.none(`
       UPDATE nodes 
-      SET node_id = $1, author_id = $2, project_id = $3, name = $4, type = $5, inputs = $6, outputs = $7,
-      coordinates = point($8, $9), node_run_type = $10, properties = $11, output_state = $12::jsonb,
+      SET node_id = $1, author_id = $2, project_id = $3, name = $4, label = $5, type = $6, inputs = $7, outputs = $8,
+      coordinates = point($9, $10), node_run_type = $11, properties = $12, output_state = $13::jsonb,
       updated_at = CURRENT_TIMESTAMP
       WHERE node_id = $1
     `, values);
@@ -186,7 +194,9 @@ export namespace Database {
     return result;
   }
 
+  ////////////////////////////////////////////////////////////////////////////////
   // Connections
+  ////////////////////////////////////////////////////////////////////////////////
 
   export async function getConnection(connectionId: string, userId: string): Promise<Connection | null> {
     const connection = await db.oneOrNone(`
@@ -226,7 +236,9 @@ export namespace Database {
     return result;
   }
 
+  ////////////////////////////////////////////////////////////////////////////////
   // Token Management
+  ////////////////////////////////////////////////////////////////////////////////
 
   export async function getUserTokenBalance(userId: string): Promise<number> {
     const result = await db.oneOrNone(`
