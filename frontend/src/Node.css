@@ -108,14 +108,14 @@
   border-color: #666;
 }
 
-.node-left-segment {
+.node-display-flag {
   fill: #4a90e2;
   /* Or any color you prefer */
   cursor: pointer;
   transition: fill 0.2s ease;
 }
 
-.node-left-segment:hover {
+.node-display-flag:hover {
   fill: #357abd;
   /* Darker shade for hover state */
 }

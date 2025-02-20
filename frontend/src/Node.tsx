@@ -133,13 +133,13 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
         className={`node-rectangle ${isSelected ? "selected" : ""}`}
       />
 
-      {/* Left Segment - in front of the rectangle */}
+      {/* Display Flag - in front of the rectangle */}
       <rect
         x={node.x}
         y={node.y}
         width={14}
         height={neu.NODE_HEIGHT}
-        className="node-left-segment"
+        className="node-display-flag"
         onClick={handleSegmentClick}
       />
 
