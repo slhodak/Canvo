@@ -24,15 +24,33 @@ class Database:
             self._connection.close()
             self._connection = None
 
-    def add_document(self, text: str) -> str:
+    def get_document_id_by_hash(self, document_hash: str) -> str:
+        """Get a document ID from the database"""
+        try:
+            self.connect()
+            with self._connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT document_id FROM documents WHERE document_hash = %s",
+                    (document_hash,)
+                )
+                result = cursor.fetchone()
+                if result:
+                    return result[0]
+                else:
+                    return None
+        except Exception as e:
+            self._connection.rollback()
+            raise e
+
+    def add_document(self, text: str, document_hash: str) -> str:
         """Add a document to the database and return its ID"""
         try:
             document_id = str(uuid.uuid4())
             self.connect()
             with self._connection.cursor() as cursor:
                 cursor.execute(
-                    "INSERT INTO documents (document_id, text) VALUES (%s, %s) RETURNING id",
-                    (document_id, text)
+                    "INSERT INTO documents (document_id, document_hash, text) VALUES (%s, %s, %s) RETURNING id",
+                    (document_id, document_hash, text)
                 )
                 self._connection.commit()
                 return document_id

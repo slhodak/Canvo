@@ -6,6 +6,7 @@ from .database import Database
 from dotenv import load_dotenv
 import os
 import traceback
+import hashlib
 
 # Load environment variables
 load_dotenv()
@@ -58,7 +59,15 @@ def read_root():
 @app.post("/embed")
 def embed(document: Document):
     try:
-        document_id = db.add_document(document.document_text)
+        document_hash = hashlib.sha256(
+            document.document_text.encode()).hexdigest()
+        # Get the document ID from the database if it was already added
+        document_id = db.get_document_id_by_hash(document_hash)
+        if not document_id:
+            document_id = db.add_document(
+                document.document_text, document_hash)
+
+        # Create the document chunks and embeddings
         num_embeddings = search_engine.embed(
             db=db,
             document_id=document_id,
