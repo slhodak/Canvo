@@ -11,6 +11,7 @@ interface NodeProps {
   isSelected: boolean;
   connections: VisualConnection[];
   wireState: WireState;
+  updateViewText: (node: VisualNode) => void;
   handleMouseDown: (e: React.MouseEvent, nodeId: string) => void;
   startDrawingWire: (nodeId: string, outputIndex: number, startX: number, startY: number) => void;
   endDrawingWire: (toNodeId: string, inputIndex: number) => void;
@@ -18,7 +19,7 @@ interface NodeProps {
   runNode: (node: VisualNode, shouldSync?: boolean) => Promise<(OutputState | null)[]>;
 }
 
-export const Node = ({ node, isSelected, connections, wireState, handleMouseDown, startDrawingWire, endDrawingWire, disconnectWire, runNode }: NodeProps) => {
+export const Node = ({ node, isSelected, connections, wireState, updateViewText, handleMouseDown, startDrawingWire, endDrawingWire, disconnectWire, runNode }: NodeProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [nodeLabel, setNodeLabel] = useState('');
   const labelInputRef = useRef<SVGForeignObjectElement>(null);
@@ -44,10 +45,10 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
     }
   }
 
-  const handleSegmentClick = (e: React.MouseEvent) => {
+  const handleDisplayFlagClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log('Segment clicked for node:', node.node.nodeId);
-    // Add your click handling logic here
+    console.log('Display flag clicked for node:', node.node.nodeId);
+    updateViewText(node);
   };
 
   // Handle edit completion
@@ -139,8 +140,8 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
         y={node.y}
         width={14}
         height={neu.NODE_HEIGHT}
-        className="node-display-flag"
-        onClick={handleSegmentClick}
+        className={`node-display-flag ${node.node.display ? "displaying" : ""}`}
+        onClick={handleDisplayFlagClick}
       />
 
       {/* Node Name - adjusted x position */}

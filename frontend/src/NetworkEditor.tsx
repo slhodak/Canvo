@@ -15,6 +15,7 @@ interface NetworkEditorProps {
   nodes: Record<string, VisualNode>;
   selectedNode: VisualNode | null;
   selectNode: (node: VisualNode) => void;
+  updateViewText: (node: VisualNode) => void;
   addNode: (node: VisualNode) => void;
   updateNode: (node: VisualNode, shouldRun?: boolean, shouldSync?: boolean) => Promise<void>;
   deleteNode: (node: VisualNode) => void;
@@ -29,6 +30,7 @@ const NetworkEditor = ({
   nodes,
   selectedNode,
   selectNode,
+  updateViewText,
   addNode,
   updateNode,
   deleteNode,
@@ -462,6 +464,7 @@ const NetworkEditor = ({
                 isSelected={isSelected}
                 connections={connections}
                 wireState={wireState}
+                updateViewText={updateViewText}
                 handleMouseDown={handleMouseDownInNode}
                 startDrawingWire={startDrawingWire}
                 endDrawingWire={endDrawingWire}

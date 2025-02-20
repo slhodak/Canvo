@@ -109,10 +109,14 @@
 }
 
 .node-display-flag {
-  fill: #4a90e2;
+  fill: #808080;
   /* Or any color you prefer */
   cursor: pointer;
   transition: fill 0.2s ease;
+}
+
+.node-display-flag.displaying {
+  fill: #4a90e2;
 }
 
 .node-display-flag:hover {

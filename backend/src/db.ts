@@ -117,7 +117,7 @@ export namespace Database {
   export async function getNode(nodeId: string, userId: string): Promise<BaseNode | null> {
     const values = [nodeId, userId];
     const node = await db.oneOrNone(`
-      SELECT node_id, project_id, author_id, name, label, type, inputs,
+      SELECT node_id, project_id, author_id, name, label, display, type, inputs,
       outputs, coordinates, node_run_type, properties, output_state
       FROM nodes
       WHERE node_id = $1 AND author_id = $2
@@ -127,7 +127,7 @@ export namespace Database {
 
   export async function getNodesForProject(projectId: string, userId: string): Promise<BaseNode[]> {
     const nodes = await db.any(`
-      SELECT n.node_id, n.project_id, n.author_id, n.name, n.label, n.type, n.inputs, n.outputs,
+      SELECT n.node_id, n.project_id, n.author_id, n.name, n.label, n.display, n.type, n.inputs, n.outputs,
       n.coordinates, n.node_run_type, n.properties, n.output_state
       FROM nodes n
       WHERE n.project_id = $1 AND n.author_id = $2
@@ -142,6 +142,7 @@ export namespace Database {
       node.projectId,
       node.name,
       node.label,
+      node.display,
       node.type,
       node.inputs,
       node.outputs,
@@ -154,12 +155,12 @@ export namespace Database {
 
     await db.none(`
       INSERT INTO nodes (
-        node_id, author_id, project_id, name, label, type, inputs, outputs,
+        node_id, author_id, project_id, name, label, display, type, inputs, outputs,
         coordinates, node_run_type, properties, output_state
       )
       VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8,
-        point($9, $10), $11, $12::jsonb, $13::jsonb
+        $1, $2, $3, $4, $5, $6, $7, $8, $9,
+        point($10, $11), $12, $13::jsonb, $14::jsonb
       )
     `, values);
   }
@@ -171,6 +172,7 @@ export namespace Database {
       node.projectId,
       node.name,
       node.label,
+      node.display,
       node.type,
       node.inputs,
       node.outputs,
@@ -182,8 +184,8 @@ export namespace Database {
     ];
     await db.none(`
       UPDATE nodes 
-      SET node_id = $1, author_id = $2, project_id = $3, name = $4, label = $5, type = $6, inputs = $7, outputs = $8,
-      coordinates = point($9, $10), node_run_type = $11, properties = $12, output_state = $13::jsonb,
+      SET node_id = $1, author_id = $2, project_id = $3, name = $4, label = $5, display = $6, type = $7, inputs = $8, outputs = $9,
+      coordinates = point($10, $11), node_run_type = $12, properties = $13, output_state = $14::jsonb,
       updated_at = CURRENT_TIMESTAMP
       WHERE node_id = $1
     `, values);

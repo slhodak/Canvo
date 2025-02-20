@@ -21,10 +21,11 @@ export class TextNode extends BaseSyncNode {
     projectId: string,
     coordinates: Coordinates,
     label: string = 'text',
+    display: boolean = false,
     text: string = '',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Text', label, NodeType.Text, 0, 1, coordinates, NodeRunType.Source, {
+    super(id, authorId, projectId, 'Text', label, display, NodeType.Text, 0, 1, coordinates, NodeRunType.Source, {
       text: {
         type: NodePropertyType.String,
         label: 'Text',
@@ -42,6 +43,7 @@ export class TextNode extends BaseSyncNode {
       object.projectId,
       object.coordinates,
       object.label,
+      object.display,
       object.properties.text.value as string,
       object.outputState
     );
@@ -74,10 +76,11 @@ export class PromptNode extends BaseAsyncNode {
     projectId: string,
     coordinates: Coordinates,
     label: string = 'prompt',
+    display: boolean = false,
     prompt: string = '',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Prompt', label, NodeType.Prompt, 1, 1, coordinates, NodeRunType.Cache, {
+    super(id, authorId, projectId, 'Prompt', label, display, NodeType.Prompt, 1, 1, coordinates, NodeRunType.Cache, {
       prompt: {
         type: NodePropertyType.String,
         label: 'Prompt',
@@ -95,6 +98,7 @@ export class PromptNode extends BaseAsyncNode {
       object.projectId,
       object.coordinates,
       object.label,
+      object.display,
       object.properties.prompt.value as string,
       object.outputState
     );
@@ -147,10 +151,11 @@ export class SaveNode extends BaseAsyncNode {
     projectId: string,
     coordinates: Coordinates,
     label: string = 'save',
+    display: boolean = false,
     filename: string = 'output.txt',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Save', label, NodeType.Save, 1, 0, coordinates, NodeRunType.None, {
+    super(id, authorId, projectId, 'Save', label, display, NodeType.Save, 1, 0, coordinates, NodeRunType.None, {
       filename: {
         type: NodePropertyType.String,
         label: 'Filename',
@@ -175,6 +180,7 @@ export class SaveNode extends BaseAsyncNode {
       object.projectId,
       object.coordinates,
       object.label,
+      object.display,
       object.properties.filename.value as string,
       object.outputState
     );
@@ -223,10 +229,11 @@ export class MergeNode extends BaseSyncNode {
     projectId: string,
     coordinates: Coordinates,
     label: string = 'merge',
+    display: boolean = false,
     separator: string = ' ',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Merge', label, NodeType.Merge, 2, 1, coordinates, NodeRunType.Run, {
+    super(id, authorId, projectId, 'Merge', label, display, NodeType.Merge, 2, 1, coordinates, NodeRunType.Run, {
       separator: {
         type: NodePropertyType.String,
         label: 'Separator',
@@ -244,7 +251,10 @@ export class MergeNode extends BaseSyncNode {
       object.projectId,
       object.coordinates,
       object.label,
-      object.properties.separator.value as string, object.outputState);
+      object.display,
+      object.properties.separator.value as string,
+      object.outputState
+    );
   }
 
   _run(inputValues: (OutputState | null)[]): OutputState[] {
@@ -278,9 +288,10 @@ export class ViewNode extends BaseSyncNode {
     projectId: string,
     coordinates: Coordinates,
     label: string = 'view',
+    display: boolean = false,
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'View', label, NodeType.View, 1, 0, coordinates, NodeRunType.None, {
+    super(id, authorId, projectId, 'View', label, display, NodeType.View, 1, 0, coordinates, NodeRunType.None, {
       content: {
         type: NodePropertyType.String,
         label: 'Content',
@@ -292,7 +303,7 @@ export class ViewNode extends BaseSyncNode {
   }
 
   public static override fromObject(object: BaseNode): BaseNode {
-    return new ViewNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.label, object.outputState);
+    return new ViewNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.label, object.display, object.outputState);
   }
 
   // View Node just passes through the input to the output
@@ -312,10 +323,11 @@ export class SplitNode extends BaseSyncNode {
     projectId: string,
     coordinates: Coordinates,
     label: string = 'split',
+    display: boolean = false,
     separator: string = ' ',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Split', label, NodeType.Split, 1, 2, coordinates, NodeRunType.Run, {
+    super(id, authorId, projectId, 'Split', label, display, NodeType.Split, 1, 2, coordinates, NodeRunType.Run, {
       separator: {
         type: NodePropertyType.String,
         label: 'Separator',
@@ -327,7 +339,7 @@ export class SplitNode extends BaseSyncNode {
   }
 
   public static override fromObject(object: BaseNode): BaseNode {
-    return new SplitNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.label, object.properties.separator.value as string, object.outputState);
+    return new SplitNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.label, object.display, object.properties.separator.value as string, object.outputState);
   }
 
   _run(inputValues: (OutputState | null)[]): OutputState[] {
@@ -360,10 +372,11 @@ export class FileNode extends BaseSyncNode {
     projectId: string,
     coordinates: Coordinates,
     label: string = 'file',
+    display: boolean = false,
     filename: string = '',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'File', label, NodeType.File, 0, 1, coordinates, NodeRunType.Source, {
+    super(id, authorId, projectId, 'File', label, display, NodeType.File, 0, 1, coordinates, NodeRunType.Source, {
       filename: {
         type: NodePropertyType.String,
         label: 'Filename',
@@ -388,6 +401,7 @@ export class FileNode extends BaseSyncNode {
       object.projectId,
       object.coordinates,
       object.label,
+      object.display,
       object.properties.filename.value as string,
       object.outputState
     );
@@ -416,10 +430,11 @@ export class EditNode extends BaseSyncNode {
     projectId: string,
     coordinates: Coordinates,
     label: string = 'edit',
+    display: boolean = false,
     content: string = '',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Edit', label, NodeType.Edit, 1, 1, coordinates, NodeRunType.Cache, {
+    super(id, authorId, projectId, 'Edit', label, display, NodeType.Edit, 1, 1, coordinates, NodeRunType.Cache, {
       content: {
         type: NodePropertyType.String,
         label: 'Content',
@@ -437,6 +452,7 @@ export class EditNode extends BaseSyncNode {
       object.projectId,
       object.coordinates,
       object.label,
+      object.display,
       object.properties.content.value as string,
       object.outputState
     );
@@ -463,11 +479,12 @@ export class EmbedNode extends BaseAsyncNode {
     projectId: string,
     coordinates: Coordinates,
     label: string = 'embed',
+    display: boolean = false,
     chunkSize: number = 100,
     overlap: number = 20,
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Embed', label, NodeType.Embed, 1, 1, coordinates, NodeRunType.Cache, {
+    super(id, authorId, projectId, 'Embed', label, display, NodeType.Embed, 1, 1, coordinates, NodeRunType.Cache, {
       documentId: {
         type: NodePropertyType.String,
         label: 'Document ID',
@@ -506,6 +523,7 @@ export class EmbedNode extends BaseAsyncNode {
       object.projectId,
       object.coordinates,
       object.label,
+      object.display,
       object.properties.chunkSize.value as number,
       object.properties.overlap.value as number,
       object.outputState
@@ -570,11 +588,12 @@ export class SearchNode extends BaseAsyncNode {
     projectId: string,
     coordinates: Coordinates,
     label: string = 'search',
+    display: boolean = false,
     outputState: OutputState[] = [],
   ) {
     // Actually this is not expensive and perhaps should be a Run node. But that's just because
     // we currently use a pretty low-dimension embedding model.
-    super(id, authorId, projectId, 'Search', label, NodeType.Search, 1, 1, coordinates, NodeRunType.Cache, {
+    super(id, authorId, projectId, 'Search', label, display, NodeType.Search, 1, 1, coordinates, NodeRunType.Cache, {
       documentId: {
         type: NodePropertyType.String,
         label: 'Document ID',
@@ -606,6 +625,7 @@ export class SearchNode extends BaseAsyncNode {
       object.projectId,
       object.coordinates,
       object.label,
+      object.display,
       object.outputState
     );
   }
@@ -661,10 +681,11 @@ export class JoinNode extends BaseSyncNode {
     projectId: string,
     coordinates: Coordinates,
     label: string = 'join',
+    display: boolean = false,
     separator: string = '\n',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Join', label, NodeType.Join, 1, 1, coordinates, NodeRunType.Run, {
+    super(id, authorId, projectId, 'Join', label, display, NodeType.Join, 1, 1, coordinates, NodeRunType.Run, {
       separator: {
         type: NodePropertyType.String,
         label: 'Separator',
@@ -682,6 +703,7 @@ export class JoinNode extends BaseSyncNode {
       object.projectId,
       object.coordinates,
       object.label,
+      object.display,
       object.properties.separator.value as string,
       object.outputState
     );
@@ -713,9 +735,10 @@ export class ReplaceNode extends BaseSyncNode {
     projectId: string,
     coordinates: Coordinates,
     label: string = 'replace',
+    display: boolean = false,
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Replace', label, NodeType.Replace, 1, 1, coordinates, NodeRunType.Run, {
+    super(id, authorId, projectId, 'Replace', label, display, NodeType.Replace, 1, 1, coordinates, NodeRunType.Run, {
       search: {
         type: NodePropertyType.String,
         label: 'Search',
@@ -740,6 +763,7 @@ export class ReplaceNode extends BaseSyncNode {
       object.projectId,
       object.coordinates,
       object.label,
+      object.display,
       object.outputState
     );
   }

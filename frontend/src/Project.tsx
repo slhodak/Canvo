@@ -247,13 +247,13 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       // TODO: Sync only the subgraph that was run
       await syncNodesUpdate(Object.values(nodes).map(n => n.node));
     }
-    if (node.node.type === NodeType.View) {
-      const outputState = await runNode(node);
-      console.debug('Setting view text:', outputState);
-      // Set view text from the output state instead of the property value. don't cache view state
-      setViewText(outputState[0]?.stringValue || '');
-    }
   }, [runNode, syncNodesUpdate, nodes]);
+
+  const updateViewText = useCallback((node: VisualNode) => {
+    if (node.node.outputState[0]?.stringValue) {
+      setViewText(node.node.outputState[0]?.stringValue || '');
+    }
+  }, []);
 
   //////////////////////////////
   // Sync Connections
@@ -367,6 +367,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
               nodes={nodes}
               selectedNode={selectedNode}
               selectNode={selectNode}
+              updateViewText={updateViewText}
               addNode={addNode}
               updateNode={updateNode}
               deleteNode={deleteNode}

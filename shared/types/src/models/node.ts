@@ -83,6 +83,7 @@ export abstract class BaseNode {
   public authorId: string;
   public name: string;
   public label: string;
+  public display: boolean;
   public type: NodeType;
   public inputs: number;
   public outputs: number;
@@ -97,6 +98,7 @@ export abstract class BaseNode {
     projectId: string,
     name: string,
     label: string,
+    display: boolean,
     type: NodeType,
     inputs: number,
     outputs: number,
@@ -110,6 +112,7 @@ export abstract class BaseNode {
     this.projectId = projectId;
     this.name = name;
     this.label = label;
+    this.display = display;
     this.type = type;
     this.inputs = inputs;
     this.outputs = outputs;
