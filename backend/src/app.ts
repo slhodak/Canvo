@@ -13,7 +13,6 @@ import { LLMResponse } from '../../shared/types/src/models/LLMResponse';
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 const app: Express = express();
-const router = Router();
 const port = 3000;
 
 const allowedOrigin = process.env.NODE_ENV == 'development' ? 'http://localhost:5173' : 'https://canvo.app';
@@ -21,7 +20,7 @@ const jwtSecret = process.env.JWT_SECRET || '';
 if (jwtSecret.length == 0) {
   throw new Error('Cannot start server: JWT_SECRET is not set');
 }
-const sixtyMinutesInSeconds = 60 * 60;
+const sevenDaysInSeconds = 60 * 60 * 24 * 7;
 const SESSION_TOKEN = "session_token";
 const FRONTEND_DOMAIN = process.env.APP_DOMAIN;
 if (!FRONTEND_DOMAIN) {
@@ -126,6 +125,7 @@ async function checkSessionToken(sessionToken: string): Promise<boolean> {
 async function authenticate(req: Request, res: Response, next: NextFunction) {
   const sessionToken = req.cookies?.session_token;
   if (!sessionToken) {
+    console.warn("Authenticate failed: no session token found");
     return res.json({ status: 'failed', error: 'No session token found' });
   }
 
@@ -167,11 +167,10 @@ authRouter.get('/authenticate', async (req: Request, res: Response) => {
     // Authenticate the OAuth token
     const response = await stytchClient.oauth.authenticate({
       token: oauthToken,
-      session_duration_minutes: 60 * 24 * 7, // 1 week
-    })
+      session_duration_minutes: sevenDaysInSeconds / 60 // Seven days in minutes
+    });
 
     const sessionToken = response.session_token;
-    const sessionExpirationString = response.provider_values.expires_at;
     const email = response.user.emails[0].email;
 
     const user = await db.getUser(email);
@@ -181,14 +180,15 @@ authRouter.get('/authenticate', async (req: Request, res: Response) => {
     }
 
     console.debug("Creating a session for this user");
-    const sessionExpiration = sessionExpirationString ? new Date(sessionExpirationString) : new Date(Date.now() + sixtyMinutesInSeconds * 1000);
-    await db.insertSession(sessionToken, email, sessionExpiration);
+    const bufferTime = 10 * 60; // Expire the token 10 minutes before the Stytch session expires
+    const maxAge = sevenDaysInSeconds * 1000 - (bufferTime * 1000);
+    const expirationTime = new Date(Date.now() + maxAge);
+    await db.insertSession(sessionToken, email, expirationTime);
 
-    // The session expires in 60 minutes, as specified in the oauth authentication request above
     res.cookie(SESSION_TOKEN, sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      maxAge: sixtyMinutesInSeconds * 1000
+      maxAge: maxAge // Express.js expects a value in milliseconds, despite HTTP saying it's in seconds
     });
     res.redirect(FRONTEND_DOMAIN);
 
@@ -219,7 +219,7 @@ authRouter.get('/check', async (req: Request, res: Response) => {
   }
 });
 
-authRouter.post('/logout', authenticate, async (req: Request, res: Response) => {
+authRouter.post('/logout', async (req: Request, res: Response) => {
   const sessionToken = req.cookies?.session_token;
   if (!sessionToken) {
     return res.json({ status: 'failed', error: 'No session token found' });
@@ -732,7 +732,7 @@ aiRouter.post('/search', async (req: Request, res: Response) => {
 const tokenRouter = Router();
 tokenRouter.use('/', authenticate);
 
-tokenRouter.post('/add', authenticate, async (req: Request, res: Response) => {
+tokenRouter.post('/add', async (req: Request, res: Response) => {
   try {
     const user = await getUserFromSessionToken(req);
     if (!user) {
@@ -754,7 +754,7 @@ tokenRouter.post('/add', authenticate, async (req: Request, res: Response) => {
   }
 });
 
-tokenRouter.get('/get_balance', authenticate, async (req: Request, res: Response) => {
+tokenRouter.get('/get_balance', async (req: Request, res: Response) => {
   try {
     const user = await getUserFromSessionToken(req);
     if (!user) {
