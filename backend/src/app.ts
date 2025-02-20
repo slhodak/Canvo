@@ -9,7 +9,7 @@ import { UserModel } from '../../shared/types/src/models/user';
 import { runPrompt } from './llm';
 import stytch from 'stytch';
 import { validateNode } from './util';
-
+import { LLMResponse } from '../../shared/types/src/models/LLMResponse';
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 const app: Express = express();
@@ -457,6 +457,32 @@ apiRouter.post('/add_node', async (req: Request, res: Response) => {
   }
 });
 
+apiRouter.post('/update_node', async (req: Request, res: Response) => {
+  const { projectId, node } = req.body;
+  if (!projectId || !node) {
+    return res.status(400).json({ error: "No projectId or node provided" });
+  }
+
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ error: "Could not find user email from session token" });
+  }
+
+  if (!validateNode(node)) {
+    return res.status(400).json({ error: "Invalid node provided" });
+  }
+
+  try {
+    await db.updateNode(node);
+    return res.json({ status: "success" });
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ error: error.message });
+    }
+    return res.status(500).json({ error: "An unknown error occurred" });
+  }
+});
+
 apiRouter.post('/update_nodes', async (req: Request, res: Response) => {
   const { nodes } = req.body;
   if (!nodes) {
@@ -684,7 +710,10 @@ aiRouter.post('/search', async (req: Request, res: Response) => {
       body: JSON.stringify({ document_id, query, top_k }),
     });
 
-    const result = await aiResponse.json();
+    const result = await aiResponse.json() as LLMResponse;
+    if (result.status !== "success") {
+      return res.status(500).json({ status: "failed", error: "AI service error" });
+    }
 
     // Deduct tokens after successful operation
     await db.deductTokens(user.userId, SEARCH_COST);
@@ -692,7 +721,7 @@ aiRouter.post('/search', async (req: Request, res: Response) => {
     return res.json(result);
   } catch (error) {
     console.error('Error in search:', error);
-    return res.status(500).json({ error: "AI service error" });
+    return res.status(500).json({ status: "failed", error: "AI service error" });
   }
 });
 

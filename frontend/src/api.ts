@@ -2,7 +2,7 @@ import { BaseNode } from '../../shared/types/src/models/node';
 import { SERVER_URL } from './constants';
 
 export default class NodesAPI {
-  static async updateNode(projectId: string, node: BaseNode) {
+  static async updateNode(projectId: string, node: BaseNode): Promise<boolean> {
     try {
       const response = await fetch(`${SERVER_URL}/api/update_node`, {
         method: 'POST',
@@ -17,14 +17,14 @@ export default class NodesAPI {
       });
       const data = await response.json();
       if (data.status === 'success') {
-        return data.node;
+        return true;
       } else {
         console.error('Server error while updating node:', data.error);
-        return null;
+        return false;
       }
     } catch (error) {
       console.error('Could not update node:', error);
-      return null;
+      return false;
     }
   };
 }

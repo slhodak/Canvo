@@ -10,6 +10,8 @@ import {
   defaultOutputStates,
   NodePropertyType,
 } from '../../shared/types/src/models/node';
+import { LLMResponse } from '../../shared/types/src/models/LLMResponse';
+import NodesAPI from './api';
 import { SERVER_URL } from './constants';
 
 export class TextNode extends BaseSyncNode {
@@ -43,6 +45,7 @@ export class TextNode extends BaseSyncNode {
       numberValue: null,
       stringArrayValue: null,
     }];
+    NodesAPI.updateNode(this.projectId, this);
   }
 
   // Every node accepts an array of input values, but sometimes that array is empty
@@ -510,12 +513,13 @@ export class EmbedNode extends BaseAsyncNode {
       this.properties.status.value = `Success: Created ${result.num_embeddings} embeddings`;
 
       // Pass on the document ID to the next node
-      // This outputState[] is not automatically persisted to the database
-      return [{
+      const outputState = [{
         stringValue: this.properties.documentId.value as string,
         numberValue: null,
         stringArrayValue: null,
       }];
+      NodesAPI.updateNode(this.projectId, this);
+      return outputState;
     } catch (error: unknown) {
       console.error('Error in EmbedNode:', error);
       this.properties.status.value = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
@@ -571,7 +575,6 @@ export class SearchNode extends BaseAsyncNode {
   }
 
   async _run(inputValues: (OutputState | null)[]): Promise<OutputState[]> {
-    console.debug(`SearchNode inputValues: ${JSON.stringify(inputValues)}`);
     if (!inputValues[0]?.stringValue) return defaultOutputStates[OutputStateType.StringArray];
 
     this.properties.documentId.value = inputValues[0].stringValue as string;
@@ -598,6 +601,7 @@ export class SearchNode extends BaseAsyncNode {
       }
 
       const result = await aiResponse.json();
+      console.debug(`SearchNode result: ${JSON.stringify(result)}`);
       this.properties.status.value = `Found ${result.search_results.length} results`;
 
       // Output the results as a string array
@@ -715,10 +719,3 @@ export class ReplaceNode extends BaseSyncNode {
     }];
   }
 }
-
-type LLMResponse = {
-  status: 'success' | 'error';
-  result: string;
-  error?: string;
-}
-
