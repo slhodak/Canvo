@@ -9,9 +9,10 @@ import { updateNode } from './api';
 interface NodeProps {
   node: VisualNode;
   isSelected: boolean;
+  isDisplaying: boolean;
   connections: VisualConnection[];
   wireState: WireState;
-  updateViewText: (node: VisualNode) => void;
+  updateDisplayedNode: (node: VisualNode) => void;
   handleMouseDown: (e: React.MouseEvent, nodeId: string) => void;
   startDrawingWire: (nodeId: string, outputIndex: number, startX: number, startY: number) => void;
   endDrawingWire: (toNodeId: string, inputIndex: number) => void;
@@ -19,10 +20,9 @@ interface NodeProps {
   runNode: (node: VisualNode, shouldSync?: boolean) => Promise<(OutputState | null)[]>;
 }
 
-export const Node = ({ node, isSelected, connections, wireState, updateViewText, handleMouseDown, startDrawingWire, endDrawingWire, disconnectWire, runNode }: NodeProps) => {
+export const Node = ({ node, isSelected, isDisplaying, connections, wireState, updateDisplayedNode, handleMouseDown, startDrawingWire, endDrawingWire, disconnectWire, runNode }: NodeProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [nodeLabel, setNodeLabel] = useState('');
-  const [displaying, setDisplaying] = useState(false);
   const labelInputRef = useRef<SVGForeignObjectElement>(null);
 
   const handleConnectionClick = (e: React.MouseEvent, isInputPort: boolean, connectionId: string | null = null, nodeId: string, inputIndex: number) => {
@@ -48,10 +48,7 @@ export const Node = ({ node, isSelected, connections, wireState, updateViewText,
 
   const handleDisplayFlagClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    node.node.display = !node.node.display;
-    setDisplaying(node.node.display);
-    updateNode(node.node.projectId, node.node);
-    updateViewText(node);
+    updateDisplayedNode(node);
   };
 
   // Handle edit completion
@@ -80,7 +77,6 @@ export const Node = ({ node, isSelected, connections, wireState, updateViewText,
   }, [isEditing, nodeLabel, handleEditComplete]);
 
   useEffect(() => {
-    setDisplaying(node.node.display);
     setNodeLabel(node.node.label || 'unlabeled');
   }, [node]);
 
@@ -144,7 +140,7 @@ export const Node = ({ node, isSelected, connections, wireState, updateViewText,
         y={node.y}
         width={14}
         height={neu.NODE_HEIGHT}
-        className={`node-display-flag ${displaying ? "displaying" : ""}`}
+        className={`node-display-flag ${isDisplaying ? "displaying" : ""}`}
         onClick={handleDisplayFlagClick}
       />
 
