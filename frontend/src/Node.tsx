@@ -135,7 +135,7 @@ export const Node = ({ node, isSelected, connections, wireState, updateViewText,
         y={node.y}
         width={neu.NODE_WIDTH}
         height={neu.NODE_HEIGHT}
-        className={`node-rectangle ${isSelected === true ? "selected" : ""}`}
+        className={`node-rectangle ${isSelected ? "selected" : ""}`}
       />
 
       {/* Display Flag - in front of the rectangle */}
@@ -144,7 +144,7 @@ export const Node = ({ node, isSelected, connections, wireState, updateViewText,
         y={node.y}
         width={14}
         height={neu.NODE_HEIGHT}
-        className={`node-display-flag ${displaying === true ? "displaying" : ""}`}
+        className={`node-display-flag ${displaying ? "displaying" : ""}`}
         onClick={handleDisplayFlagClick}
       />
 
