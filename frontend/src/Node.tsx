@@ -3,6 +3,7 @@ import { VisualNode, VisualConnection, WireState } from './NetworkTypes';
 import PlayButton from './assets/PlayButton';
 import './Node.css';
 import { NodeRunType, OutputState } from '../../shared/types/src/models/node';
+import { useState, useRef, useEffect, useCallback } from 'react';
 
 interface NodeProps {
   node: VisualNode;
@@ -14,9 +15,14 @@ interface NodeProps {
   endDrawingWire: (toNodeId: string, inputIndex: number) => void;
   disconnectWire: (connectionId: string) => void;
   runNode: (node: VisualNode, shouldSync?: boolean) => Promise<(OutputState | null)[]>;
+  updateNodeLabel: (nodeId: string, label: string) => void;
 }
 
-export const Node = ({ node, isSelected, connections, wireState, handleMouseDown, startDrawingWire, endDrawingWire, disconnectWire, runNode }: NodeProps) => {
+export const Node = ({ node, isSelected, connections, wireState, handleMouseDown, startDrawingWire, endDrawingWire, disconnectWire, runNode, updateNodeLabel }: NodeProps) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(node.node.label || '');
+  const foreignObjectRef = useRef<SVGForeignObjectElement>(null);
+
   const handleConnectionClick = (e: React.MouseEvent, isInputPort: boolean, connectionId: string | null = null, nodeId: string, inputIndex: number) => {
     if (connectionId) {
       // Immediately start a new connection if the clicked port is an output port
@@ -38,11 +44,74 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
     }
   }
 
+  // Handle edit completion
+  const handleEditComplete = useCallback(() => {
+    setIsEditing(false);
+    if (editValue !== node.node.label) {
+      updateNodeLabel(node.node.nodeId, editValue);
+    }
+  }, [node, editValue, updateNodeLabel]);
+
+  // Handle click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (foreignObjectRef.current && !foreignObjectRef.current.contains(event.target as Node)) {
+        handleEditComplete();
+      }
+    };
+
+    if (isEditing) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isEditing, editValue, handleEditComplete]);
+
   return (
     <g
       key={node.node.nodeId}
       onMouseDown={(e) => handleMouseDown(e, node.node.nodeId)}
       className="node-g">
+
+      {/* Node Label */}
+      {!isEditing ? (
+        <text
+          x={node.x - 5}
+          y={node.y + neu.NODE_HEIGHT / 2}
+          className="node-label"
+          textAnchor="end"
+          dominantBaseline="middle"
+          onDoubleClick={(e) => {
+            e.stopPropagation();
+            setIsEditing(true);
+          }}
+        >
+          {node.node.label || ''}
+        </text>
+      ) : (
+        <foreignObject
+          ref={foreignObjectRef}
+          x={node.x - 100}
+          y={node.y + neu.NODE_HEIGHT / 2 - 10}
+          width="90"
+          height="20"
+        >
+          <input
+            type="text"
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleEditComplete();
+              }
+              e.stopPropagation();
+            }}
+            className="node-label-input"
+            autoFocus
+          />
+        </foreignObject>
+      )}
 
       {/* Node Rectangle */}
       <rect

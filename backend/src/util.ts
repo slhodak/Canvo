@@ -24,11 +24,11 @@ export const formatStateArray = (state: OutputState) => {
 
 export const validateNode = (node: BaseNode): boolean => {
   const {
-    nodeId, projectId, name, type, inputs, outputs, coordinates,
+    nodeId, projectId, name, label, type, inputs, outputs, coordinates,
     nodeRunType, properties, outputState } = node;
   try {
     checkAnyNullOrUndefined({
-      nodeId, projectId, name, type, inputs, outputs, coordinates,
+      nodeId, projectId, name, label, type, inputs, outputs, coordinates,
       nodeRunType, properties, outputState
     });
   } catch (error) {

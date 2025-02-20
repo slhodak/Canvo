@@ -87,3 +87,25 @@
 .node-play-button svg:hover {
   fill: rgb(0, 255, 0);
 }
+
+.node-label {
+  fill: #666;
+  font-size: 12px;
+  user-select: none;
+  cursor: text;
+}
+
+.node-label-input {
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-size: 12px;
+  width: 100%;
+  height: 100%;
+  outline: none;
+}
+
+.node-label-input:focus {
+  border-color: #666;
+}

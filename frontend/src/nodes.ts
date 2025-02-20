@@ -23,7 +23,7 @@ export class TextNode extends BaseSyncNode {
     text: string = '',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Text', NodeType.Text, 0, 1, coordinates, NodeRunType.Source, {
+    super(id, authorId, projectId, 'Text', 'text', NodeType.Text, 0, 1, coordinates, NodeRunType.Source, {
       text: {
         type: NodePropertyType.String,
         label: 'Text',
@@ -67,7 +67,7 @@ export class PromptNode extends BaseAsyncNode {
     prompt: string = '',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Prompt', NodeType.Prompt, 1, 1, coordinates, NodeRunType.Cache, {
+    super(id, authorId, projectId, 'Prompt', 'prompt', NodeType.Prompt, 1, 1, coordinates, NodeRunType.Cache, {
       prompt: {
         type: NodePropertyType.String,
         label: 'Prompt',
@@ -133,7 +133,7 @@ export class SaveNode extends BaseAsyncNode {
     filename: string = 'output.txt',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Save', NodeType.Save, 1, 0, coordinates, NodeRunType.None, {
+    super(id, authorId, projectId, 'Save', 'save', NodeType.Save, 1, 0, coordinates, NodeRunType.None, {
       filename: {
         type: NodePropertyType.String,
         label: 'Filename',
@@ -207,7 +207,7 @@ export class MergeNode extends BaseSyncNode {
     separator: string = ' ',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Merge', NodeType.Merge, 2, 1, coordinates, NodeRunType.Run, {
+    super(id, authorId, projectId, 'Merge', 'merge', NodeType.Merge, 2, 1, coordinates, NodeRunType.Run, {
       separator: {
         type: NodePropertyType.String,
         label: 'Separator',
@@ -253,7 +253,7 @@ export class ViewNode extends BaseSyncNode {
     projectId: string,
     coordinates: Coordinates,
   ) {
-    super(id, authorId, projectId, 'View', NodeType.View, 1, 0, coordinates, NodeRunType.None, {
+    super(id, authorId, projectId, 'View', 'view', NodeType.View, 1, 0, coordinates, NodeRunType.None, {
       content: {
         type: NodePropertyType.String,
         label: 'Content',
@@ -287,7 +287,7 @@ export class SplitNode extends BaseSyncNode {
     separator: string = ' ',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Split', NodeType.Split, 1, 2, coordinates, NodeRunType.Run, {
+    super(id, authorId, projectId, 'Split', 'split', NodeType.Split, 1, 2, coordinates, NodeRunType.Run, {
       separator: {
         type: NodePropertyType.String,
         label: 'Separator',
@@ -334,7 +334,7 @@ export class FileNode extends BaseSyncNode {
     filename: string = '',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'File', NodeType.File, 0, 1, coordinates, NodeRunType.Source, {
+    super(id, authorId, projectId, 'File', 'file', NodeType.File, 0, 1, coordinates, NodeRunType.Source, {
       filename: {
         type: NodePropertyType.String,
         label: 'Filename',
@@ -388,7 +388,7 @@ export class EditNode extends BaseSyncNode {
     content: string = '',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Edit', NodeType.Edit, 1, 1, coordinates, NodeRunType.Cache, {
+    super(id, authorId, projectId, 'Edit', 'edit', NodeType.Edit, 1, 1, coordinates, NodeRunType.Cache, {
       content: {
         type: NodePropertyType.String,
         label: 'Content',
@@ -434,7 +434,7 @@ export class EmbedNode extends BaseAsyncNode {
     overlap: number = 20,
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Embed', NodeType.Embed, 1, 1, coordinates, NodeRunType.Cache, {
+    super(id, authorId, projectId, 'Embed', 'embed', NodeType.Embed, 1, 1, coordinates, NodeRunType.Cache, {
       documentId: {
         type: NodePropertyType.String,
         label: 'Document ID',
@@ -539,7 +539,7 @@ export class SearchNode extends BaseAsyncNode {
   ) {
     // Actually this is not expensive and perhaps should be a Run node. But that's just because
     // we currently use a pretty low-dimension embedding model.
-    super(id, authorId, projectId, 'Search', NodeType.Search, 1, 1, coordinates, NodeRunType.Cache, {
+    super(id, authorId, projectId, 'Search', 'search', NodeType.Search, 1, 1, coordinates, NodeRunType.Cache, {
       documentId: {
         type: NodePropertyType.String,
         label: 'Document ID',
@@ -627,7 +627,7 @@ export class JoinNode extends BaseSyncNode {
     separator: string = '\n',
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Join', NodeType.Join, 1, 1, coordinates, NodeRunType.Run, {
+    super(id, authorId, projectId, 'Join', 'join', NodeType.Join, 1, 1, coordinates, NodeRunType.Run, {
       separator: {
         type: NodePropertyType.String,
         label: 'Separator',
@@ -676,7 +676,7 @@ export class ReplaceNode extends BaseSyncNode {
     coordinates: Coordinates,
     outputState: OutputState[] = [],
   ) {
-    super(id, authorId, projectId, 'Replace', NodeType.Replace, 1, 1, coordinates, NodeRunType.Run, {
+    super(id, authorId, projectId, 'Replace', 'replace', NodeType.Replace, 1, 1, coordinates, NodeRunType.Run, {
       search: {
         type: NodePropertyType.String,
         label: 'Search',
