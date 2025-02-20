@@ -87,15 +87,15 @@ export const Node = ({ node, isSelected, connections, wireState, handleMouseDown
             setIsEditing(true);
           }}
         >
-          {node.node.label || ''}
+          {node.node.label || 'unlabeled'}
         </text>
       ) : (
         <foreignObject
           ref={foreignObjectRef}
           x={node.x - 100}
-          y={node.y + neu.NODE_HEIGHT / 2 - 10}
-          width="90"
-          height="20"
+          y={node.y + neu.NODE_HEIGHT / 2 - 12}
+          width="80"
+          height="24"
         >
           <input
             type="text"
