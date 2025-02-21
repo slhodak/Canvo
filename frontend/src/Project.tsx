@@ -272,7 +272,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     }
   }, [runNode, syncNodesUpdate, nodes]);
 
-  const updateDisplayedNode = (node: VisualNode) => {
+  const updateDisplayedNode = async (node: VisualNode) => {
     node.node.display = !node.node.display;
     // If this node is being displayed, undisplay all other nodes
     if (node.node.display) {
@@ -283,6 +283,9 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
         }
       });
       setNodes(newNodes);
+      if (node.node.nodeRunType === NodeRunType.Run) {
+        await runNode(node);
+      }
       syncNodesUpdate(Object.values(nodes).map(n => n.node));
       updateViewText(node);
     } else {
