@@ -69,6 +69,70 @@ export class TextNode extends BaseSyncNode {
   }
 }
 
+export class FetchNode extends BaseAsyncNode {
+  constructor(
+    id: string,
+    authorId: string,
+    projectId: string,
+    coordinates: Coordinates,
+    label: string = 'fetch',
+    display: boolean = false,
+    url: string = '',
+    outputState: OutputState[] = [],
+  ) {
+    super(id, authorId, projectId, 'Fetch', label, display, NodeType.Fetch, 0, 1, coordinates, NodeRunType.Cache, {
+      url: {
+        type: NodePropertyType.String,
+        label: 'URL',
+        value: url,
+        editable: true,
+        displayed: true,
+      }
+    }, outputState);
+  }
+
+  public static override fromObject(object: BaseNode): BaseNode {
+    return new FetchNode(
+      object.nodeId,
+      object.authorId,
+      object.projectId,
+      object.coordinates,
+      object.label,
+      object.display,
+      object.properties.url.value as string,
+      object.outputState
+    );
+  }
+
+  async _run(inputValues: (OutputState | null)[]): Promise<OutputState[]> {
+    const url = this.properties.url.value as string;
+    if (!url) {
+      console.warn(`Will not run FetchNode, no URL provided for node ${this.nodeId}`);
+      return defaultOutputStates[OutputStateType.String];
+    }
+
+    const response = await fetch(`${SERVER_URL}/api/run_fetch`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ url }),
+    });
+    const data = await response.json();
+    if (data.status === 'success') {
+      return [{
+        stringValue: data.text,
+        numberValue: null,
+        stringArrayValue: null,
+      }];
+    } else {
+      console.error('Error running fetch:', data.error);
+      return defaultOutputStates[OutputStateType.String];
+    }
+  }
+}
+
 export class PromptNode extends BaseAsyncNode {
   constructor(
     id: string,
@@ -775,3 +839,4 @@ export class ReplaceNode extends BaseSyncNode {
     }];
   }
 }
+

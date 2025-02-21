@@ -615,6 +615,33 @@ apiRouter.delete('/delete_connection/:connectionId', async (req: Request, res: R
 });
 
 ////////////////////////////////////////////////////////////
+// Non-AI Functions
+////////////////////////////////////////////////////////////
+
+apiRouter.post('/run_fetch', async (req: Request, res: Response) => {
+  let { url } = req.body;
+  if (!url) {
+    return res.status(400).json({ error: "No URL provided" });
+  }
+
+  // If the URL is just a domain, add the https:// prefix
+  if (!url.startsWith('http')) {
+    url = `https://${url}`;
+  }
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Accept': 'text/html',
+      'Access-Control-Allow-Origin': '*',
+    }
+  });
+
+  const text = await response.text();
+  return res.json({ status: "success", text });
+});
+
+////////////////////////////////////////////////////////////
 // AI Functions
 ////////////////////////////////////////////////////////////
 

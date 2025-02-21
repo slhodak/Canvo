@@ -1,5 +1,6 @@
 export enum NodeType {
   Text = 'text',
+  Fetch = 'fetch',
   Prompt = 'prompt',
   Save = 'save',
   Merge = 'merge',
