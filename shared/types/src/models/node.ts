@@ -11,6 +11,7 @@ export enum NodeType {
   Search = 'search',
   Join = 'join',
   Replace = 'replace',
+  Pick = 'pick',
 }
 
 // A source node is not dependent on other nodes, and will cache its output state

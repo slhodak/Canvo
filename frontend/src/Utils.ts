@@ -1,6 +1,6 @@
 import { VisualNode } from "./NetworkTypes";
 import { BaseNode, NodeType, Coordinates, IOStateType, IOState } from "../../shared/types/src/models/node";
-import { TextNode, PromptNode, SaveNode, MergeNode, SplitNode, FileNode, EditNode, EmbedNode, SearchNode, JoinNode, ReplaceNode, FetchNode } from "./nodes";
+import { TextNode, PromptNode, SaveNode, MergeNode, SplitNode, FileNode, EditNode, EmbedNode, SearchNode, JoinNode, ReplaceNode, FetchNode, PickNode } from "./nodes";
 
 export const NetworkEditorUtils = {
   NODE_WIDTH: 100,
@@ -47,6 +47,8 @@ export const NodeUtils = {
         return new JoinNode(nodeId, authorId, projectId, coordinates);
       case NodeType.Replace:
         return new ReplaceNode(nodeId, authorId, projectId, coordinates);
+      case NodeType.Pick:
+        return new PickNode(nodeId, authorId, projectId, coordinates);
       default:
         return null;
     }
@@ -78,6 +80,8 @@ export const NodeUtils = {
         return JoinNode.fromObject(object);
       case NodeType.Replace:
         return ReplaceNode.fromObject(object);
+      case NodeType.Pick:
+        return PickNode.fromObject(object);
       default:
         return null;
     }

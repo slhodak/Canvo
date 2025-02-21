@@ -887,3 +887,56 @@ export class ReplaceNode extends BaseSyncNode {
   }
 }
 
+// The Pick node chooses an element from an array to copy to its string output
+export class PickNode extends BaseSyncNode {
+  constructor(
+    id: string,
+    authorId: string,
+    projectId: string,
+    coordinates: Coordinates,
+    label: string = 'pick',
+    display: boolean = false,
+    index: number = 0,
+    outputState: IOState[] = [],
+  ) {
+    super(id, authorId, projectId, 'Pick', label, display, NodeType.Pick, 1, 1, coordinates, NodeRunType.Run, {
+      index: {
+        type: NodePropertyType.Number,
+        label: 'Index',
+        value: index,
+        editable: true,
+        displayed: true,
+      }
+    }, [IOStateType.StringArray], outputState);
+  }
+
+  public static override fromObject(object: BaseNode): BaseNode {
+    return new PickNode(
+      object.nodeId,
+      object.authorId,
+      object.projectId,
+      object.coordinates,
+      object.label,
+      object.display,
+      object.properties.index.value as number,
+      object.outputState
+    );
+  }
+
+  protected override resetOutputState(): void {
+    this.outputState = [defaultIOStates[IOStateType.String]];
+  }
+
+  _run(inputValues: IOState[]): IOState[] {
+    if (!inputValues[0]?.stringArrayValue) return [defaultIOStates[IOStateType.String]];
+
+    const index = this.properties.index.value as number;
+    const pickedString = inputValues[0].stringArrayValue[index];
+
+    return [{
+      stringValue: pickedString,
+      numberValue: null,
+      stringArrayValue: null,
+    }];
+  }
+}
