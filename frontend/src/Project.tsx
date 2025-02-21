@@ -308,26 +308,6 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     }
   }
 
-  // index-selector: check if the output type of the connection is string[]
-  // if so, check if the input type of the connection is a string
-  // if so, tell the toNode that it's got to do index selection
-  const updateIndexSelection = useCallback((fromNodeId: string, fromOutput: number, toNodeId: string, inputIndex: number) => {
-    const fromNode = nodes[fromNodeId];
-    const fromNodeIOState = fromNode?.node.outputState[fromOutput];
-    if (fromNodeIOState) {
-      const fromNodeOutputType = nu.inferOutputType(fromNodeIOState);
-      if (fromNodeOutputType === IOStateType.StringArray) {
-        const toNode = nodes[toNodeId];
-        if (toNode) {
-          const toNodeInputType = toNode.node.inputTypes[inputIndex];
-          if (toNodeInputType === IOStateType.String) {
-            toNode.node.indexSelections[inputIndex] = 0;
-          }
-        }
-      }
-    }
-  }, [nodes]);
-
   //////////////////////////////
   // Sync Connections
   //////////////////////////////
@@ -405,6 +385,27 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     setNodes(newNodes);
     await syncNodeDelete(node);
   }, [nodes, selectedNode, syncNodeDelete, deleteConnections]);
+
+  // index-selector: check if the output type of the connection is string[]
+  // if so, check if the input type of the connection is a string
+  // if so, tell the toNode that it's got to do index selection
+  const updateIndexSelection = useCallback((fromNodeId: string, fromOutput: number, toNodeId: string, inputIndex: number) => {
+    const fromNode = nodes[fromNodeId];
+    const fromNodeIOState = fromNode?.node.outputState[fromOutput];
+    if (fromNodeIOState) {
+      const fromNodeOutputType = nu.inferOutputType(fromNodeIOState);
+      if (fromNodeOutputType === IOStateType.StringArray) {
+        const toNode = nodes[toNodeId];
+        if (toNode) {
+          const toNodeInputType = toNode.node.inputTypes[inputIndex];
+          if (toNodeInputType === IOStateType.String) {
+            toNode.node.indexSelections[inputIndex] = 0;
+            updateNode(toNode);
+          }
+        }
+      }
+    }
+  }, [nodes, updateNode]);
 
   //////////////////////////////
   // React Hooks
