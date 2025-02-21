@@ -60,7 +60,7 @@ export class TextNode extends BaseSyncNode {
   }
 
   // Every node accepts an array of input values, but sometimes that array is empty
-  _run(inputValues: (IOState | null)[]): IOState[] {
+  _run(inputValues: IOState[]): IOState[] {
     return [{
       stringValue: this.properties.text.value as string,
       numberValue: null,
@@ -104,7 +104,7 @@ export class FetchNode extends BaseAsyncNode {
     );
   }
 
-  async _run(inputValues: (IOState | null)[]): Promise<IOState[]> {
+  async _run(inputValues: IOState[]): Promise<IOState[]> {
     const url = this.properties.url.value as string;
     if (!url) {
       console.warn(`Will not run FetchNode, no URL provided for node ${this.nodeId}`);
@@ -168,7 +168,7 @@ export class PromptNode extends BaseAsyncNode {
     );
   }
 
-  async _run(inputValues: (IOState | null)[]): Promise<IOState[]> {
+  async _run(inputValues: IOState[]): Promise<IOState[]> {
     if (!inputValues[0]) return [defaultIOStates[IOStateType.String]];
 
     if (!this.properties.prompt.value || this.properties.prompt.value === '') {
@@ -250,7 +250,7 @@ export class SaveNode extends BaseAsyncNode {
     );
   }
 
-  async _run(inputValues: (IOState | null)[]): Promise<IOState[]> {
+  async _run(inputValues: IOState[]): Promise<IOState[]> {
     const inputText = inputValues[0]?.stringValue;
     if (!inputText) {
       this.properties.status.value = 'No input to save';
@@ -321,7 +321,7 @@ export class MergeNode extends BaseSyncNode {
     );
   }
 
-  _run(inputValues: (IOState | null)[]): IOState[] {
+  _run(inputValues: IOState[]): IOState[] {
     // Merge the input texts into a single output text
     let mergedResult = '';
     let i = 0;
@@ -369,7 +369,7 @@ export class SplitNode extends BaseSyncNode {
     return new SplitNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.label, object.display, object.properties.separator.value as string, object.outputState);
   }
 
-  _run(inputValues: (IOState | null)[]): IOState[] {
+  _run(inputValues: IOState[]): IOState[] {
     // Split the input text into two parts
     const separator = this.properties.separator.value as string;
     const inputText = inputValues[0]?.stringValue as string;
@@ -428,7 +428,7 @@ export class FileNode extends BaseSyncNode {
     );
   }
 
-  _run(inputValues: (IOState | null)[]): IOState[] {
+  _run(inputValues: IOState[]): IOState[] {
     return this.outputState;
   }
 
@@ -479,14 +479,19 @@ export class EditNode extends BaseSyncNode {
     );
   }
 
-  _run(inputValues: (IOState | null)[]): IOState[] {
+  _run(inputValues: IOState[]): IOState[] {
     if (!inputValues[0]) {
       return [defaultIOStates[IOStateType.String]];
     }
 
-    this.properties.content.value = inputValues[0].stringValue as string;
+    const content = inputValues[0].stringValue as string;
+    if (!content) {
+      return [defaultIOStates[IOStateType.String]];
+    }
+
+    this.properties.content.value = content;
     return [{
-      stringValue: this.properties.content.value as string,
+      stringValue: content,
       numberValue: null,
       stringArrayValue: null,
     }];
@@ -555,7 +560,7 @@ export class EmbedNode extends BaseAsyncNode {
     );
   }
 
-  async _run(inputValues: (IOState | null)[]): Promise<IOState[]> {
+  async _run(inputValues: IOState[]): Promise<IOState[]> {
     if (!inputValues[0]?.stringValue) return [defaultIOStates[IOStateType.String]];
 
     try {
@@ -680,7 +685,7 @@ export class SearchNode extends BaseAsyncNode {
     );
   }
 
-  async _run(inputValues: (IOState | null)[]): Promise<IOState[]> {
+  async _run(inputValues: IOState[]): Promise<IOState[]> {
     if (!inputValues[0]?.stringValue) return [defaultIOStates[IOStateType.StringArray]];
 
     this.properties.documentId.value = inputValues[0].stringValue as string;
@@ -759,7 +764,7 @@ export class JoinNode extends BaseSyncNode {
     );
   }
 
-  _run(inputValues: (IOState | null)[]): IOState[] {
+  _run(inputValues: IOState[]): IOState[] {
     if (!inputValues[0]?.stringArrayValue) {
       return [defaultIOStates[IOStateType.StringArray]];
     }
@@ -818,7 +823,7 @@ export class ReplaceNode extends BaseSyncNode {
     );
   }
 
-  _run(inputValues: (IOState | null)[]): IOState[] {
+  _run(inputValues: IOState[]): IOState[] {
     if (!inputValues[0]?.stringValue) return [defaultIOStates[IOStateType.String]];
 
     const search = this.properties.search.value as string;

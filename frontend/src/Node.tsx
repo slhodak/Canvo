@@ -17,7 +17,7 @@ interface NodeProps {
   startDrawingWire: (nodeId: string, outputIndex: number, startX: number, startY: number) => void;
   endDrawingWire: (toNodeId: string, inputIndex: number) => void;
   disconnectWire: (connectionId: string) => void;
-  runNode: (node: VisualNode, shouldSync?: boolean) => Promise<(IOState | null)[]>;
+  runNode: (node: VisualNode, shouldSync?: boolean) => Promise<IOState[]>;
 }
 
 export const Node = ({ node, isSelected, isDisplaying, connections, wireState, updateDisplayedNode, handleMouseDown, startDrawingWire, endDrawingWire, disconnectWire, runNode }: NodeProps) => {

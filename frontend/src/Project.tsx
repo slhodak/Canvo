@@ -2,7 +2,7 @@ import './Project.css';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { VisualNode, VisualConnection } from './NetworkTypes';
-import { BaseNode, NodeRunType, IOState } from '../../shared/types/src/models/node';
+import { BaseNode, NodeRunType, IOState, emptyIOState } from '../../shared/types/src/models/node';
 import { Connection } from '../../shared/types/src/models/connection';
 import { ConnectionUtils as cu, NodeUtils as nu } from './Utils';
 import NetworkEditor from './NetworkEditor';
@@ -202,7 +202,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   //////////////////////////////
 
   // cache-expensive: calculate the output state of a node given its input states
-  const _runNodeOnInput = useCallback(async (inputValues: (IOState | null)[], node: VisualNode): Promise<(IOState | null)[]> => {
+  const _runNodeOnInput = useCallback(async (inputValues: IOState[], node: VisualNode): Promise<IOState[]> => {
     if ('run' in node.node && typeof node.node.run === 'function') {
       return node.node.run(inputValues);
     }
@@ -214,24 +214,26 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
 
   // For each input connection to this node, get or calculate the input from that connection
   // If this node is a Run node, run it once you've gathered all the input values
-  const _runPriorDAG = useCallback(async (node: VisualNode): Promise<(IOState | null)[]> => {
+  const _runPriorDAG = useCallback(async (node: VisualNode): Promise<IOState[]> => {
     const inputConnections = connections.filter(conn => conn.connection.toNode === node.node.nodeId);
     if (inputConnections.length === 0) {
       console.debug('Node has no input connections');
       return [];
     }
 
-    const inputValues: (IOState | null)[] = [];
+    const inputValues: IOState[] = [];
     for (const conn of inputConnections) {
       const inputNode = nodes[conn.connection.fromNode];
       if (!inputNode) {
         console.warn("Input node not found for connection:", conn.connection.connectionId);
+        inputValues.push(emptyIOState);
         continue;
       };
 
       const outputState = inputNode.node.outputState[conn.connection.fromOutput];
-      if (!outputState) {
+      if (outputState === null) {
         console.warn("Output state not found for connection:", conn.connection.connectionId);
+        inputValues.push(emptyIOState);
         continue;
       }
 
@@ -256,7 +258,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     return inputValues;
   }, [nodes, connections, _runNodeOnInput]);
 
-  const runNode = useCallback(async (node: VisualNode): Promise<(IOState | null)[]> => {
+  const runNode = useCallback(async (node: VisualNode): Promise<IOState[]> => {
     const inputValues = await _runPriorDAG(node);
     return await _runNodeOnInput(inputValues, node);
   }, [_runPriorDAG, _runNodeOnInput]);

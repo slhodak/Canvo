@@ -57,6 +57,12 @@ export enum IOStateType {
   StringArray = 'stringArray',
 }
 
+export const emptyIOState: IOState = {
+  stringValue: null,
+  numberValue: null,
+  stringArrayValue: null,
+};
+
 export const defaultIOStates: Record<IOStateType, IOState> = {
   [IOStateType.String]: {
     stringValue: '',
@@ -159,10 +165,11 @@ export abstract class BaseNode {
 
   public cacheOrClearIOState(runResult: IOState[]) {
     switch (this.nodeRunType) {
-      case (NodeRunType.Source, NodeRunType.Cache):
+      case NodeRunType.Source:
+      case NodeRunType.Cache:
         this.outputState = runResult;
         break;
-      case (NodeRunType.Run, NodeRunType.Cache):
+      case NodeRunType.Run:
         // To make a Run node displayable, cache its output state
         if (this.display) {
           this.outputState = runResult;
@@ -175,25 +182,52 @@ export abstract class BaseNode {
   }
 }
 
+function selectInputsByIndices(inputValues: IOState[], indexSelections: (number | null)[]): IOState[] {
+  const selectedInputValues: IOState[] = [];
+  for (let i = 0; i < inputValues.length; i++) {
+    const selectedIndexForInput = indexSelections[i];
+    const inputValue = inputValues[i];
+    if (selectedIndexForInput === null || inputValue === null) {
+      selectedInputValues.push(inputValue); // In case the selectedIndex is null
+      continue;
+    }
+
+    // For now we only care about stringArrayValue
+    const inputStringArrayValue = inputValue.stringArrayValue;
+    if (inputStringArrayValue === null) {
+      selectedInputValues.push(inputValue);
+      continue;
+    }
+
+    selectedInputValues.push({
+      stringValue: inputStringArrayValue[selectedIndexForInput],
+      numberValue: null,
+      stringArrayValue: null,
+    });
+  }
+  return selectedInputValues;
+}
+
 export abstract class BaseSyncNode extends BaseNode {
-  public run(inputValues: (IOState | null)[]): IOState[] {
+  public run(inputValues: IOState[]): IOState[] {
     // index-selector: if the node is doing index selection, pick the index
     // from each outputState in the array
     // index selection will be per input. selectedIndices
-    const runResult = this._run(inputValues);
+    const selectedInputValues = selectInputsByIndices(inputValues, this.indexSelections);
+    const runResult = this._run(selectedInputValues);
     this.cacheOrClearIOState(runResult);
     return runResult;
   }
 
-  public abstract _run(inputValues: (IOState | null)[]): IOState[];
+  public abstract _run(inputValues: IOState[]): IOState[];
 }
 
 export abstract class BaseAsyncNode extends BaseNode {
-  public async run(inputValues: (IOState | null)[]): Promise<IOState[]> {
+  public async run(inputValues: IOState[]): Promise<IOState[]> {
     const runResult = await this._run(inputValues);
     this.cacheOrClearIOState(runResult);
     return runResult;
   }
 
-  public abstract _run(inputValues: (IOState | null)[]): Promise<IOState[]>;
+  public abstract _run(inputValues: IOState[]): Promise<IOState[]>;
 }

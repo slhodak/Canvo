@@ -15,26 +15,47 @@ interface ParametersPaneProps {
 
 // index-selector: display UI for selecting the index of each input
 // if index selection is active
-const ParametersPane = ({ node, updateNode }: ParametersPaneProps) => (
-  <div className="parameters-pane-container">
-    <div className="parameters-pane-header">
-      <h3>Parameters<span className="parameters-pane-node-id">{node?.node.nodeId}</span></h3>
-    </div>
+const ParametersPane = ({ node, updateNode }: ParametersPaneProps) => {
+  const [indexSelections, setIndexSelections] = useState<(number | null)[]>([]);
 
-    <div className="parameters-pane-content">
-      {node && node.node.indexSelections.filter(val => val !== null).length > 0 && (
-        <div className="parameters-pane-index-selections">
-          {node.node.indexSelections.map((val, index) => (
-            <div key={index}>{val}</div>
-          ))}
-        </div>
-      )}
-      {node && Object.entries(node.node.properties).filter(([, property]) => property.displayed).map(([key, property]) => (
-        <PropertyInputContainer key={property.label} propertyKey={key} property={property} node={node} updateNode={updateNode} />
-      ))}
+  useEffect(() => {
+    if (!node) return;
+    setIndexSelections(node.node.indexSelections);
+  }, [node]);
+
+  const handleIndexSelectionChange = (index: number, value: string) => {
+    if (!node) return;
+
+    node.node.indexSelections[index] = Number(value);
+    setIndexSelections(node.node.indexSelections);
+    updateNode(node);
+  }
+
+  return (
+    <div className="parameters-pane-container">
+      <div className="parameters-pane-header">
+        <h3>Parameters<span className="parameters-pane-node-id">{node?.node.nodeId}</span></h3>
+      </div>
+
+      <div className="parameters-pane-content">
+        {node && indexSelections.length > 0 && (
+          <div className="parameters-pane-index-selections">
+            {indexSelections.map((val, index) => (
+              val !== null && (
+                <input type="number" key={index} value={val} onChange={(e) => handleIndexSelectionChange(index, e.target.value)} />
+              )
+            ))}
+          </div>
+        )}
+        {node && Object.entries(node.node.properties).filter(([, property]) => property.displayed).map(([key, property]) => {
+          return (
+            <PropertyInputContainer key={property.label} propertyKey={key} property={property} node={node} updateNode={updateNode} />
+          )
+        })}
+      </div>
     </div>
-  </div>
-)
+  )
+}
 
 export default ParametersPane;
 
@@ -78,7 +99,7 @@ const PropertyInputContainer = ({ propertyKey, property, node, updateNode }: Pro
         initialValue={property.value as string}
         node={node}
         updateNode={updateNode}
-    />;
+      />;
 
     default:
       return null;
