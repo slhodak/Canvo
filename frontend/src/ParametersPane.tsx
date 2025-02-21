@@ -102,6 +102,7 @@ const TextPropertyInput = ({ propertyKey, label, editable, initialValue, node, u
   const handlePropertyChange = (newValue: string) => {
     setValue(newValue);
     node.node.setProperty(propertyKey, newValue);
+    console.debug(`TextPropertyInput: ${propertyKey} = ${newValue}`);
     updateNode(node);
   }
 

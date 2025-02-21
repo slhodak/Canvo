@@ -443,15 +443,17 @@ export class EmbedNode extends BaseAsyncNode {
     coordinates: Coordinates,
     label: string = 'embed',
     display: boolean = false,
+    documentId: string = '',
     chunkSize: number = 100,
     overlap: number = 20,
+    status: string = '',
     outputState: OutputState[] = [],
   ) {
     super(id, authorId, projectId, 'Embed', label, display, NodeType.Embed, 1, 1, coordinates, NodeRunType.Cache, {
       documentId: {
         type: NodePropertyType.String,
         label: 'Document ID',
-        value: '',
+        value: documentId,
         editable: false,
         displayed: true,
       },
@@ -472,7 +474,7 @@ export class EmbedNode extends BaseAsyncNode {
       status: {
         type: NodePropertyType.String,
         label: 'Status',
-        value: '',
+        value: status,
         editable: false,
         displayed: true,
       }
@@ -487,8 +489,10 @@ export class EmbedNode extends BaseAsyncNode {
       object.coordinates,
       object.label,
       object.display,
+      object.properties.documentId.value as string,
       object.properties.chunkSize.value as number,
       object.properties.overlap.value as number,
+      object.properties.status.value as string,
       object.outputState
     );
   }
@@ -552,6 +556,9 @@ export class SearchNode extends BaseAsyncNode {
     coordinates: Coordinates,
     label: string = 'search',
     display: boolean = false,
+    query: string = '',
+    documentId: string = '',
+    status: string = '',
     outputState: OutputState[] = [],
   ) {
     // Actually this is not expensive and perhaps should be a Run node. But that's just because
@@ -560,21 +567,21 @@ export class SearchNode extends BaseAsyncNode {
       documentId: {
         type: NodePropertyType.String,
         label: 'Document ID',
-        value: '',
+        value: documentId,
         editable: false,
         displayed: true,
       },
       status: {
         type: NodePropertyType.String,
         label: 'Status',
-        value: '',
+        value: status,
         editable: false,
         displayed: true,
       },
       query: {
         type: NodePropertyType.String,
         label: 'Query',
-        value: '',
+        value: query,
         editable: true,
         displayed: true,
       }
@@ -589,6 +596,9 @@ export class SearchNode extends BaseAsyncNode {
       object.coordinates,
       object.label,
       object.display,
+      object.properties.query.value as string,
+      object.properties.documentId.value as string,
+      object.properties.status.value as string,
       object.outputState
     );
   }
@@ -599,7 +609,6 @@ export class SearchNode extends BaseAsyncNode {
     this.properties.documentId.value = inputValues[0].stringValue as string;
     try {
       this.properties.status.value = 'Searching...';
-      console.debug(`Searching for ${this.properties.query.value} in document ${this.properties.documentId.value}`);
 
       const aiResponse = await fetch(`${SERVER_URL}/ai/search`, {
         method: 'POST',
@@ -620,8 +629,8 @@ export class SearchNode extends BaseAsyncNode {
       }
 
       const result = await aiResponse.json();
-      console.debug(`SearchNode result: ${JSON.stringify(result)}`);
       this.properties.status.value = `Found ${result.search_results.length} results`;
+      updateNode(this.projectId, this);
 
       // Output the results as a string array
       return [{

@@ -140,12 +140,19 @@ export abstract class BaseNode {
     this.properties[key].value = value;
   }
 
-  public cacheOutputStateIfNecessary(runResult: OutputState[]) {
+  public cacheOrClearOutputState(runResult: OutputState[]) {
     switch (this.nodeRunType) {
       case (NodeRunType.Source, NodeRunType.Cache):
         this.outputState = runResult;
         break;
       case (NodeRunType.Run, NodeRunType.Cache):
+        // To make a Run node displayable, cache its output state
+        if (this.display) {
+          this.outputState = runResult;
+        } else {
+          // When not displaying a Run node, erase its output state
+          this.outputState = [];
+        }
         break;
     }
   }
@@ -154,7 +161,7 @@ export abstract class BaseNode {
 export abstract class BaseSyncNode extends BaseNode {
   public run(inputValues: (OutputState | null)[]): OutputState[] {
     const runResult = this._run(inputValues);
-    this.cacheOutputStateIfNecessary(runResult);
+    this.cacheOrClearOutputState(runResult);
     return runResult;
   }
 
@@ -164,7 +171,7 @@ export abstract class BaseSyncNode extends BaseNode {
 export abstract class BaseAsyncNode extends BaseNode {
   public async run(inputValues: (OutputState | null)[]): Promise<OutputState[]> {
     const runResult = await this._run(inputValues);
-    this.cacheOutputStateIfNecessary(runResult);
+    this.cacheOrClearOutputState(runResult);
     return runResult;
   }
 
