@@ -3,7 +3,7 @@ import './NetworkEditor.css';
 import { VisualNode, VisualConnection, DragState, WireState } from './NetworkTypes';
 import { Node } from './Node';
 import { ConnectionUtils as cu, NetworkEditorUtils as neu } from './Utils';
-import { Coordinates, NodeType, OutputState } from '../../shared/types/src/models/node';
+import { Coordinates, NodeType, IOState, IOStateType } from '../../shared/types/src/models/node';
 import { Connection } from '../../shared/types/src/models/connection';
 import { NodeUtils as nu } from './Utils';
 import { ProjectModel } from '../../shared/types/src/models/project';
@@ -21,7 +21,7 @@ interface NetworkEditorProps {
   deleteNode: (node: VisualNode) => void;
   connections: VisualConnection[];
   updateConnections: (connections: VisualConnection[]) => void;
-  runNode: (node: VisualNode) => Promise<(OutputState | null)[]>;
+  runNode: (node: VisualNode) => Promise<(IOState | null)[]>;
 }
 
 const NetworkEditor = ({
@@ -331,9 +331,22 @@ const NetworkEditor = ({
     // index-selector: check if the output type of the connection is string[]
     // if so, check if the input type of the connection is a string
     // if so, tell the toNode that it's got to do index selection
-
+    const fromNode = nodes[fromNodeId];
+    const fromNodeIOState = fromNode?.node.outputState[fromOutput];
+    if (fromNodeIOState) {
+      const fromNodeOutputType = nu.inferOutputType(fromNodeIOState);
+      if (fromNodeOutputType === IOStateType.StringArray) {
+        const toNode = nodes[toNodeId];
+        if (toNode) {
+          const toNodeInputType = toNode.node.inputTypes[inputIndex];
+          if (toNodeInputType === IOStateType.String) {
+            toNode.node.indexSelections[inputIndex] = 0;
+          }
+        }
+      }
+    }
     updateConnections(newConnections);
-  }, [connections, updateConnections, project.projectId, user.userId]);
+  }, [nodes, connections, updateConnections, project.projectId, user.userId]);
 
   //////////////////////////////
   // React Hooks

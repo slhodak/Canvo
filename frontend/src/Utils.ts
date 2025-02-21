@@ -1,5 +1,5 @@
 import { VisualNode } from "./NetworkTypes";
-import { BaseNode, NodeType, Coordinates } from "../../shared/types/src/models/node";
+import { BaseNode, NodeType, Coordinates, IOStateType, IOState } from "../../shared/types/src/models/node";
 import { TextNode, PromptNode, SaveNode, MergeNode, SplitNode, FileNode, EditNode, EmbedNode, SearchNode, JoinNode, ReplaceNode, FetchNode } from "./nodes";
 
 export const NetworkEditorUtils = {
@@ -81,9 +81,21 @@ export const NodeUtils = {
       default:
         return null;
     }
-
-    return null;
   },
+
+  // index-selector: Infer the output type of a node from its outputState
+  // in the future it might be better to just let the node have an outputType property
+  inferOutputType(outputState: IOState): IOStateType {
+    if (outputState.stringArrayValue !== null) {
+      return IOStateType.StringArray;
+    } else if (outputState.stringValue !== null) {
+      return IOStateType.String;
+    } else if (outputState.numberValue !== null) {
+      return IOStateType.Number;
+    }
+    // Default return value -- but the check above is exhaustive
+    return IOStateType.String;
+  }
 }
 
 export const ConnectionUtils = {

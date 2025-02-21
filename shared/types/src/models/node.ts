@@ -45,30 +45,30 @@ export interface Coordinates {
   y: number;
 }
 
-export interface OutputState {
+export interface IOState {
   stringValue: string | null;
   numberValue: number | null;
   stringArrayValue: string[] | null;
 }
 
-export enum OutputStateType {
+export enum IOStateType {
   String = 'string',
   Number = 'number',
   StringArray = 'stringArray',
 }
 
-export const defaultOutputStates: Record<OutputStateType, OutputState[]> = {
-  [OutputStateType.String]: [{
+export const defaultIOStates: Record<IOStateType, IOState[]> = {
+  [IOStateType.String]: [{
     stringValue: '',
     numberValue: null,
     stringArrayValue: null,
   }],
-  [OutputStateType.Number]: [{
+  [IOStateType.Number]: [{
     stringValue: null,
     numberValue: null,
     stringArrayValue: null,
   }],
-  [OutputStateType.StringArray]: [{
+  [IOStateType.StringArray]: [{
     stringValue: null,
     numberValue: null,
     stringArrayValue: [],
@@ -89,10 +89,12 @@ export abstract class BaseNode {
   public type: NodeType;
   public inputs: number;
   public outputs: number;
-  public outputState: OutputState[] = [];
+  public inputTypes: IOStateType[] = [];
+  public outputState: IOState[] = [];
   public coordinates: Coordinates;
   public nodeRunType: NodeRunType;
   public properties: Record<string, NodeProperty> = {};
+  public indexSelections: (number | null)[] = [];
 
   constructor(
     nodeId: string,
@@ -107,7 +109,9 @@ export abstract class BaseNode {
     coordinates: Coordinates,
     nodeRunType: NodeRunType,
     properties: Record<string, NodeProperty> = {},
-    outputState: OutputState[] = [],
+    inputTypes: IOStateType[] = [],
+    outputState: IOState[] = [],
+    indexSelections: (number | null)[] = [],
   ) {
     this.nodeId = nodeId;
     this.authorId = authorId;
@@ -122,6 +126,8 @@ export abstract class BaseNode {
     this.nodeRunType = nodeRunType;
     this.properties = properties;
     this.outputState = outputState;
+    this.inputTypes = inputTypes;
+    this.indexSelections = indexSelections;
 
     // For new nodes, initialize the output state array
     if (outputState.length === 0) {
@@ -131,6 +137,14 @@ export abstract class BaseNode {
           numberValue: null,
           stringArrayValue: null,
         });
+      }
+    }
+
+    // For new nodes, initialize the index selections array
+    if (indexSelections.length === 0) {
+      for (let i = 0; i < this.inputs; i++) {
+        // When doing index selection, the value at the input index is not null
+        this.indexSelections.push(null);
       }
     }
   }
@@ -143,7 +157,7 @@ export abstract class BaseNode {
     this.properties[key].value = value;
   }
 
-  public cacheOrClearOutputState(runResult: OutputState[]) {
+  public cacheOrClearIOState(runResult: IOState[]) {
     switch (this.nodeRunType) {
       case (NodeRunType.Source, NodeRunType.Cache):
         this.outputState = runResult;
@@ -162,24 +176,24 @@ export abstract class BaseNode {
 }
 
 export abstract class BaseSyncNode extends BaseNode {
-  public run(inputValues: (OutputState | null)[]): OutputState[] {
+  public run(inputValues: (IOState | null)[]): IOState[] {
     // index-selector: if the node is doing index selection, pick the index
     // from each outputState in the array
     // index selection will be per input. selectedIndices
     const runResult = this._run(inputValues);
-    this.cacheOrClearOutputState(runResult);
+    this.cacheOrClearIOState(runResult);
     return runResult;
   }
 
-  public abstract _run(inputValues: (OutputState | null)[]): OutputState[];
+  public abstract _run(inputValues: (IOState | null)[]): IOState[];
 }
 
 export abstract class BaseAsyncNode extends BaseNode {
-  public async run(inputValues: (OutputState | null)[]): Promise<OutputState[]> {
+  public async run(inputValues: (IOState | null)[]): Promise<IOState[]> {
     const runResult = await this._run(inputValues);
-    this.cacheOrClearOutputState(runResult);
+    this.cacheOrClearIOState(runResult);
     return runResult;
   }
 
-  public abstract _run(inputValues: (OutputState | null)[]): Promise<OutputState[]>;
+  public abstract _run(inputValues: (IOState | null)[]): Promise<IOState[]>;
 }
