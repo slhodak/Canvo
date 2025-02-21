@@ -952,7 +952,15 @@ export class CacheNode extends BaseSyncNode {
     display: boolean = false,
     outputState: IOState[] = [],
   ) {
-    super(id, authorId, projectId, 'Cache', label, display, NodeType.Cache, 1, 1, coordinates, NodeRunType.Cache, {}, [], outputState);
+    super(id, authorId, projectId, 'Cache', label, display, NodeType.Cache, 1, 1, coordinates, NodeRunType.Cache, {
+      updatedAt: {
+        type: NodePropertyType.String,
+        label: 'Last Updated',
+        value: 'Never',
+        editable: false,
+        displayed: true,
+      }
+    }, [], outputState);
   }
 
   public static override fromObject(object: BaseNode): BaseNode {
@@ -972,6 +980,7 @@ export class CacheNode extends BaseSyncNode {
   }
 
   _run(inputValues: IOState[]): IOState[] {
+    this.properties.updatedAt.value = new Date().toLocaleString();
     return inputValues;
   }
 }
