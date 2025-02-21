@@ -3,7 +3,7 @@ import './NetworkEditor.css';
 import { VisualNode, VisualConnection, DragState, WireState } from './NetworkTypes';
 import { Node } from './Node';
 import { ConnectionUtils as cu, NetworkEditorUtils as neu } from './Utils';
-import { Coordinates, NodeType, IOState, IOStateType } from '../../shared/types/src/models/node';
+import { Coordinates, NodeType, IOStateType } from '../../shared/types/src/models/node';
 import { Connection } from '../../shared/types/src/models/connection';
 import { NodeUtils as nu } from './Utils';
 import { ProjectModel } from '../../shared/types/src/models/project';
@@ -21,7 +21,7 @@ interface NetworkEditorProps {
   deleteNode: (node: VisualNode) => void;
   connections: VisualConnection[];
   updateConnections: (connections: VisualConnection[]) => void;
-  runNode: (node: VisualNode) => Promise<IOState[]>;
+  runNode: (node: VisualNode) => void;
 }
 
 const NetworkEditor = ({
