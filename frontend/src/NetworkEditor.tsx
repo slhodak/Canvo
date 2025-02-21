@@ -328,6 +328,9 @@ const NetworkEditor = ({
       ),
     };
     newConnections.push(newConnection);
+    // index-selector: check if the output type of the connection is string[]
+    // if so, check if the input type of the connection is a string
+    // if so, tell the toNode that it's got to do index selection
 
     updateConnections(newConnections);
   }, [connections, updateConnections, project.projectId, user.userId]);

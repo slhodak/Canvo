@@ -13,6 +13,8 @@ interface ParametersPaneProps {
   updateNode: (updatedNode: VisualNode, shouldSync?: boolean) => void;
 }
 
+// index-selector: display UI for selecting the index of each input
+// if index selection is active
 const ParametersPane = ({ node, updateNode }: ParametersPaneProps) => (
   <div className="parameters-pane-container">
     <div className="parameters-pane-header">

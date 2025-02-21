@@ -75,8 +75,10 @@ export const defaultOutputStates: Record<OutputStateType, OutputState[]> = {
   }],
 };
 
-// cache-expensive: a node will only cache its output state if it is a node that does not run automatically
-// run methods return their output state, and only cache them as a side effect, and only if the node does not run automatically
+// index-selector: the node may need to do index selection on its input.
+// this means that it expects a string input
+// but is receiving a string[] input
+// and it will have to pick an index to read from
 export abstract class BaseNode {
   public nodeId: string;
   public projectId: string;
@@ -161,6 +163,9 @@ export abstract class BaseNode {
 
 export abstract class BaseSyncNode extends BaseNode {
   public run(inputValues: (OutputState | null)[]): OutputState[] {
+    // index-selector: if the node is doing index selection, pick the index
+    // from each outputState in the array
+    // index selection will be per input. selectedIndices
     const runResult = this._run(inputValues);
     this.cacheOrClearOutputState(runResult);
     return runResult;
