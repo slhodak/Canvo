@@ -16,6 +16,7 @@ interface NetworkEditorProps {
   selectedNode: VisualNode | null;
   selectNode: (node: VisualNode) => void;
   updateDisplayedNode: (node: VisualNode) => void;
+  updateIndexSelection: (fromNodeId: string, fromOutput: number, toNodeId: string, inputIndex: number) => void;
   addNode: (node: VisualNode) => void;
   updateNode: (node: VisualNode, shouldRun?: boolean, shouldSync?: boolean) => Promise<void>;
   deleteNode: (node: VisualNode) => void;
@@ -31,6 +32,7 @@ const NetworkEditor = ({
   selectedNode,
   selectNode,
   updateDisplayedNode,
+  updateIndexSelection,
   addNode,
   updateNode,
   deleteNode,
@@ -328,25 +330,9 @@ const NetworkEditor = ({
       ),
     };
     newConnections.push(newConnection);
-    // index-selector: check if the output type of the connection is string[]
-    // if so, check if the input type of the connection is a string
-    // if so, tell the toNode that it's got to do index selection
-    const fromNode = nodes[fromNodeId];
-    const fromNodeIOState = fromNode?.node.outputState[fromOutput];
-    if (fromNodeIOState) {
-      const fromNodeOutputType = nu.inferOutputType(fromNodeIOState);
-      if (fromNodeOutputType === IOStateType.StringArray) {
-        const toNode = nodes[toNodeId];
-        if (toNode) {
-          const toNodeInputType = toNode.node.inputTypes[inputIndex];
-          if (toNodeInputType === IOStateType.String) {
-            toNode.node.indexSelections[inputIndex] = 0;
-          }
-        }
-      }
-    }
+    updateIndexSelection(fromNodeId, fromOutput, toNodeId, inputIndex);
     updateConnections(newConnections);
-  }, [nodes, connections, updateConnections, project.projectId, user.userId]);
+  }, [connections, updateConnections, updateIndexSelection, project.projectId, user.userId]);
 
   //////////////////////////////
   // React Hooks

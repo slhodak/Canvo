@@ -2,7 +2,7 @@ import './Project.css';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { VisualNode, VisualConnection } from './NetworkTypes';
-import { BaseNode, NodeRunType, IOState, emptyIOState } from '../../shared/types/src/models/node';
+import { BaseNode, NodeRunType, IOState, emptyIOState, IOStateType } from '../../shared/types/src/models/node';
 import { Connection } from '../../shared/types/src/models/connection';
 import { ConnectionUtils as cu, NodeUtils as nu } from './Utils';
 import NetworkEditor from './NetworkEditor';
@@ -308,6 +308,26 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     }
   }
 
+  // index-selector: check if the output type of the connection is string[]
+  // if so, check if the input type of the connection is a string
+  // if so, tell the toNode that it's got to do index selection
+  const updateIndexSelection = useCallback((fromNodeId: string, fromOutput: number, toNodeId: string, inputIndex: number) => {
+    const fromNode = nodes[fromNodeId];
+    const fromNodeIOState = fromNode?.node.outputState[fromOutput];
+    if (fromNodeIOState) {
+      const fromNodeOutputType = nu.inferOutputType(fromNodeIOState);
+      if (fromNodeOutputType === IOStateType.StringArray) {
+        const toNode = nodes[toNodeId];
+        if (toNode) {
+          const toNodeInputType = toNode.node.inputTypes[inputIndex];
+          if (toNodeInputType === IOStateType.String) {
+            toNode.node.indexSelections[inputIndex] = 0;
+          }
+        }
+      }
+    }
+  }, [nodes]);
+
   //////////////////////////////
   // Sync Connections
   //////////////////////////////
@@ -418,6 +438,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
               selectedNode={selectedNode}
               selectNode={selectNode}
               updateDisplayedNode={updateDisplayedNode}
+              updateIndexSelection={updateIndexSelection}
               addNode={addNode}
               updateNode={updateNode}
               deleteNode={deleteNode}
