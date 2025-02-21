@@ -106,7 +106,7 @@ const TextPropertyInput = ({ propertyKey, label, editable, initialValue, node, u
   }
 
   return (
-    <div key={propertyKey} className="parameters-pane-property-container">
+    <div key={propertyKey} className={`parameters-pane-property-container text-property ${editable ? "editable" : ""}`}>
       <label className="parameters-pane-property-label">{label}</label>
       {editable ? (
         <textarea
@@ -142,7 +142,7 @@ const NumberPropertyInput = ({ propertyKey, label, editable, initialValue, node,
   }
 
   return (
-    <div key={propertyKey} className="parameters-pane-property-container">
+    <div key={propertyKey} className="parameters-pane-property-container number-property">
       <label className="parameters-pane-property-label">{label}</label>
       {editable ? (
         <input
@@ -176,7 +176,7 @@ const FilePropertyInput = ({ propertyKey, label, node, updateNode }: FilePropert
   };
 
   return (
-    <div key={propertyKey} className="parameters-pane-property-container">
+    <div key={propertyKey} className="parameters-pane-property-container file-property">
       <label className="parameters-pane-property-label">{label}</label>
       <div className="parameters-pane-file-input">
         <input
