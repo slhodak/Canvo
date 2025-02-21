@@ -386,7 +386,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     await syncNodeDelete(node);
   }, [nodes, selectedNode, syncNodeDelete, deleteConnections]);
 
-  const updateIndexSelection = useCallback((fromNodeId: string, fromOutput: number, toNodeId: string, inputIndex: number) => {
+  const enableIndexSelection = useCallback((fromNodeId: string, fromOutput: number, toNodeId: string, inputIndex: number) => {
     const fromNode = nodes[fromNodeId];
     const fromNodeIOState = fromNode?.node.outputState[fromOutput];
     if (fromNodeIOState) {
@@ -403,6 +403,17 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       }
     }
   }, [nodes, updateNode]);
+
+  const disableIndexSelection = useCallback((connectionId: string) => {
+    const connection = connections.find(conn => conn.connection.connectionId === connectionId);
+    if (connection) {
+      const toNode = nodes[connection.connection.toNode];
+      if (toNode) {
+        toNode.node.indexSelections[connection.connection.toInput] = null;
+        updateNode(toNode, false, true);
+      }
+    }
+  }, [nodes, connections, updateNode]);
 
   //////////////////////////////
   // React Hooks
@@ -436,7 +447,8 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
               selectedNode={selectedNode}
               selectNode={selectNode}
               updateDisplayedNode={updateDisplayedNode}
-              updateIndexSelection={updateIndexSelection}
+              enableIndexSelection={enableIndexSelection}
+              disableIndexSelection={disableIndexSelection}
               addNode={addNode}
               updateNode={updateNode}
               deleteNode={deleteNode}
