@@ -108,7 +108,7 @@ export class FetchNode extends BaseAsyncNode {
     const url = this.properties.url.value as string;
     if (!url) {
       console.warn(`Will not run FetchNode, no URL provided for node ${this.nodeId}`);
-      return defaultIOStates[IOStateType.String];
+      return [defaultIOStates[IOStateType.String]];
     }
 
     const response = await fetch(`${SERVER_URL}/api/run_fetch`, {
@@ -128,7 +128,7 @@ export class FetchNode extends BaseAsyncNode {
       }];
     } else {
       console.error('Error running fetch:', data.error);
-      return defaultIOStates[IOStateType.String];
+      return [defaultIOStates[IOStateType.String]];
     }
   }
 }
@@ -142,7 +142,7 @@ export class PromptNode extends BaseAsyncNode {
     label: string = 'prompt',
     display: boolean = false,
     prompt: string = '',
-    outputState: IOState[] = [],
+    outputState: IOState[] = [defaultIOStates[IOStateType.String]],
   ) {
     super(id, authorId, projectId, 'Prompt', label, display, NodeType.Prompt, 1, 1, coordinates, NodeRunType.Cache, {
       prompt: {
@@ -169,10 +169,10 @@ export class PromptNode extends BaseAsyncNode {
   }
 
   async _run(inputValues: (IOState | null)[]): Promise<IOState[]> {
-    if (!inputValues[0]) return defaultIOStates[IOStateType.String];
+    if (!inputValues[0]) return [defaultIOStates[IOStateType.String]];
 
     if (!this.properties.prompt.value || this.properties.prompt.value === '') {
-      return defaultIOStates[IOStateType.String];
+      return [defaultIOStates[IOStateType.String]];
     }
 
     // Call the LLM with the prompt and the input text
@@ -199,11 +199,11 @@ export class PromptNode extends BaseAsyncNode {
         }];
       } else {
         console.error('Error running prompt:', data.error);
-        return defaultIOStates[IOStateType.String];
+        return [defaultIOStates[IOStateType.String]];
       }
     } catch (error) {
       console.error('Error running prompt:', error);
-      return defaultIOStates[IOStateType.String];
+      return [defaultIOStates[IOStateType.String]];
     }
   }
 }
@@ -217,7 +217,7 @@ export class SaveNode extends BaseAsyncNode {
     label: string = 'save',
     display: boolean = false,
     filename: string = 'output.txt',
-    outputState: IOState[] = [],
+    outputState: IOState[] = [defaultIOStates[IOStateType.String]],
   ) {
     super(id, authorId, projectId, 'Save', label, display, NodeType.Save, 1, 0, coordinates, NodeRunType.None, {
       filename: {
@@ -254,7 +254,7 @@ export class SaveNode extends BaseAsyncNode {
     const inputText = inputValues[0]?.stringValue;
     if (!inputText) {
       this.properties.status.value = 'No input to save';
-      return defaultIOStates[IOStateType.String];
+      return [defaultIOStates[IOStateType.String]];
     }
 
     try {
@@ -282,7 +282,7 @@ export class SaveNode extends BaseAsyncNode {
       this.properties.status.value = `Error saving file: ${error instanceof Error ? error.message : 'Unknown error'}`;
     }
 
-    return defaultIOStates[IOStateType.String];
+    return [defaultIOStates[IOStateType.String]];
   }
 }
 
@@ -295,7 +295,7 @@ export class MergeNode extends BaseSyncNode {
     label: string = 'merge',
     display: boolean = false,
     separator: string = ' ',
-    outputState: IOState[] = [],
+    outputState: IOState[] = [defaultIOStates[IOStateType.String], defaultIOStates[IOStateType.String]],
   ) {
     super(id, authorId, projectId, 'Merge', label, display, NodeType.Merge, 2, 1, coordinates, NodeRunType.Run, {
       separator: {
@@ -352,9 +352,9 @@ export class SplitNode extends BaseSyncNode {
     label: string = 'split',
     display: boolean = false,
     separator: string = ' ',
-    outputState: IOState[] = [],
+    outputState: IOState[] = [defaultIOStates[IOStateType.StringArray]],
   ) {
-    super(id, authorId, projectId, 'Split', label, display, NodeType.Split, 1, 2, coordinates, NodeRunType.Run, {
+    super(id, authorId, projectId, 'Split', label, display, NodeType.Split, 1, 1, coordinates, NodeRunType.Run, {
       separator: {
         type: NodePropertyType.String,
         label: 'Separator',
@@ -374,20 +374,14 @@ export class SplitNode extends BaseSyncNode {
     const separator = this.properties.separator.value as string;
     const inputText = inputValues[0]?.stringValue as string;
     if (!inputText) {
-      return defaultIOStates[IOStateType.String];
+      return [defaultIOStates[IOStateType.StringArray]];
     }
 
     const parts = inputText.split(separator);
-    // Join all the parts from the second to the end
-    const remainingParts = parts.slice(1).join(separator);
     return [{
-      stringValue: parts[0],
+      stringValue: null,
       numberValue: null,
-      stringArrayValue: null,
-    }, {
-      stringValue: remainingParts,
-      numberValue: null,
-      stringArrayValue: null,
+      stringArrayValue: parts,
     }];
   }
 }
@@ -401,7 +395,7 @@ export class FileNode extends BaseSyncNode {
     label: string = 'file',
     display: boolean = false,
     filename: string = '',
-    outputState: IOState[] = [],
+    outputState: IOState[] = [defaultIOStates[IOStateType.String]],
   ) {
     super(id, authorId, projectId, 'File', label, display, NodeType.File, 0, 1, coordinates, NodeRunType.Source, {
       filename: {
@@ -459,7 +453,7 @@ export class EditNode extends BaseSyncNode {
     label: string = 'edit',
     display: boolean = false,
     content: string = '',
-    outputState: IOState[] = [],
+    outputState: IOState[] = [defaultIOStates[IOStateType.String]],
   ) {
     super(id, authorId, projectId, 'Edit', label, display, NodeType.Edit, 1, 1, coordinates, NodeRunType.Cache, {
       content: {
@@ -487,7 +481,7 @@ export class EditNode extends BaseSyncNode {
 
   _run(inputValues: (IOState | null)[]): IOState[] {
     if (!inputValues[0]) {
-      return defaultIOStates[IOStateType.String];
+      return [defaultIOStates[IOStateType.String]];
     }
 
     this.properties.content.value = inputValues[0].stringValue as string;
@@ -511,7 +505,7 @@ export class EmbedNode extends BaseAsyncNode {
     chunkSize: number = 100,
     overlap: number = 20,
     status: string = '',
-    outputState: IOState[] = [],
+    outputState: IOState[] = [defaultIOStates[IOStateType.String]],
   ) {
     super(id, authorId, projectId, 'Embed', label, display, NodeType.Embed, 1, 1, coordinates, NodeRunType.Cache, {
       documentId: {
@@ -562,7 +556,7 @@ export class EmbedNode extends BaseAsyncNode {
   }
 
   async _run(inputValues: (IOState | null)[]): Promise<IOState[]> {
-    if (!inputValues[0]?.stringValue) return defaultIOStates[IOStateType.String];
+    if (!inputValues[0]?.stringValue) return [defaultIOStates[IOStateType.String]];
 
     try {
       this.properties.status.value = 'Processing...';
@@ -582,13 +576,13 @@ export class EmbedNode extends BaseAsyncNode {
 
       if (!response.ok) {
         this.properties.status.value = `Error: ${response.statusText}`;
-        return defaultIOStates[IOStateType.String];
+        return [defaultIOStates[IOStateType.String]];
       }
 
       const result = await response.json();
       if (result.status === 'failed') {
         this.properties.status.value = `Error: ${result.error}`;
-        return defaultIOStates[IOStateType.String];
+        return [defaultIOStates[IOStateType.String]];
       }
 
       // Set success status with chunk count
@@ -607,7 +601,7 @@ export class EmbedNode extends BaseAsyncNode {
       console.error('Error in EmbedNode:', error);
       this.properties.status.value = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
       this.properties.documentId.value = '';
-      return defaultIOStates[IOStateType.String];
+      return [defaultIOStates[IOStateType.String]];
     }
   }
 }
@@ -625,7 +619,7 @@ export class SearchNode extends BaseAsyncNode {
     status: string = '',
     neighbors: number = 0,
     results: number = 3,
-    outputState: IOState[] = [],
+    outputState: IOState[] = [defaultIOStates[IOStateType.StringArray]],
   ) {
     // Actually this is not expensive and perhaps should be a Run node. But that's just because
     // we currently use a pretty low-dimension embedding model.
@@ -687,7 +681,7 @@ export class SearchNode extends BaseAsyncNode {
   }
 
   async _run(inputValues: (IOState | null)[]): Promise<IOState[]> {
-    if (!inputValues[0]?.stringValue) return defaultIOStates[IOStateType.StringArray];
+    if (!inputValues[0]?.stringValue) return [defaultIOStates[IOStateType.StringArray]];
 
     this.properties.documentId.value = inputValues[0].stringValue as string;
     try {
@@ -709,7 +703,7 @@ export class SearchNode extends BaseAsyncNode {
 
       if (!aiResponse.ok) {
         this.properties.status.value = `Error: ${aiResponse.statusText}`;
-        return defaultIOStates[IOStateType.StringArray];
+        return [defaultIOStates[IOStateType.StringArray]];
       }
 
       const result = await aiResponse.json();
@@ -725,7 +719,7 @@ export class SearchNode extends BaseAsyncNode {
     } catch (error: unknown) {
       console.error('Error in SearchNode:', error);
       this.properties.status.value = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
-      return defaultIOStates[IOStateType.StringArray];
+      return [defaultIOStates[IOStateType.StringArray]];
     }
   }
 }
@@ -739,7 +733,7 @@ export class JoinNode extends BaseSyncNode {
     label: string = 'join',
     display: boolean = false,
     separator: string = '\n',
-    outputState: IOState[] = [],
+    outputState: IOState[] = [defaultIOStates[IOStateType.StringArray]],
   ) {
     super(id, authorId, projectId, 'Join', label, display, NodeType.Join, 1, 1, coordinates, NodeRunType.Run, {
       separator: {
@@ -767,7 +761,7 @@ export class JoinNode extends BaseSyncNode {
 
   _run(inputValues: (IOState | null)[]): IOState[] {
     if (!inputValues[0]?.stringArrayValue) {
-      return defaultIOStates[IOStateType.String];
+      return [defaultIOStates[IOStateType.StringArray]];
     }
 
     // Join the array elements with the separator
@@ -792,7 +786,7 @@ export class ReplaceNode extends BaseSyncNode {
     coordinates: Coordinates,
     label: string = 'replace',
     display: boolean = false,
-    outputState: IOState[] = [],
+    outputState: IOState[] = [defaultIOStates[IOStateType.String]],
   ) {
     super(id, authorId, projectId, 'Replace', label, display, NodeType.Replace, 1, 1, coordinates, NodeRunType.Run, {
       search: {
@@ -825,7 +819,7 @@ export class ReplaceNode extends BaseSyncNode {
   }
 
   _run(inputValues: (IOState | null)[]): IOState[] {
-    if (!inputValues[0]?.stringValue) return defaultIOStates[IOStateType.String];
+    if (!inputValues[0]?.stringValue) return [defaultIOStates[IOStateType.String]];
 
     const search = this.properties.search.value as string;
     const replace = this.properties.replace.value as string;

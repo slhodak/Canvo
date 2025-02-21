@@ -57,22 +57,22 @@ export enum IOStateType {
   StringArray = 'stringArray',
 }
 
-export const defaultIOStates: Record<IOStateType, IOState[]> = {
-  [IOStateType.String]: [{
+export const defaultIOStates: Record<IOStateType, IOState> = {
+  [IOStateType.String]: {
     stringValue: '',
     numberValue: null,
     stringArrayValue: null,
-  }],
-  [IOStateType.Number]: [{
+  },
+  [IOStateType.Number]: {
     stringValue: null,
     numberValue: null,
     stringArrayValue: null,
-  }],
-  [IOStateType.StringArray]: [{
+  },
+  [IOStateType.StringArray]: {
     stringValue: null,
     numberValue: null,
     stringArrayValue: [],
-  }],
+  },
 };
 
 // index-selector: the node may need to do index selection on its input.
