@@ -19,12 +19,28 @@ class SemanticSearch:
         db.add_embeddings(document_id, chunk_ids, embeddings)
         return len(embeddings)
 
-    def search(self, db: Database, document_id: str, query: str, top_k: int = 5) -> List[Tuple[str, float]]:
+    def search(self, db: Database, document_id: str, query: str, top_k: int, neighbors: int) -> List[str]:
         # Generate embedding for the query
         query_embedding = self.model.encode(query)
         # Search database for similar chunks
         results = db.search_similar(query_embedding, top_k, document_id)
-        return results
+        if neighbors == 0:
+            return [result_text for (result_text, _, _) in results]
+
+        # For each result, fetch it with its n neighbors before and after
+        results_with_neighbors = []
+        for (_, result_chunk_index, _) in results:
+            # Confirm that +1 is here because end index is exclusive
+            fromIndex = int(result_chunk_index) - neighbors
+            toIndex = int(result_chunk_index) + neighbors
+            neighbor_inclusive_results = db.get_document_chunks_between_indices(
+                document_id, fromIndex, toIndex)
+
+            neighbor_inclusive_results_string = " ".join(
+                [result_text for (result_text, _) in neighbor_inclusive_results])
+
+            results_with_neighbors.append(neighbor_inclusive_results_string)
+        return results_with_neighbors
 
     def split_text(self, text: str, chunk_size: int, chunk_overlap: int) -> List[str]:
         # TODO: chunk_overlap

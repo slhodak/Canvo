@@ -559,6 +559,8 @@ export class SearchNode extends BaseAsyncNode {
     query: string = '',
     documentId: string = '',
     status: string = '',
+    neighbors: number = 0,
+    results: number = 3,
     outputState: OutputState[] = [],
   ) {
     // Actually this is not expensive and perhaps should be a Run node. But that's just because
@@ -584,7 +586,22 @@ export class SearchNode extends BaseAsyncNode {
         value: query,
         editable: true,
         displayed: true,
-      }
+      },
+      neighbors: {
+        type: NodePropertyType.Number,
+        label: 'Neighbors',
+        value: neighbors,
+        editable: true,
+        displayed: true,
+      },
+      // This is number of results requested, not result information returned
+      results: {
+        type: NodePropertyType.Number,
+        label: 'Results',
+        value: results,
+        editable: true,
+        displayed: true,
+      },
     }, outputState);
   }
 
@@ -599,6 +616,8 @@ export class SearchNode extends BaseAsyncNode {
       object.properties.query.value as string,
       object.properties.documentId.value as string,
       object.properties.status.value as string,
+      object.properties.neighbors.value as number,
+      object.properties.results.value as number,
       object.outputState
     );
   }
@@ -619,7 +638,8 @@ export class SearchNode extends BaseAsyncNode {
         body: JSON.stringify({
           document_id: this.properties.documentId.value as string,
           query: this.properties.query.value as string,
-          top_k: 3
+          top_k: this.properties.results.value as number,
+          neighbors: this.properties.neighbors.value as number,
         }),
       });
 

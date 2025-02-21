@@ -49,6 +49,7 @@ class SearchQuery(BaseModel):
     document_id: str
     query: str
     top_k: int = 5
+    neighbors: int = 0
 
 
 @app.get("/")
@@ -106,11 +107,11 @@ def search(search_query: SearchQuery):
             db=db,
             document_id=search_query.document_id,
             query=search_query.query,
-            top_k=search_query.top_k
+            top_k=search_query.top_k,
+            neighbors=search_query.neighbors
         )
         # Return only the text of the search results
-        result_strings = [result[0] for result in search_results]
-        return {"status": "success", "search_results": result_strings}
+        return {"status": "success", "search_results": search_results}
     except Exception as e:
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))

@@ -687,7 +687,7 @@ aiRouter.post('/embed', async (req: Request, res: Response) => {
 });
 
 aiRouter.post('/search', async (req: Request, res: Response) => {
-  const { document_id, query, top_k } = req.body;
+  const { document_id, query, top_k, neighbors } = req.body;
   if (!document_id || !query || !top_k) {
     return res.status(400).json({ error: "No document_id or query or top_k provided" });
   }
@@ -707,7 +707,7 @@ aiRouter.post('/search', async (req: Request, res: Response) => {
     const aiResponse = await fetch(`${AI_SERVICE_URL}/search`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ document_id, query, top_k }),
+      body: JSON.stringify({ document_id, query, top_k, neighbors }),
     });
 
     const result = await aiResponse.json() as LLMResponse;

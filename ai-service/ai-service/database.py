@@ -100,12 +100,12 @@ class Database:
             self._connection.rollback()
             raise e
 
-    def search_similar(self, query_embedding: np.ndarray, top_k: int, document_id: str) -> List[Tuple[str, float]]:
+    def search_similar(self, query_embedding: np.ndarray, top_k: int, document_id: str) -> List[Tuple[str, float, int]]:
         """Search for similar chunks using vector similarity"""
         try:
             self.connect()
             query = """
-                SELECT c.text, e.vector <=> %s AS distance
+                SELECT c.text, c.chunk_index, e.vector <=> %s AS distance
                 FROM embeddings e
                 JOIN chunks c ON c.chunk_id = e.chunk_id
                 JOIN documents d ON d.document_id = c.document_id
@@ -125,16 +125,16 @@ class Database:
             self._connection.rollback()
             raise e
 
-    def get_document_chunks(self, document_id: str) -> List[str]:
+    def get_document_chunks(self, document_id: str) -> List[Tuple[str, int]]:
         """Retrieve all chunks for a given document_id"""
         try:
             self.connect()
             with self._connection.cursor() as cursor:
                 cursor.execute(
                     """
-                    SELECT c.text
+                    SELECT c.text, c.chunk_index
                     FROM chunks c
-                    JOIN documents d ON d.id = c.document_id
+                    JOIN documents d ON d.document_id = c.document_id
                     WHERE d.document_id = %s
                     ORDER BY c.chunk_index
                     """,
@@ -142,7 +142,29 @@ class Database:
                 )
                 results = cursor.fetchall()
                 self._connection.commit()
-                return [r['text'] for r in results]
+                return results
+        except Exception as e:
+            self._connection.rollback()
+            raise e
+
+    def get_document_chunks_between_indices(self, document_id: str, fromIndex: int, toIndex: int) -> List[Tuple[str, int]]:
+        """Get chunks for a document at given indices"""
+        try:
+            self.connect()
+            with self._connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT c.text, c.chunk_index
+                    FROM chunks c
+                    JOIN documents d ON d.document_id = c.document_id
+                    WHERE d.document_id = %s AND c.chunk_index BETWEEN %s AND %s
+                    ORDER BY c.chunk_index
+                    """,
+                    (document_id, fromIndex, toIndex)
+                )
+                results = cursor.fetchall()
+                self._connection.commit()
+                return results
         except Exception as e:
             self._connection.rollback()
             raise e
