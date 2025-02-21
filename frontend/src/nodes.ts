@@ -940,3 +940,38 @@ export class PickNode extends BaseSyncNode {
     }];
   }
 }
+
+// The Cache node just caches its input values (just string for now)
+export class CacheNode extends BaseSyncNode {
+  constructor(
+    id: string,
+    authorId: string,
+    projectId: string,
+    coordinates: Coordinates,
+    label: string = 'cache',
+    display: boolean = false,
+    outputState: IOState[] = [],
+  ) {
+    super(id, authorId, projectId, 'Cache', label, display, NodeType.Cache, 1, 1, coordinates, NodeRunType.Cache, {}, [], outputState);
+  }
+
+  public static override fromObject(object: BaseNode): BaseNode {
+    return new CacheNode(
+      object.nodeId,
+      object.authorId,
+      object.projectId,
+      object.coordinates,
+      object.label,
+      object.display,
+      object.outputState
+    );
+  }
+
+  protected override resetOutputState(): void {
+    this.outputState = [defaultIOStates[IOStateType.String]];
+  }
+
+  _run(inputValues: IOState[]): IOState[] {
+    return inputValues;
+  }
+}
