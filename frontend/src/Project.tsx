@@ -216,7 +216,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   // If this node is a Run node, run it once you've gathered all the input values
   const _runPriorDAG = useCallback(async (node: VisualNode): Promise<IOState[]> => {
     const inputConnections = connections.filter(conn => conn.connection.toNode === node.node.nodeId);
-    if (inputConnections.length === 0) {
+    if (inputConnections.length === 0 && node.node.nodeRunType) {
       console.debug('Node has no input connections');
       return [];
     }
@@ -258,9 +258,24 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     return inputValues;
   }, [nodes, connections, _runNodeOnInput]);
 
-  const runNode = useCallback(async (node: VisualNode): Promise<IOState[]> => {
-    const inputValues = await _runPriorDAG(node);
-    return await _runNodeOnInput(inputValues, node);
+  const runNode = useCallback(async (node: VisualNode) => {
+    switch (node.node.nodeRunType) {
+      case NodeRunType.Source:
+        _runNodeOnInput([], node);
+        break;
+      case NodeRunType.Cache:
+      case NodeRunType.Run: {
+        const inputValues = await _runPriorDAG(node);
+        await _runNodeOnInput(inputValues, node);
+        break;
+      }
+      default:
+        break;
+    }
+
+    if (node.node.display) {
+      updateViewText(node);
+    }
   }, [_runPriorDAG, _runNodeOnInput]);
 
   const selectNode = useCallback(async (node: VisualNode) => {
@@ -349,19 +364,16 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     // Sometimes the node is only having its coordinates updated, so don't run it
     if (shouldRun) {
       // The updated nodes above may/will not be available immediately for runNode to find the new data
-      if (node.node.nodeRunType === NodeRunType.Run) {
+      // When source or run nodes are updated, run them immediately
+      if (node.node.nodeRunType === NodeRunType.Run || node.node.nodeRunType === NodeRunType.Source) {
         await runNode(node);
-      }
-      // When a source node is updated, run it immediately
-      if (node.node.nodeRunType === NodeRunType.Source) {
-        await _runNodeOnInput([], node);
       }
     }
     if (shouldSync) {
       // TODO: Sync only the subgraph that was updated
       await syncNodesUpdate(Object.values(nodes).map(n => n.node));
     }
-  }, [runNode, syncNodesUpdate, _runNodeOnInput, nodes]);
+  }, [nodes, runNode, syncNodesUpdate]);
 
   const deleteNode = useCallback(async (node: VisualNode) => {
     const newNodes = { ...nodes };
