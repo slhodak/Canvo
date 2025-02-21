@@ -2,7 +2,7 @@ import './Project.css';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { VisualNode, VisualConnection } from './NetworkTypes';
-import { BaseNode, NodeRunType, OutputState } from '../../shared/types/src/models/node';
+import { BaseNode, NodeRunType, IOState, emptyIOState, IOStateType } from '../../shared/types/src/models/node';
 import { Connection } from '../../shared/types/src/models/connection';
 import { ConnectionUtils as cu, NodeUtils as nu } from './Utils';
 import NetworkEditor from './NetworkEditor';
@@ -202,7 +202,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   //////////////////////////////
 
   // cache-expensive: calculate the output state of a node given its input states
-  const _runNodeOnInput = useCallback(async (inputValues: (OutputState | null)[], node: VisualNode): Promise<(OutputState | null)[]> => {
+  const _runNodeOnInput = useCallback(async (inputValues: IOState[], node: VisualNode): Promise<IOState[]> => {
     if ('run' in node.node && typeof node.node.run === 'function') {
       return node.node.run(inputValues);
     }
@@ -214,24 +214,26 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
 
   // For each input connection to this node, get or calculate the input from that connection
   // If this node is a Run node, run it once you've gathered all the input values
-  const _runPriorDAG = useCallback(async (node: VisualNode): Promise<(OutputState | null)[]> => {
+  const _runPriorDAG = useCallback(async (node: VisualNode): Promise<IOState[]> => {
     const inputConnections = connections.filter(conn => conn.connection.toNode === node.node.nodeId);
-    if (inputConnections.length === 0) {
+    if (inputConnections.length === 0 && node.node.nodeRunType) {
       console.debug('Node has no input connections');
       return [];
     }
 
-    const inputValues: (OutputState | null)[] = [];
+    const inputValues: IOState[] = [];
     for (const conn of inputConnections) {
       const inputNode = nodes[conn.connection.fromNode];
       if (!inputNode) {
         console.warn("Input node not found for connection:", conn.connection.connectionId);
+        inputValues.push(emptyIOState);
         continue;
       };
 
       const outputState = inputNode.node.outputState[conn.connection.fromOutput];
-      if (!outputState) {
+      if (outputState === null) {
         console.warn("Output state not found for connection:", conn.connection.connectionId);
+        inputValues.push(emptyIOState);
         continue;
       }
 
@@ -245,8 +247,8 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
           break;
         case NodeRunType.Run: {
           const priorInputValues = await _runPriorDAG(inputNode);
-          const calculatedOutputState = await _runNodeOnInput(priorInputValues, inputNode);
-          inputValues.push(...calculatedOutputState);
+          const calculatedIOState = await _runNodeOnInput(priorInputValues, inputNode);
+          inputValues.push(...calculatedIOState);
           break;
         }
         default:
@@ -256,9 +258,24 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     return inputValues;
   }, [nodes, connections, _runNodeOnInput]);
 
-  const runNode = useCallback(async (node: VisualNode): Promise<(OutputState | null)[]> => {
-    const inputValues = await _runPriorDAG(node);
-    return await _runNodeOnInput(inputValues, node);
+  const runNode = useCallback(async (node: VisualNode) => {
+    switch (node.node.nodeRunType) {
+      case NodeRunType.Source:
+        _runNodeOnInput([], node);
+        break;
+      case NodeRunType.Cache:
+      case NodeRunType.Run: {
+        const inputValues = await _runPriorDAG(node);
+        await _runNodeOnInput(inputValues, node);
+        break;
+      }
+      default:
+        break;
+    }
+
+    if (node.node.display) {
+      updateViewText(node);
+    }
   }, [_runPriorDAG, _runNodeOnInput]);
 
   const selectNode = useCallback(async (node: VisualNode) => {
@@ -270,7 +287,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     }
   }, [runNode, syncNodesUpdate, nodes]);
 
-  const updateDisplayedNode = (node: VisualNode) => {
+  const updateDisplayedNode = async (node: VisualNode) => {
     node.node.display = !node.node.display;
     // If this node is being displayed, undisplay all other nodes
     if (node.node.display) {
@@ -281,6 +298,9 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
         }
       });
       setNodes(newNodes);
+      if (node.node.nodeRunType === NodeRunType.Run) {
+        await runNode(node);
+      }
       syncNodesUpdate(Object.values(nodes).map(n => n.node));
       updateViewText(node);
     } else {
@@ -344,19 +364,16 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     // Sometimes the node is only having its coordinates updated, so don't run it
     if (shouldRun) {
       // The updated nodes above may/will not be available immediately for runNode to find the new data
-      if (node.node.nodeRunType === NodeRunType.Run) {
+      // When source or run nodes are updated, run them immediately
+      if (node.node.nodeRunType === NodeRunType.Run || node.node.nodeRunType === NodeRunType.Source) {
         await runNode(node);
-      }
-      // When a source node is updated, run it immediately
-      if (node.node.nodeRunType === NodeRunType.Source) {
-        await _runNodeOnInput([], node);
       }
     }
     if (shouldSync) {
       // TODO: Sync only the subgraph that was updated
       await syncNodesUpdate(Object.values(nodes).map(n => n.node));
     }
-  }, [runNode, syncNodesUpdate, _runNodeOnInput, nodes]);
+  }, [nodes, runNode, syncNodesUpdate]);
 
   const deleteNode = useCallback(async (node: VisualNode) => {
     const newNodes = { ...nodes };
@@ -368,6 +385,35 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     setNodes(newNodes);
     await syncNodeDelete(node);
   }, [nodes, selectedNode, syncNodeDelete, deleteConnections]);
+
+  const enableIndexSelection = useCallback((fromNodeId: string, fromOutput: number, toNodeId: string, inputIndex: number) => {
+    const fromNode = nodes[fromNodeId];
+    const fromNodeIOState = fromNode?.node.outputState[fromOutput];
+    if (fromNodeIOState) {
+      const fromNodeOutputType = nu.inferOutputType(fromNodeIOState);
+      if (fromNodeOutputType === IOStateType.StringArray) {
+        const toNode = nodes[toNodeId];
+        if (toNode) {
+          const toNodeInputType = toNode.node.inputTypes[inputIndex];
+          if (toNodeInputType === IOStateType.String) {
+            toNode.node.indexSelections[inputIndex] = 0;
+            updateNode(toNode);
+          }
+        }
+      }
+    }
+  }, [nodes, updateNode]);
+
+  const disableIndexSelection = useCallback((connectionId: string) => {
+    const connection = connections.find(conn => conn.connection.connectionId === connectionId);
+    if (connection) {
+      const toNode = nodes[connection.connection.toNode];
+      if (toNode) {
+        toNode.node.indexSelections[connection.connection.toInput] = null;
+        updateNode(toNode, false, true);
+      }
+    }
+  }, [nodes, connections, updateNode]);
 
   //////////////////////////////
   // React Hooks
@@ -401,6 +447,8 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
               selectedNode={selectedNode}
               selectNode={selectNode}
               updateDisplayedNode={updateDisplayedNode}
+              enableIndexSelection={enableIndexSelection}
+              disableIndexSelection={disableIndexSelection}
               addNode={addNode}
               updateNode={updateNode}
               deleteNode={deleteNode}

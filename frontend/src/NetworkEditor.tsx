@@ -3,7 +3,7 @@ import './NetworkEditor.css';
 import { VisualNode, VisualConnection, DragState, WireState } from './NetworkTypes';
 import { Node } from './Node';
 import { ConnectionUtils as cu, NetworkEditorUtils as neu } from './Utils';
-import { Coordinates, NodeType, OutputState } from '../../shared/types/src/models/node';
+import { Coordinates, NodeType } from '../../shared/types/src/models/node';
 import { Connection } from '../../shared/types/src/models/connection';
 import { NodeUtils as nu } from './Utils';
 import { ProjectModel } from '../../shared/types/src/models/project';
@@ -16,12 +16,14 @@ interface NetworkEditorProps {
   selectedNode: VisualNode | null;
   selectNode: (node: VisualNode) => void;
   updateDisplayedNode: (node: VisualNode) => void;
+  enableIndexSelection: (fromNodeId: string, fromOutput: number, toNodeId: string, inputIndex: number) => void;
+  disableIndexSelection: (connectionId: string) => void;
   addNode: (node: VisualNode) => void;
   updateNode: (node: VisualNode, shouldRun?: boolean, shouldSync?: boolean) => Promise<void>;
   deleteNode: (node: VisualNode) => void;
   connections: VisualConnection[];
   updateConnections: (connections: VisualConnection[]) => void;
-  runNode: (node: VisualNode) => Promise<(OutputState | null)[]>;
+  runNode: (node: VisualNode) => void;
 }
 
 const NetworkEditor = ({
@@ -31,6 +33,8 @@ const NetworkEditor = ({
   selectedNode,
   selectNode,
   updateDisplayedNode,
+  enableIndexSelection,
+  disableIndexSelection,
   addNode,
   updateNode,
   deleteNode,
@@ -255,6 +259,7 @@ const NetworkEditor = ({
   };
 
   const disconnectWire = (connectionId: string) => {
+    disableIndexSelection(connectionId);
     deleteConnection(connectionId);
   };
 
@@ -328,9 +333,9 @@ const NetworkEditor = ({
       ),
     };
     newConnections.push(newConnection);
-
+    enableIndexSelection(fromNodeId, fromOutput, toNodeId, inputIndex);
     updateConnections(newConnections);
-  }, [connections, updateConnections, project.projectId, user.userId]);
+  }, [connections, updateConnections, enableIndexSelection, project.projectId, user.userId]);
 
   //////////////////////////////
   // React Hooks

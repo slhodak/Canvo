@@ -2,7 +2,7 @@ import { NetworkEditorUtils as neu } from './Utils';
 import { VisualNode, VisualConnection, WireState } from './NetworkTypes';
 import PlayButton from './assets/PlayButton';
 import './Node.css';
-import { NodeRunType, OutputState } from '../../shared/types/src/models/node';
+import { NodeRunType, IOState } from '../../shared/types/src/models/node';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { updateNode } from './api';
 
@@ -17,11 +17,11 @@ interface NodeProps {
   startDrawingWire: (nodeId: string, outputIndex: number, startX: number, startY: number) => void;
   endDrawingWire: (toNodeId: string, inputIndex: number) => void;
   disconnectWire: (connectionId: string) => void;
-  runNode: (node: VisualNode, shouldSync?: boolean) => Promise<(OutputState | null)[]>;
+  runNode: (node: VisualNode, shouldSync?: boolean) => Promise<IOState[]>;
 }
 
 export const Node = ({ node, isSelected, isDisplaying, connections, wireState, updateDisplayedNode, handleMouseDown, startDrawingWire, endDrawingWire, disconnectWire, runNode }: NodeProps) => {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [nodeLabel, setNodeLabel] = useState('');
   const labelInputRef = useRef<SVGForeignObjectElement>(null);
 
@@ -46,14 +46,9 @@ export const Node = ({ node, isSelected, isDisplaying, connections, wireState, u
     }
   }
 
-  const handleDisplayFlagClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    updateDisplayedNode(node);
-  };
-
   // Handle edit completion
   const handleEditComplete = useCallback(() => {
-    setIsEditing(false);
+    setIsEditingLabel(false);
     if (nodeLabel !== node.node.label) {
       node.node.label = nodeLabel;
       updateNode(node.node.projectId, node.node);
@@ -68,13 +63,13 @@ export const Node = ({ node, isSelected, isDisplaying, connections, wireState, u
       }
     };
 
-    if (isEditing) {
+    if (isEditingLabel) {
       document.addEventListener('mousedown', handleClickOutsideLabel);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutsideLabel);
     };
-  }, [isEditing, nodeLabel, handleEditComplete]);
+  }, [isEditingLabel, nodeLabel, handleEditComplete]);
 
   useEffect(() => {
     setNodeLabel(node.node.label || 'unlabeled');
@@ -83,6 +78,7 @@ export const Node = ({ node, isSelected, isDisplaying, connections, wireState, u
   const handleNodeMouseDown = (e: React.MouseEvent, nodeId: string) => {
     // Don't select the node if clicking on the display flag
     if ((e.target as SVGElement).classList.contains('node-display-flag')) {
+      updateDisplayedNode(node);
       return;
     }
     handleMouseDown(e, nodeId);
@@ -95,7 +91,7 @@ export const Node = ({ node, isSelected, isDisplaying, connections, wireState, u
       className="node-g">
 
       {/* Node Label */}
-      {!isEditing ? (
+      {!isEditingLabel ? (
         <text
           x={node.x - 5}
           y={node.y + neu.NODE_HEIGHT / 2}
@@ -104,7 +100,7 @@ export const Node = ({ node, isSelected, isDisplaying, connections, wireState, u
           dominantBaseline="middle"
           onDoubleClick={(e) => {
             e.stopPropagation();
-            setIsEditing(true);
+            setIsEditingLabel(true);
           }}
         >
           {nodeLabel}
@@ -149,7 +145,6 @@ export const Node = ({ node, isSelected, isDisplaying, connections, wireState, u
         width={14}
         height={neu.NODE_HEIGHT}
         className={`node-display-flag ${isDisplaying ? "displaying" : ""}`}
-        onClick={handleDisplayFlagClick}
       />
 
       {/* Node Name - adjusted x position */}

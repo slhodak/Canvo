@@ -1,6 +1,6 @@
 import { VisualNode } from "./NetworkTypes";
-import { BaseNode, NodeType, Coordinates } from "../../shared/types/src/models/node";
-import { TextNode, PromptNode, SaveNode, MergeNode, SplitNode, FileNode, EditNode, EmbedNode, SearchNode, JoinNode, ReplaceNode, FetchNode } from "./nodes";
+import { BaseNode, NodeType, Coordinates, IOStateType, IOState } from "../../shared/types/src/models/node";
+import { TextNode, PromptNode, SaveNode, MergeNode, SplitNode, FileNode, EditNode, EmbedNode, SearchNode, JoinNode, ReplaceNode, FetchNode, PickNode, CacheNode } from "./nodes";
 
 export const NetworkEditorUtils = {
   NODE_WIDTH: 100,
@@ -47,6 +47,10 @@ export const NodeUtils = {
         return new JoinNode(nodeId, authorId, projectId, coordinates);
       case NodeType.Replace:
         return new ReplaceNode(nodeId, authorId, projectId, coordinates);
+      case NodeType.Pick:
+        return new PickNode(nodeId, authorId, projectId, coordinates);
+      case NodeType.Cache:
+        return new CacheNode(nodeId, authorId, projectId, coordinates);
       default:
         return null;
     }
@@ -78,12 +82,26 @@ export const NodeUtils = {
         return JoinNode.fromObject(object);
       case NodeType.Replace:
         return ReplaceNode.fromObject(object);
+      case NodeType.Pick:
+        return PickNode.fromObject(object);
+      case NodeType.Cache:
+        return CacheNode.fromObject(object);
       default:
         return null;
     }
-
-    return null;
   },
+
+  inferOutputType(outputState: IOState): IOStateType {
+    if (outputState.stringArrayValue !== null) {
+      return IOStateType.StringArray;
+    } else if (outputState.stringValue !== null) {
+      return IOStateType.String;
+    } else if (outputState.numberValue !== null) {
+      return IOStateType.Number;
+    }
+    // Default return value -- but the check above is exhaustive
+    return IOStateType.String;
+  }
 }
 
 export const ConnectionUtils = {

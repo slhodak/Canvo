@@ -1,0 +1,3 @@
+ALTER TABLE nodes
+ADD COLUMN input_types JSONB NOT NULL DEFAULT '[]',
+ADD COLUMN index_selections JSONB NOT NULL DEFAULT '[]';

@@ -1,5 +1,5 @@
 import humps from 'humps';
-import { BaseNode, OutputState } from "../../shared/types/src/models/node";
+import { BaseNode, IOState } from "../../shared/types/src/models/node";
 
 // Check if a value is null or undefined
 export function isNullOrUndefined(value: any): boolean {
@@ -16,7 +16,7 @@ export function checkAnyNullOrUndefined(object: Record<string, any>) {
 }
 
 // Convert input and output states to the correct PostgreSQL format
-export const formatStateArray = (state: OutputState) => {
+export const formatStateArray = (state: IOState) => {
   const { stringValue, numberValue } = state;
   return `{${stringValue ?? null}, ${numberValue ?? null}}`;
 };

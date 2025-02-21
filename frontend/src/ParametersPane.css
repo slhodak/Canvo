@@ -5,6 +5,7 @@
   padding: 4px;
   display: flex;
   flex-direction: column;
+  --property-label-width: 100px;
 }
 
 .parameters-pane-header h3 {
@@ -29,6 +30,43 @@
   gap: 2px;
 }
 
+/* Index Selection */
+
+.parameters-pane-index-selections-container {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+.parameters-pane-index-selections-label {
+  width: var(--property-label-width);
+  flex-shrink: 0;
+}
+
+.parameters-pane-index-selections {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+.parameters-pane-index-selection-container {
+  display: flex;
+  flex-direction: row;
+}
+
+.parameters-pane-index-selection-label {
+  width: 20px;
+  flex-shrink: 0;
+  text-align: right;
+  margin-right: 4px;
+}
+
+.parameters-pane-index-selection-input {
+  width: 60px;
+}
+
+/* Property Containers */
+
 .parameters-pane-property-container {
   display: flex;
   flex-direction: row;
@@ -51,7 +89,7 @@
 }
 
 .parameters-pane-property-label {
-  width: 100px;
+  width: var(--property-label-width);
   flex-shrink: 0;
 }
 
