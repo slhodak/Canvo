@@ -22,6 +22,13 @@ const ParametersPane = ({ node, updateNode }: ParametersPaneProps) => (
     </div>
 
     <div className="parameters-pane-content">
+      {node && node.node.indexSelections.filter(val => val !== null).length > 0 && (
+        <div className="parameters-pane-index-selections">
+          {node.node.indexSelections.map((val, index) => (
+            <div key={index}>{val}</div>
+          ))}
+        </div>
+      )}
       {node && Object.entries(node.node.properties).filter(([, property]) => property.displayed).map(([key, property]) => (
         <PropertyInputContainer key={property.label} propertyKey={key} property={property} node={node} updateNode={updateNode} />
       ))}
