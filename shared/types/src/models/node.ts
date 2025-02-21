@@ -137,13 +137,7 @@ export abstract class BaseNode {
 
     // For new nodes, initialize the output state array
     if (outputState.length === 0) {
-      for (let i = 0; i < this.outputs; i++) {
-        this.outputState.push({
-          stringValue: null,
-          numberValue: null,
-          stringArrayValue: null,
-        });
-      }
+      this.resetOutputState();
     }
 
     // For new nodes, initialize the index selections array
@@ -174,14 +168,17 @@ export abstract class BaseNode {
         if (this.display) {
           this.outputState = runResult;
         } else {
-          // When not displaying a Run node, erase its output state
-          this.outputState = [];
+          // When not displaying a Run node, reset its output state
+          this.resetOutputState();
         }
         break;
     }
   }
+
+  protected abstract resetOutputState(): void;
 }
 
+// Return a set of input values that pick elements from arrays wherever a node's input expects a string
 function selectInputsByIndices(inputValues: IOState[], indexSelections: (number | null)[]): IOState[] {
   const selectedInputValues: IOState[] = [];
   for (let i = 0; i < inputValues.length; i++) {

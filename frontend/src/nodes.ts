@@ -49,6 +49,10 @@ export class TextNode extends BaseSyncNode {
     );
   }
 
+  protected override resetOutputState(): void {
+    this.outputState = [defaultIOStates[IOStateType.String]];
+  }
+
   public override setProperty(key: string, value: string | number) {
     this.properties[key].value = value;
     this.outputState = [{
@@ -104,6 +108,10 @@ export class FetchNode extends BaseAsyncNode {
     );
   }
 
+  protected override resetOutputState(): void {
+    this.outputState = [defaultIOStates[IOStateType.String]];
+  }
+
   async _run(inputValues: IOState[]): Promise<IOState[]> {
     const url = this.properties.url.value as string;
     if (!url) {
@@ -142,7 +150,7 @@ export class PromptNode extends BaseAsyncNode {
     label: string = 'prompt',
     display: boolean = false,
     prompt: string = '',
-    outputState: IOState[] = [defaultIOStates[IOStateType.String]],
+    outputState: IOState[] = [],
   ) {
     super(id, authorId, projectId, 'Prompt', label, display, NodeType.Prompt, 1, 1, coordinates, NodeRunType.Cache, {
       prompt: {
@@ -166,6 +174,10 @@ export class PromptNode extends BaseAsyncNode {
       object.properties.prompt.value as string,
       object.outputState
     );
+  }
+
+  protected override resetOutputState(): void {
+    this.outputState = [defaultIOStates[IOStateType.String]];
   }
 
   async _run(inputValues: IOState[]): Promise<IOState[]> {
@@ -217,7 +229,7 @@ export class SaveNode extends BaseAsyncNode {
     label: string = 'save',
     display: boolean = false,
     filename: string = 'output.txt',
-    outputState: IOState[] = [defaultIOStates[IOStateType.String]],
+    outputState: IOState[] = [],
   ) {
     super(id, authorId, projectId, 'Save', label, display, NodeType.Save, 1, 0, coordinates, NodeRunType.None, {
       filename: {
@@ -248,6 +260,10 @@ export class SaveNode extends BaseAsyncNode {
       object.properties.filename.value as string,
       object.outputState
     );
+  }
+
+  protected override resetOutputState(): void {
+    this.outputState = [];
   }
 
   async _run(inputValues: IOState[]): Promise<IOState[]> {
@@ -321,6 +337,10 @@ export class MergeNode extends BaseSyncNode {
     );
   }
 
+  protected override resetOutputState(): void {
+    this.outputState = [defaultIOStates[IOStateType.String]];
+  }
+
   _run(inputValues: IOState[]): IOState[] {
     // Merge the input texts into a single output text
     let mergedResult = '';
@@ -352,7 +372,7 @@ export class SplitNode extends BaseSyncNode {
     label: string = 'split',
     display: boolean = false,
     separator: string = ' ',
-    outputState: IOState[] = [defaultIOStates[IOStateType.StringArray]],
+    outputState: IOState[] = [],
   ) {
     super(id, authorId, projectId, 'Split', label, display, NodeType.Split, 1, 1, coordinates, NodeRunType.Run, {
       separator: {
@@ -367,6 +387,10 @@ export class SplitNode extends BaseSyncNode {
 
   public static override fromObject(object: BaseNode): BaseNode {
     return new SplitNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.label, object.display, object.properties.separator.value as string, object.outputState);
+  }
+
+  protected override resetOutputState(): void {
+    this.outputState = [defaultIOStates[IOStateType.StringArray]];
   }
 
   _run(inputValues: IOState[]): IOState[] {
@@ -395,7 +419,7 @@ export class FileNode extends BaseSyncNode {
     label: string = 'file',
     display: boolean = false,
     filename: string = '',
-    outputState: IOState[] = [defaultIOStates[IOStateType.String]],
+    outputState: IOState[] = [],
   ) {
     super(id, authorId, projectId, 'File', label, display, NodeType.File, 0, 1, coordinates, NodeRunType.Source, {
       filename: {
@@ -428,6 +452,10 @@ export class FileNode extends BaseSyncNode {
     );
   }
 
+  protected override resetOutputState(): void {
+    this.outputState = [defaultIOStates[IOStateType.String]];
+  }
+
   _run(inputValues: IOState[]): IOState[] {
     return this.outputState;
   }
@@ -453,7 +481,7 @@ export class EditNode extends BaseSyncNode {
     label: string = 'edit',
     display: boolean = false,
     content: string = '',
-    outputState: IOState[] = [defaultIOStates[IOStateType.String]],
+    outputState: IOState[] = [],
   ) {
     super(id, authorId, projectId, 'Edit', label, display, NodeType.Edit, 1, 1, coordinates, NodeRunType.Cache, {
       content: {
@@ -477,6 +505,10 @@ export class EditNode extends BaseSyncNode {
       object.properties.content.value as string,
       object.outputState
     );
+  }
+
+  protected override resetOutputState(): void {
+    this.outputState = [defaultIOStates[IOStateType.String]];
   }
 
   _run(inputValues: IOState[]): IOState[] {
@@ -510,7 +542,7 @@ export class EmbedNode extends BaseAsyncNode {
     chunkSize: number = 100,
     overlap: number = 20,
     status: string = '',
-    outputState: IOState[] = [defaultIOStates[IOStateType.String]],
+    outputState: IOState[] = [],
   ) {
     super(id, authorId, projectId, 'Embed', label, display, NodeType.Embed, 1, 1, coordinates, NodeRunType.Cache, {
       documentId: {
@@ -558,6 +590,10 @@ export class EmbedNode extends BaseAsyncNode {
       object.properties.status.value as string,
       object.outputState
     );
+  }
+
+  protected override resetOutputState(): void {
+    this.outputState = [defaultIOStates[IOStateType.String]];
   }
 
   async _run(inputValues: IOState[]): Promise<IOState[]> {
@@ -624,7 +660,7 @@ export class SearchNode extends BaseAsyncNode {
     status: string = '',
     neighbors: number = 0,
     results: number = 3,
-    outputState: IOState[] = [defaultIOStates[IOStateType.StringArray]],
+    outputState: IOState[] = [],
   ) {
     // Actually this is not expensive and perhaps should be a Run node. But that's just because
     // we currently use a pretty low-dimension embedding model.
@@ -685,6 +721,10 @@ export class SearchNode extends BaseAsyncNode {
     );
   }
 
+  protected override resetOutputState(): void {
+    this.outputState = [defaultIOStates[IOStateType.StringArray]];
+  }
+
   async _run(inputValues: IOState[]): Promise<IOState[]> {
     if (!inputValues[0]?.stringValue) return [defaultIOStates[IOStateType.StringArray]];
 
@@ -738,7 +778,7 @@ export class JoinNode extends BaseSyncNode {
     label: string = 'join',
     display: boolean = false,
     separator: string = '\n',
-    outputState: IOState[] = [defaultIOStates[IOStateType.StringArray]],
+    outputState: IOState[] = [],
   ) {
     super(id, authorId, projectId, 'Join', label, display, NodeType.Join, 1, 1, coordinates, NodeRunType.Run, {
       separator: {
@@ -762,6 +802,10 @@ export class JoinNode extends BaseSyncNode {
       object.properties.separator.value as string,
       object.outputState
     );
+  }
+
+  protected override resetOutputState(): void {
+    this.outputState = [defaultIOStates[IOStateType.StringArray]];
   }
 
   _run(inputValues: IOState[]): IOState[] {
@@ -791,7 +835,7 @@ export class ReplaceNode extends BaseSyncNode {
     coordinates: Coordinates,
     label: string = 'replace',
     display: boolean = false,
-    outputState: IOState[] = [defaultIOStates[IOStateType.String]],
+    outputState: IOState[] = [],
   ) {
     super(id, authorId, projectId, 'Replace', label, display, NodeType.Replace, 1, 1, coordinates, NodeRunType.Run, {
       search: {
@@ -821,6 +865,10 @@ export class ReplaceNode extends BaseSyncNode {
       object.display,
       object.outputState
     );
+  }
+
+  protected override resetOutputState(): void {
+    this.outputState = [defaultIOStates[IOStateType.String]];
   }
 
   _run(inputValues: IOState[]): IOState[] {
