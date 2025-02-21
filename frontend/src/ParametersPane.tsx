@@ -38,13 +38,25 @@ const ParametersPane = ({ node, updateNode }: ParametersPaneProps) => {
       </div>
 
       <div className="parameters-pane-content">
-        {node && indexSelections.length > 0 && (
-          <div className="parameters-pane-index-selections">
-            {indexSelections.map((val, index) => (
-              val !== null && (
-                <input type="number" key={index} value={val} onChange={(e) => handleIndexSelectionChange(index, e.target.value)} />
-              )
-            ))}
+        {node && indexSelections.filter(val => val !== null).length > 0 && (
+          <div className="parameters-pane-index-selections-container">
+            <label className="parameters-pane-index-selections-label">Inputs</label>
+            <div className="parameters-pane-index-selections">
+              {indexSelections.map((val, index) => (
+                val !== null && (
+                  <div className="parameters-pane-index-selection-container">
+                    <label className="parameters-pane-index-selection-label">{index}:</label>
+                    <input
+                      type="number"
+                      key={index}
+                      value={val}
+                      onChange={(e) => handleIndexSelectionChange(index, e.target.value)}
+                      className="parameters-pane-index-selection-input"
+                    />
+                  </div>
+                )
+              ))}
+            </div>
           </div>
         )}
         {node && Object.entries(node.node.properties).filter(([, property]) => property.displayed).map(([key, property]) => {

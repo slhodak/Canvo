@@ -386,9 +386,6 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     await syncNodeDelete(node);
   }, [nodes, selectedNode, syncNodeDelete, deleteConnections]);
 
-  // index-selector: check if the output type of the connection is string[]
-  // if so, check if the input type of the connection is a string
-  // if so, tell the toNode that it's got to do index selection
   const updateIndexSelection = useCallback((fromNodeId: string, fromOutput: number, toNodeId: string, inputIndex: number) => {
     const fromNode = nodes[fromNodeId];
     const fromNodeIOState = fromNode?.node.outputState[fromOutput];

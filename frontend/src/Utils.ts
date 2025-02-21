@@ -91,8 +91,6 @@ export const NodeUtils = {
     }
   },
 
-  // index-selector: Infer the output type of a node from its outputState
-  // in the future it might be better to just let the node have an outputType property
   inferOutputType(outputState: IOState): IOStateType {
     if (outputState.stringArrayValue !== null) {
       return IOStateType.StringArray;
