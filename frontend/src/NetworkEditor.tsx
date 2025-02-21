@@ -333,8 +333,6 @@ const NetworkEditor = ({
     // if so, tell the toNode that it's got to do index selection
     const fromNode = nodes[fromNodeId];
     const fromNodeIOState = fromNode?.node.outputState[fromOutput];
-    // the Split node only has outputState after it's been run -- what we really need to know here is whether
-    // the node will/would have an outputState of type StringArray
     if (fromNodeIOState) {
       const fromNodeOutputType = nu.inferOutputType(fromNodeIOState);
       if (fromNodeOutputType === IOStateType.StringArray) {

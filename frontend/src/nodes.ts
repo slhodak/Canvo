@@ -960,7 +960,7 @@ export class CacheNode extends BaseSyncNode {
         editable: false,
         displayed: true,
       }
-    }, [], outputState);
+    }, [IOStateType.String], outputState);
   }
 
   public static override fromObject(object: BaseNode): BaseNode {
