@@ -5,7 +5,7 @@ import { UserModel, SessionModel } from '../../shared/types/src/models/user';
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { BaseNode } from '../../shared/types/src/models/node';
 import { Connection } from '../../shared/types/src/models/connection';
-import { camelizeColumns } from './util';
+import { camelizeColumns, formatIntegerArray } from './util';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -118,7 +118,7 @@ export namespace Database {
     const values = [nodeId, userId];
     const node = await db.oneOrNone(`
       SELECT node_id, project_id, author_id, name, label, display, type, inputs,
-      outputs, coordinates, node_run_type, properties, output_state
+      outputs, coordinates, node_run_type, properties, output_state, input_types, index_selections
       FROM nodes
       WHERE node_id = $1 AND author_id = $2
     `, values);
@@ -128,7 +128,7 @@ export namespace Database {
   export async function getNodesForProject(projectId: string, userId: string): Promise<BaseNode[]> {
     const nodes = await db.any(`
       SELECT n.node_id, n.project_id, n.author_id, n.name, n.label, n.display, n.type, n.inputs, n.outputs,
-      n.coordinates, n.node_run_type, n.properties, n.output_state
+      n.coordinates, n.node_run_type, n.properties, n.output_state, n.input_types, n.index_selections
       FROM nodes n
       WHERE n.project_id = $1 AND n.author_id = $2
     `, [projectId, userId]);
@@ -151,16 +151,18 @@ export namespace Database {
       node.nodeRunType,
       node.properties,
       JSON.stringify(node.outputState),
+      JSON.stringify(node.inputTypes),
+      formatIntegerArray(node.indexSelections),
     ];
 
     await db.none(`
       INSERT INTO nodes (
         node_id, author_id, project_id, name, label, display, type, inputs, outputs,
-        coordinates, node_run_type, properties, output_state
+        coordinates, node_run_type, properties, output_state, input_types, index_selections
       )
       VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9,
-        point($10, $11), $12, $13::jsonb, $14::jsonb
+        point($10, $11), $12, $13::jsonb, $14::jsonb, $15::jsonb, $16::integer[]
       )
     `, values);
   }
@@ -181,11 +183,14 @@ export namespace Database {
       node.nodeRunType,
       node.properties,
       JSON.stringify(node.outputState),
+      JSON.stringify(node.inputTypes),
+      formatIntegerArray(node.indexSelections),
     ];
     await db.none(`
       UPDATE nodes 
-      SET node_id = $1, author_id = $2, project_id = $3, name = $4, label = $5, display = $6, type = $7, inputs = $8, outputs = $9,
-      coordinates = point($10, $11), node_run_type = $12, properties = $13, output_state = $14::jsonb,
+      SET node_id = $1, author_id = $2, project_id = $3, name = $4, label = $5, display = $6,
+      type = $7, inputs = $8, outputs = $9, coordinates = point($10, $11), node_run_type = $12,
+      properties = $13, output_state = $14::jsonb, input_types = $15::jsonb, index_selections = $16::integer[],
       updated_at = CURRENT_TIMESTAMP
       WHERE node_id = $1
     `, values);

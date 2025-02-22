@@ -10,6 +10,7 @@ import ParametersPane from './ParametersPane';
 import OutputView from "./OutputView";
 import { SERVER_URL } from './constants';
 import { UserModel } from '../../shared/types/src/models/user';
+import { updateNode as syncNodeUpdate } from './api';
 
 interface ProjectProps {
   user: UserModel;
@@ -145,32 +146,6 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     }
   }, [project.projectId, nodes]);
 
-  const syncNodesUpdate = useCallback(async (updatedNodes: BaseNode[]) => {
-    try {
-      const response = await fetch(`${SERVER_URL}/api/update_nodes`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          projectId: project.projectId,
-          nodes: updatedNodes,
-        }),
-      });
-      const data = await response.json();
-      if (data.status === 'success') {
-        prevNodesRef.current = { ...nodes };
-      } else {
-        console.error('Server error while updating node:', data.error);
-        setNodes(prevNodesRef.current);
-      }
-    } catch (error) {
-      console.error('Could not update node:', error);
-      setNodes(prevNodesRef.current);
-    }
-  }, [project.projectId, nodes]);
-
   const syncNodeDelete = useCallback(async (node: VisualNode) => {
     try {
       const response = await fetch(`${SERVER_URL}/api/delete_node`, {
@@ -202,19 +177,23 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   //////////////////////////////
 
   // cache-expensive: calculate the output state of a node given its input states
-  const _runNodeOnInput = useCallback(async (inputValues: IOState[], node: VisualNode): Promise<IOState[]> => {
+  const _runNodeOnInput = useCallback(async (inputValues: IOState[], node: VisualNode, shouldSync: boolean = true): Promise<IOState[]> => {
     if ('run' in node.node && typeof node.node.run === 'function') {
-      return node.node.run(inputValues);
+      node.node.run(inputValues);
     }
     if ('asyncRun' in node.node && typeof node.node.asyncRun === 'function') {
-      return await node.node.asyncRun(inputValues);
+      await node.node.asyncRun(inputValues);
+    }
+
+    if (shouldSync) {
+      await syncNodeUpdate(node.node);
     }
     return [];
   }, []);
 
   // For each input connection to this node, get or calculate the input from that connection
   // If this node is a Run node, run it once you've gathered all the input values
-  const _runPriorDAG = useCallback(async (node: VisualNode): Promise<IOState[]> => {
+  const _runPriorDAG = useCallback(async (node: VisualNode, shouldSync: boolean = true): Promise<IOState[]> => {
     const inputConnections = connections.filter(conn => conn.connection.toNode === node.node.nodeId);
     if (inputConnections.length === 0 && node.node.nodeRunType) {
       console.debug('Node has no input connections');
@@ -246,8 +225,8 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
           inputValues.push(outputState);
           break;
         case NodeRunType.Run: {
-          const priorInputValues = await _runPriorDAG(inputNode);
-          const calculatedIOState = await _runNodeOnInput(priorInputValues, inputNode);
+          const priorInputValues = await _runPriorDAG(inputNode, shouldSync);
+          const calculatedIOState = await _runNodeOnInput(priorInputValues, inputNode, shouldSync);
           inputValues.push(...calculatedIOState);
           break;
         }
@@ -258,15 +237,15 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     return inputValues;
   }, [nodes, connections, _runNodeOnInput]);
 
-  const runNode = useCallback(async (node: VisualNode) => {
+  const runNode = useCallback(async (node: VisualNode, shouldSync: boolean = true) => {
     switch (node.node.nodeRunType) {
       case NodeRunType.Source:
-        _runNodeOnInput([], node);
+        _runNodeOnInput([], node, shouldSync);
         break;
       case NodeRunType.Cache:
       case NodeRunType.Run: {
-        const inputValues = await _runPriorDAG(node);
-        await _runNodeOnInput(inputValues, node);
+        const inputValues = await _runPriorDAG(node, shouldSync);
+        await _runNodeOnInput(inputValues, node, shouldSync);
         break;
       }
       default:
@@ -282,10 +261,8 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     setSelectedNode(node);
     if (node.node.nodeRunType === NodeRunType.Run) {
       await runNode(node);
-      // TODO: Sync only the subgraph that was run
-      await syncNodesUpdate(Object.values(nodes).map(n => n.node));
     }
-  }, [runNode, syncNodesUpdate, nodes]);
+  }, [runNode]);
 
   const updateDisplayedNode = async (node: VisualNode) => {
     node.node.display = !node.node.display;
@@ -301,7 +278,6 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       if (node.node.nodeRunType === NodeRunType.Run) {
         await runNode(node);
       }
-      syncNodesUpdate(Object.values(nodes).map(n => n.node));
       updateViewText(node);
     } else {
       setViewText('');
@@ -366,14 +342,13 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       // The updated nodes above may/will not be available immediately for runNode to find the new data
       // When source or run nodes are updated, run them immediately
       if (node.node.nodeRunType === NodeRunType.Run || node.node.nodeRunType === NodeRunType.Source) {
-        await runNode(node);
+        await runNode(node, shouldSync);
       }
+    } else if (shouldSync) {
+      // If the node is not being run, sync it if needed, e.g. on coordinate updates
+      await syncNodeUpdate(node.node);
     }
-    if (shouldSync) {
-      // TODO: Sync only the subgraph that was updated
-      await syncNodesUpdate(Object.values(nodes).map(n => n.node));
-    }
-  }, [nodes, runNode, syncNodesUpdate]);
+  }, [runNode]);
 
   const deleteNode = useCallback(async (node: VisualNode) => {
     const newNodes = { ...nodes };
@@ -386,21 +361,28 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     await syncNodeDelete(node);
   }, [nodes, selectedNode, syncNodeDelete, deleteConnections]);
 
+  // If a string array output is connected to a string input, enable index selection for the input
   const enableIndexSelection = useCallback((fromNodeId: string, fromOutput: number, toNodeId: string, inputIndex: number) => {
     const fromNode = nodes[fromNodeId];
-    const fromNodeIOState = fromNode?.node.outputState[fromOutput];
-    if (fromNodeIOState) {
-      const fromNodeOutputType = nu.inferOutputType(fromNodeIOState);
-      if (fromNodeOutputType === IOStateType.StringArray) {
-        const toNode = nodes[toNodeId];
-        if (toNode) {
-          const toNodeInputType = toNode.node.inputTypes[inputIndex];
-          if (toNodeInputType === IOStateType.String) {
-            toNode.node.indexSelections[inputIndex] = 0;
-            updateNode(toNode);
-          }
-        }
-      }
+    const toNode = nodes[toNodeId];
+    if (!fromNode) {
+      console.error(`Error while enabling index selection: from node ${fromNodeId} not found`);
+      return;
+    }
+    if (!toNode) {
+      console.error(`Error while enabling index selection: to node ${toNodeId} not found`);
+      return;
+    }
+    const fromNodeIOState = fromNode.node.outputState[fromOutput];
+    if (!fromNodeIOState) {
+      console.error(`Error while enabling index selection: no output state found for node ${fromNodeId} output ${fromOutput}`);
+      return;
+    }
+    const fromNodeOutputType = nu.inferOutputType(fromNodeIOState);
+    const toNodeInputType = toNode.node.inputTypes[inputIndex];
+    if (fromNodeOutputType == IOStateType.StringArray && toNodeInputType == IOStateType.String) {
+      toNode.node.indexSelections[inputIndex] = 0;
+      updateNode(toNode);
     }
   }, [nodes, updateNode]);
 
