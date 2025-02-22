@@ -21,15 +21,19 @@ export const formatStateArray = (state: IOState) => {
   return `{${stringValue ?? null}, ${numberValue ?? null}}`;
 };
 
+export const formatIntegerArray = (array: (number | null)[]) => {
+  return `{${array.map(element => element ?? 'NULL').join(',')}}`;
+};
+
 
 export const validateNode = (node: BaseNode): boolean => {
   const {
     nodeId, projectId, name, label, display, type, inputs, outputs, coordinates,
-    nodeRunType, properties, outputState } = node;
+    nodeRunType, properties, outputState, inputTypes, indexSelections } = node;
   try {
     checkAnyNullOrUndefined({
       nodeId, projectId, name, label, display, type, inputs, outputs, coordinates,
-      nodeRunType, properties, outputState
+      nodeRunType, properties, outputState, inputTypes, indexSelections
     });
   } catch (error) {
     console.error(`A required field is missing from the node: ${error}`);

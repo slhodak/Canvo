@@ -42,7 +42,7 @@ const ParametersPane = ({ node, updateNode }: ParametersPaneProps) => {
             <div className="parameters-pane-index-selections">
               {indexSelections.map((val, index) => (
                 val !== null && (
-                  <div className="parameters-pane-index-selection-container">
+                  <div key={`${node.node.nodeId}-input-selection-${index}`} className="parameters-pane-index-selection-container">
                     <label className="parameters-pane-index-selection-label">{index}:</label>
                     <input
                       type="number"

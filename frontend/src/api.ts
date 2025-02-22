@@ -1,7 +1,7 @@
 import { BaseNode } from '../../shared/types/src/models/node';
 import { SERVER_URL } from './constants';
 
-export async function updateNode(projectId: string, node: BaseNode): Promise<boolean> {
+export async function updateNode(node: BaseNode): Promise<boolean> {
   try {
     const response = await fetch(`${SERVER_URL}/api/update_node`, {
       method: 'POST',
@@ -10,7 +10,7 @@ export async function updateNode(projectId: string, node: BaseNode): Promise<boo
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        projectId,
+        projectId: node.projectId,
         node,
       }),
     });

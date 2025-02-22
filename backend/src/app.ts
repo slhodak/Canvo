@@ -473,6 +473,7 @@ apiRouter.post('/update_node', async (req: Request, res: Response) => {
   }
 
   try {
+    // console.debug(`Updating node ${node.nodeId} in project ${projectId}`, JSON.stringify(node));
     await db.updateNode(node);
     return res.json({ status: "success" });
   } catch (error) {

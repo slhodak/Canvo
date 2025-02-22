@@ -2,7 +2,7 @@ import { NetworkEditorUtils as neu } from './Utils';
 import { VisualNode, VisualConnection, WireState } from './NetworkTypes';
 import PlayButton from './assets/PlayButton';
 import './Node.css';
-import { NodeRunType, IOState } from '../../shared/types/src/models/node';
+import { NodeRunType } from '../../shared/types/src/models/node';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { updateNode } from './api';
 
@@ -17,7 +17,7 @@ interface NodeProps {
   startDrawingWire: (nodeId: string, outputIndex: number, startX: number, startY: number) => void;
   endDrawingWire: (toNodeId: string, inputIndex: number) => void;
   disconnectWire: (connectionId: string) => void;
-  runNode: (node: VisualNode, shouldSync?: boolean) => Promise<IOState[]>;
+  runNode: (node: VisualNode, shouldSync?: boolean) => void;
 }
 
 export const Node = ({ node, isSelected, isDisplaying, connections, wireState, updateDisplayedNode, handleMouseDown, startDrawingWire, endDrawingWire, disconnectWire, runNode }: NodeProps) => {
@@ -51,7 +51,7 @@ export const Node = ({ node, isSelected, isDisplaying, connections, wireState, u
     setIsEditingLabel(false);
     if (nodeLabel !== node.node.label) {
       node.node.label = nodeLabel;
-      updateNode(node.node.projectId, node.node);
+      updateNode(node.node);
     }
   }, [node, nodeLabel]);
 
