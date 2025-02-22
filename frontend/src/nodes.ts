@@ -45,7 +45,7 @@ export class TextNode extends BaseSyncNode {
       object.label,
       object.display,
       object.properties.text.value as string,
-      object.outputState
+      object.outputState,
     );
   }
 
@@ -104,7 +104,7 @@ export class FetchNode extends BaseAsyncNode {
       object.label,
       object.display,
       object.properties.url.value as string,
-      object.outputState
+      object.outputState,
     );
   }
 
@@ -151,6 +151,7 @@ export class PromptNode extends BaseAsyncNode {
     display: boolean = false,
     prompt: string = '',
     outputState: IOState[] = [],
+    indexSelections: (number | null)[] = [],
   ) {
     super(id, authorId, projectId, 'Prompt', label, display, NodeType.Prompt, 1, 1, coordinates, NodeRunType.Cache, {
       prompt: {
@@ -160,7 +161,7 @@ export class PromptNode extends BaseAsyncNode {
         editable: true,
         displayed: true,
       }
-    }, [IOStateType.String], outputState);
+    }, [IOStateType.String], outputState, indexSelections);
   }
 
   public static override fromObject(object: BaseNode): BaseNode {
@@ -172,7 +173,8 @@ export class PromptNode extends BaseAsyncNode {
       object.label,
       object.display,
       object.properties.prompt.value as string,
-      object.outputState
+      object.outputState,
+      object.indexSelections
     );
   }
 
@@ -230,6 +232,7 @@ export class SaveNode extends BaseAsyncNode {
     display: boolean = false,
     filename: string = 'output.txt',
     outputState: IOState[] = [],
+    indexSelections: (number | null)[] = [],
   ) {
     super(id, authorId, projectId, 'Save', label, display, NodeType.Save, 1, 0, coordinates, NodeRunType.None, {
       filename: {
@@ -246,7 +249,7 @@ export class SaveNode extends BaseAsyncNode {
         editable: false,
         displayed: true,
       }
-    }, [IOStateType.String], outputState);
+    }, [IOStateType.String], outputState, indexSelections);
   }
 
   public static override fromObject(object: BaseNode): BaseNode {
@@ -258,7 +261,8 @@ export class SaveNode extends BaseAsyncNode {
       object.label,
       object.display,
       object.properties.filename.value as string,
-      object.outputState
+      object.outputState,
+      object.indexSelections
     );
   }
 
@@ -312,6 +316,7 @@ export class MergeNode extends BaseSyncNode {
     display: boolean = false,
     separator: string = ' ',
     outputState: IOState[] = [defaultIOStates[IOStateType.String], defaultIOStates[IOStateType.String]],
+    indexSelections: (number | null)[] = [null, null],
   ) {
     super(id, authorId, projectId, 'Merge', label, display, NodeType.Merge, 2, 1, coordinates, NodeRunType.Run, {
       separator: {
@@ -321,7 +326,7 @@ export class MergeNode extends BaseSyncNode {
         editable: true,
         displayed: true,
       },
-    }, [IOStateType.String, IOStateType.String], outputState);
+    }, [IOStateType.String, IOStateType.String], outputState, indexSelections);
   }
 
   public static override fromObject(object: BaseNode): BaseNode {
@@ -333,7 +338,8 @@ export class MergeNode extends BaseSyncNode {
       object.label,
       object.display,
       object.properties.separator.value as string,
-      object.outputState
+      object.outputState,
+      object.indexSelections
     );
   }
 
@@ -373,6 +379,7 @@ export class SplitNode extends BaseSyncNode {
     display: boolean = false,
     separator: string = ' ',
     outputState: IOState[] = [],
+    indexSelections: (number | null)[] = [],
   ) {
     super(id, authorId, projectId, 'Split', label, display, NodeType.Split, 1, 1, coordinates, NodeRunType.Run, {
       separator: {
@@ -382,11 +389,21 @@ export class SplitNode extends BaseSyncNode {
         editable: true,
         displayed: true,
       },
-    }, [IOStateType.String], outputState);
+    }, [IOStateType.String], outputState, indexSelections);
   }
 
   public static override fromObject(object: BaseNode): BaseNode {
-    return new SplitNode(object.nodeId, object.authorId, object.projectId, object.coordinates, object.label, object.display, object.properties.separator.value as string, object.outputState);
+    return new SplitNode(
+      object.nodeId,
+      object.authorId,
+      object.projectId,
+      object.coordinates,
+      object.label,
+      object.display,
+      object.properties.separator.value as string,
+      object.outputState,
+      object.indexSelections
+    );
   }
 
   protected override resetOutputState(): void {
@@ -482,6 +499,7 @@ export class EditNode extends BaseSyncNode {
     display: boolean = false,
     content: string = '',
     outputState: IOState[] = [],
+    indexSelections: (number | null)[] = [],
   ) {
     super(id, authorId, projectId, 'Edit', label, display, NodeType.Edit, 1, 1, coordinates, NodeRunType.Cache, {
       content: {
@@ -491,7 +509,7 @@ export class EditNode extends BaseSyncNode {
         editable: true,
         displayed: true,
       }
-    }, [IOStateType.String], outputState);
+    }, [IOStateType.String], outputState, indexSelections);
   }
 
   public static override fromObject(object: BaseNode): BaseNode {
@@ -503,7 +521,8 @@ export class EditNode extends BaseSyncNode {
       object.label,
       object.display,
       object.properties.content.value as string,
-      object.outputState
+      object.outputState,
+      object.indexSelections
     );
   }
 
@@ -543,6 +562,7 @@ export class EmbedNode extends BaseAsyncNode {
     overlap: number = 20,
     status: string = '',
     outputState: IOState[] = [],
+    indexSelections: (number | null)[] = [],
   ) {
     super(id, authorId, projectId, 'Embed', label, display, NodeType.Embed, 1, 1, coordinates, NodeRunType.Cache, {
       documentId: {
@@ -573,7 +593,7 @@ export class EmbedNode extends BaseAsyncNode {
         editable: false,
         displayed: true,
       }
-    }, [IOStateType.String], outputState);
+    }, [IOStateType.String], outputState, indexSelections);
   }
 
   public static override fromObject(object: BaseNode): BaseNode {
@@ -588,7 +608,8 @@ export class EmbedNode extends BaseAsyncNode {
       object.properties.chunkSize.value as number,
       object.properties.overlap.value as number,
       object.properties.status.value as string,
-      object.outputState
+      object.outputState,
+      object.indexSelections
     );
   }
 
@@ -661,6 +682,7 @@ export class SearchNode extends BaseAsyncNode {
     neighbors: number = 0,
     results: number = 3,
     outputState: IOState[] = [],
+    indexSelections: (number | null)[] = [],
   ) {
     // Actually this is not expensive and perhaps should be a Run node. But that's just because
     // we currently use a pretty low-dimension embedding model.
@@ -701,7 +723,7 @@ export class SearchNode extends BaseAsyncNode {
         editable: true,
         displayed: true,
       },
-    }, [IOStateType.String], outputState);
+    }, [IOStateType.String], outputState, indexSelections);
   }
 
   public static override fromObject(object: BaseNode): BaseNode {
@@ -717,7 +739,8 @@ export class SearchNode extends BaseAsyncNode {
       object.properties.status.value as string,
       object.properties.neighbors.value as number,
       object.properties.results.value as number,
-      object.outputState
+      object.outputState,
+      object.indexSelections
     );
   }
 
@@ -836,6 +859,7 @@ export class ReplaceNode extends BaseSyncNode {
     label: string = 'replace',
     display: boolean = false,
     outputState: IOState[] = [],
+    indexSelections: (number | null)[] = [],
   ) {
     super(id, authorId, projectId, 'Replace', label, display, NodeType.Replace, 1, 1, coordinates, NodeRunType.Run, {
       search: {
@@ -852,7 +876,7 @@ export class ReplaceNode extends BaseSyncNode {
         editable: true,
         displayed: true,
       }
-    }, [IOStateType.String], outputState);
+    }, [IOStateType.String], outputState, indexSelections);
   }
 
   public static override fromObject(object: BaseNode): BaseNode {
@@ -863,7 +887,8 @@ export class ReplaceNode extends BaseSyncNode {
       object.coordinates,
       object.label,
       object.display,
-      object.outputState
+      object.outputState,
+      object.indexSelections
     );
   }
 
@@ -951,6 +976,7 @@ export class CacheNode extends BaseSyncNode {
     label: string = 'cache',
     display: boolean = false,
     outputState: IOState[] = [],
+    indexSelections: (number | null)[] = [],
   ) {
     super(id, authorId, projectId, 'Cache', label, display, NodeType.Cache, 1, 1, coordinates, NodeRunType.Cache, {
       updatedAt: {
@@ -960,7 +986,7 @@ export class CacheNode extends BaseSyncNode {
         editable: false,
         displayed: true,
       }
-    }, [IOStateType.String], outputState);
+    }, [IOStateType.String], outputState, indexSelections);
   }
 
   public static override fromObject(object: BaseNode): BaseNode {
@@ -971,7 +997,8 @@ export class CacheNode extends BaseSyncNode {
       object.coordinates,
       object.label,
       object.display,
-      object.outputState
+      object.outputState,
+      object.indexSelections
     );
   }
 
