@@ -56,7 +56,6 @@
 /* Table */
 
 .output-view-table {
-  flex-shrink: 0;
   overflow-x: auto;
   --table-cell-width: 100px;
 }
