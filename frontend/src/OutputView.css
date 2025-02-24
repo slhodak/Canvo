@@ -5,7 +5,6 @@
   padding: 4px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
   overflow-y: auto;
 }
 
@@ -14,19 +13,30 @@
   background-color: var(--input-background-color);
   padding: 4px;
   min-height: 100px;
-  flex-shrink: 0;
+  height: 100%;
 }
 
-.output-view-header {
-  font-size: 12px;
-  color: var(--text-color-dim);
-  padding-bottom: 4px;
-  border-bottom: 1px solid var(--border-color);
-  margin-bottom: 4px;
+.output-view-selector {
+  display: flex;
+  flex-direction: row;
+  background-color: var(--background-dark-2);
+  gap: 2px;
+}
+
+.output-view-selector-item {
+  padding: 8px;
+  color: var(--text-color);
+  background-color: var(--background-dark-1);
+  border: none;
+}
+
+.output-view-selector-item.selected {
+  color: var(--text-color);
+  background-color: var(--input-background-color);
 }
 
 .output-view-text {
   white-space: pre-wrap;
   overflow-y: auto;
-  max-height: 300px;
+  flex-shrink: 0;
 }

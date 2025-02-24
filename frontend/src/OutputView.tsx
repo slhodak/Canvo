@@ -1,5 +1,6 @@
 import './OutputView.css';
-import { IOState } from '../../shared/types/src/models/node';
+import { IOState, IOStateType } from '../../shared/types/src/models/node';
+import { useState, useCallback } from 'react';
 import * as tf from '@tensorflow/tfjs';
 
 interface OutputViewProps {
@@ -8,32 +9,67 @@ interface OutputViewProps {
 
 // Let there be multiple panes for the output view
 const OutputView = ({ outputState }: OutputViewProps) => {
-  const renderValue = (value: string | number | string[] | tf.Tensor | null) => {
-    switch (typeof value) {
-      case 'string':
-        return value;
-      case 'number':
-        return value.toString();
-      case 'object':
-        if (value instanceof tf.Tensor) {
-          return value.toString();
+  const [selectedStateType, setSelectedStateType] = useState<IOStateType>(outputState.type);
+
+  const renderValue = useCallback((): string => {
+    switch (selectedStateType) {
+      case IOStateType.String:
+        if (outputState.type === IOStateType.String) {
+          return outputState.getValue() as string;
+        } else {
+          return 'N/A';
         }
-        return '';
+      case IOStateType.Number:
+        if (outputState.type === IOStateType.Number) {
+          return (outputState.getValue() as number).toString();
+        } else {
+          return 'N/A';
+        }
+      case IOStateType.StringArray:
+        if (outputState.type === IOStateType.StringArray) {
+          return (outputState.getValue() as string[]).join(', ');
+        } else {
+          return 'N/A';
+        }
+      case IOStateType.Tensor:
+        if (outputState.type === IOStateType.Tensor) {
+          return (outputState.getValue() as tf.Tensor).toString();
+        } else {
+          return 'N/A';
+        }
       default:
-        return '';
+        return 'None';
     }
-  };
+  }, [selectedStateType, outputState]);
 
   return (
     <div className="output-view-container">
-      {Object.entries(outputState.getStateDict()).map(([key, value], index) => (
-        value !== null && (
-          <div key={index} className="output-view-content">
-            <div className="output-view-header">{key}</div>
-            <div className="output-view-text">{renderValue(value)}</div>
-          </div>
-        )
-      ))}
+      <div className="output-view-selector">
+        {Object.values(IOStateType).map((type) => {
+          const isSelected = selectedStateType === type;
+          return (
+            <button
+              className={`output-view-selector-item ${isSelected ? 'selected' : ''}`}
+              onClick={() => setSelectedStateType(type)}>
+              {type}
+            </button>
+          );
+        })}
+      </div>
+      <div className="output-view-content">
+        {/* Room for different kinds of display components based on output type */}
+        {selectedStateType === IOStateType.String ? (
+          <div className="output-view-text">{renderValue()}</div>
+        ) : selectedStateType === IOStateType.Number ? (
+          <div className="output-view-number">{renderValue()}</div>
+        ) : selectedStateType === IOStateType.StringArray ? (
+          <div className="output-view-string-array">{renderValue()}</div>
+        ) : selectedStateType === IOStateType.Tensor ? (
+          <div className="output-view-tensor">{renderValue()}</div>
+        ) : (
+          <div className="output-view-text">None</div>
+        )}
+      </div>
     </div>
   );
 };
