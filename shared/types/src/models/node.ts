@@ -112,6 +112,21 @@ export class IOState {
 
     return IOStateType.Empty;
   }
+
+  public getValue(): string | number | string[] | tf.Tensor | null {
+    switch (this.type) {
+      case IOStateType.String:
+        return this.stringValue;
+      case IOStateType.Number:
+        return this.numberValue;
+      case IOStateType.StringArray:
+        return this.stringArrayValue;
+      case IOStateType.Tensor:
+        return this.tensor;
+      case IOStateType.Empty:
+        return null;
+    }
+  }
 }
 
 // index-selector: the node may need to do index selection on its input.

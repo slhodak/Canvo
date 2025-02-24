@@ -29,16 +29,16 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   const [selectedNode, setSelectedNode] = useState<VisualNode | null>(null);
   const [viewText, setViewText] = useState<string>('');
 
+  // Notice that this only displays the first output state
   const updateViewText = (node: VisualNode) => {
-    // Notice that this only displays the first output state
-    if (node.node.outputState[0]?.stringValue) {
-      setViewText(node.node.outputState[0]?.stringValue || '');
-    } else if (node.node.outputState[0]?.numberValue) {
-      setViewText(node.node.outputState[0]?.numberValue.toString() || '');
-    } else if (node.node.outputState[0]?.stringArrayValue) {
-      setViewText(node.node.outputState[0]?.stringArrayValue.join("\n") || '');
-    } else if (node.node.outputState[0]?.tensor) {
-      setViewText(node.node.outputState[0]?.tensor.toString() || '');
+    if (node.node.outputState[0].type === IOStateType.String) {
+      setViewText(node.node.outputState[0].stringValue || '');
+    } else if (node.node.outputState[0].type === IOStateType.Number) {
+      setViewText(node.node.outputState[0].numberValue?.toString() || '');
+    } else if (node.node.outputState[0].type === IOStateType.StringArray) {
+      setViewText(node.node.outputState[0].stringArrayValue?.join("\n") || '');
+    } else if (node.node.outputState[0].type === IOStateType.Tensor) {
+      setViewText(node.node.outputState[0].tensor?.toString() || '');
     } else {
       console.debug('Displayed node has no output state');
       setViewText('');
