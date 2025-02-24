@@ -45,7 +45,7 @@ export class TextNode extends BaseSyncNode {
       object.label,
       object.display,
       object.properties.text.value as string,
-      object.outputState,
+      object.outputState.map(IOState.fromObject),
     );
   }
 
@@ -96,7 +96,7 @@ export class FetchNode extends BaseAsyncNode {
       object.label,
       object.display,
       object.properties.url.value as string,
-      object.outputState,
+      object.outputState.map(IOState.fromObject),
     );
   }
 
@@ -161,7 +161,7 @@ export class PromptNode extends BaseAsyncNode {
       object.label,
       object.display,
       object.properties.prompt.value as string,
-      object.outputState,
+      object.outputState.map(IOState.fromObject),
       object.indexSelections
     );
   }
@@ -245,7 +245,7 @@ export class SaveNode extends BaseAsyncNode {
       object.label,
       object.display,
       object.properties.filename.value as string,
-      object.outputState,
+      object.outputState.map(IOState.fromObject),
       object.indexSelections
     );
   }
@@ -322,7 +322,7 @@ export class MergeNode extends BaseSyncNode {
       object.label,
       object.display,
       object.properties.separator.value as string,
-      object.outputState,
+      object.outputState.map(IOState.fromObject),
       object.indexSelections
     );
   }
@@ -381,7 +381,7 @@ export class SplitNode extends BaseSyncNode {
       object.label,
       object.display,
       object.properties.separator.value as string,
-      object.outputState,
+      object.outputState.map(IOState.fromObject),
       object.indexSelections
     );
   }
@@ -441,7 +441,7 @@ export class FileNode extends BaseSyncNode {
       object.label,
       object.display,
       object.properties.filename.value as string,
-      object.outputState
+      object.outputState.map(IOState.fromObject),
     );
   }
 
@@ -495,7 +495,7 @@ export class EditNode extends BaseSyncNode {
       object.label,
       object.display,
       object.properties.content.value as string,
-      object.outputState,
+      object.outputState.map(IOState.fromObject),
       object.indexSelections
     );
   }
@@ -578,7 +578,7 @@ export class EmbedNode extends BaseAsyncNode {
       object.properties.chunkSize.value as number,
       object.properties.overlap.value as number,
       object.properties.status.value as string,
-      object.outputState,
+      object.outputState.map(IOState.fromObject),
       object.indexSelections
     );
   }
@@ -705,7 +705,7 @@ export class SearchNode extends BaseAsyncNode {
       object.properties.status.value as string,
       object.properties.neighbors.value as number,
       object.properties.results.value as number,
-      object.outputState,
+      object.outputState.map(IOState.fromObject),
       object.indexSelections
     );
   }
@@ -785,7 +785,7 @@ export class JoinNode extends BaseSyncNode {
       object.label,
       object.display,
       object.properties.separator.value as string,
-      object.outputState
+      object.outputState.map(IOState.fromObject),
     );
   }
 
@@ -845,7 +845,7 @@ export class ReplaceNode extends BaseSyncNode {
       object.coordinates,
       object.label,
       object.display,
-      object.outputState,
+      object.outputState.map(IOState.fromObject),
       object.indexSelections
     );
   }
@@ -898,7 +898,7 @@ export class PickNode extends BaseSyncNode {
       object.label,
       object.display,
       object.properties.index.value as number,
-      object.outputState
+      object.outputState.map(IOState.fromObject),
     );
   }
 
@@ -947,7 +947,7 @@ export class CacheNode extends BaseSyncNode {
       object.coordinates,
       object.label,
       object.display,
-      object.outputState,
+      object.outputState.map(IOState.fromObject),
       object.indexSelections
     );
   }
@@ -1019,7 +1019,7 @@ export class CSVNode extends BaseSyncNode {
       object.properties.filename.value as string,
       object.properties.separator.value as string,
       object.properties.lineTerminator.value as string,
-      object.outputState,
+      object.outputState.map(IOState.fromObject),
     );
   }
 

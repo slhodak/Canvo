@@ -98,6 +98,15 @@ export class IOState {
     }
   }
 
+  public static fromObject(object: IOState): IOState {
+    return new IOState({
+      stringValue: object.stringValue,
+      numberValue: object.numberValue,
+      stringArrayValue: object.stringArrayValue,
+      tensor: object.tensor,
+    });
+  }
+
   // For now, IOState can only have one type
   private inferType(): IOStateType {
     if (this.stringArrayValue !== null) {
@@ -126,6 +135,31 @@ export class IOState {
       case IOStateType.Empty:
         return null;
     }
+  }
+
+  public getStateDict(): Record<string, (string | number | string[] | tf.Tensor | null)> {
+    return {
+      stringValue: this.stringValue,
+      numberValue: this.numberValue,
+      stringArrayValue: this.stringArrayValue,
+      tensor: this.tensor,
+    };
+  }
+
+  public isEmpty(): boolean {
+    if (this.stringValue !== null) {
+      return false;
+    }
+    if (this.numberValue !== null) {
+      return false;
+    }
+    if (this.stringArrayValue !== null) {
+      return false;
+    }
+    if (this.tensor !== null) {
+      return false;
+    }
+    return true;
   }
 }
 

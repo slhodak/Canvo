@@ -27,21 +27,17 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   const prevNodesRef = useRef<NetworkNodes>({});
   const prevConnectionsRef = useRef<NetworkConnections>([]);
   const [selectedNode, setSelectedNode] = useState<VisualNode | null>(null);
-  const [viewText, setViewText] = useState<string>('');
+  const [viewState, setViewState] = useState<IOState>(IOState.ofType(IOStateType.String));
 
   // Notice that this only displays the first output state
-  const updateViewText = (node: VisualNode) => {
-    if (node.node.outputState[0].type === IOStateType.String) {
-      setViewText(node.node.outputState[0].stringValue || '');
-    } else if (node.node.outputState[0].type === IOStateType.Number) {
-      setViewText(node.node.outputState[0].numberValue?.toString() || '');
-    } else if (node.node.outputState[0].type === IOStateType.StringArray) {
-      setViewText(node.node.outputState[0].stringArrayValue?.join("\n") || '');
-    } else if (node.node.outputState[0].type === IOStateType.Tensor) {
-      setViewText(node.node.outputState[0].tensor?.toString() || '');
+  const updateViewState = (node: VisualNode) => {
+    const outputState = node.node.outputState[0];
+    if (outputState === null) {
+      setViewState(IOState.ofType(IOStateType.String));
+    } else if (outputState.isEmpty()) {
+      setViewState(IOState.ofType(IOStateType.String));
     } else {
-      console.debug('Displayed node has no output state');
-      setViewText('');
+      setViewState(outputState);
     }
   }
 
@@ -79,7 +75,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
         // If any node is displaying, update the view text
         for (const node of Object.values(visualNodes)) {
           if (node.node.display) {
-            updateViewText(node);
+            updateViewState(node);
             break;
           }
         }
@@ -255,7 +251,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     }
 
     if (node.node.display) {
-      updateViewText(node);
+      updateViewState(node);
     }
   }, [_runPriorDAG, _runNodeOnInput]);
 
@@ -280,9 +276,9 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       if (node.node.nodeRunType === NodeRunType.Run) {
         await runNode(node);
       }
-      updateViewText(node);
+      updateViewState(node);
     } else {
-      setViewText('');
+      setViewState(IOState.ofType(IOStateType.String));
     }
   }
 
@@ -405,7 +401,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
 
   useEffect(() => {
     // Clear all state when switching projects
-    setViewText('');
+    setViewState(IOState.ofType(IOStateType.String));
     setSelectedNode(null);
     setConnections([]);
     setNodes({});
@@ -447,7 +443,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
 
         </div>
         <div className="right-pane">
-          <OutputView text={viewText} />
+          <OutputView outputState={viewState} />
         </div>
       </div>
     </div>
