@@ -1,7 +1,6 @@
 import './OutputView.css';
 import { IOState, IOStateType } from '../../shared/types/src/models/node';
 import { useState, useCallback, useEffect } from 'react';
-import * as tf from '@tensorflow/tfjs';
 
 interface OutputViewProps {
   outputState: IOState;
@@ -33,9 +32,9 @@ const OutputView = ({ outputState }: OutputViewProps) => {
         } else {
           return 'N/A';
         }
-      case IOStateType.Tensor:
-        if (outputState.type === IOStateType.Tensor) {
-          return (outputState.getValue() as tf.Tensor).toString();
+      case IOStateType.Table:
+        if (outputState.type === IOStateType.Table) {
+          return (outputState.getValue() as string[][]).join(', ');
         } else {
           return 'N/A';
         }
@@ -70,8 +69,8 @@ const OutputView = ({ outputState }: OutputViewProps) => {
           <div className="output-view-number">{renderValue()}</div>
         ) : selectedStateType === IOStateType.StringArray ? (
           <div className="output-view-string-array">{renderValue()}</div>
-        ) : selectedStateType === IOStateType.Tensor ? (
-          <div className="output-view-tensor">{renderValue()}</div>
+        ) : selectedStateType === IOStateType.Table ? (
+          <div className="output-view-table">{renderValue()}</div>
         ) : (
           <div className="output-view-text">None</div>
         )}

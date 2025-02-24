@@ -11,8 +11,5 @@
   "devDependencies": {
     "typescript": "^5.0.0"
   },
-  "packageManager": "yarn@4.2.2",
-  "dependencies": {
-    "@tensorflow/tfjs": "^4.22.0"
-  }
+  "packageManager": "yarn@4.2.2"
 }

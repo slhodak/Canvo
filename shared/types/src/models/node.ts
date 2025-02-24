@@ -1,5 +1,3 @@
-import * as tf from '@tensorflow/tfjs';
-
 export enum NodeType {
   Text = 'text',
   Fetch = 'fetch',
@@ -54,7 +52,7 @@ export enum IOStateType {
   String = 'string',
   Number = 'number',
   StringArray = 'stringArray',
-  Tensor = 'tensor',
+  Table = 'table',
   Empty = 'empty',
 }
 
@@ -62,24 +60,24 @@ export class IOState {
   public stringValue: string | null;
   public numberValue: number | null;
   public stringArrayValue: string[] | null;
-  public tensor: tf.Tensor | null;
+  public tableValue: string[][] | null;
   public type: IOStateType;
 
   constructor({
     stringValue = null,
     numberValue = null,
     stringArrayValue = null,
-    tensor = null,
+    tableValue = null,
   }: {
     stringValue?: string | null;
     numberValue?: number | null;
     stringArrayValue?: string[] | null;
-    tensor?: tf.Tensor | null;
+    tableValue?: string[][] | null;
   }) {
     this.stringValue = stringValue;
     this.numberValue = numberValue;
     this.stringArrayValue = stringArrayValue;
-    this.tensor = tensor;
+    this.tableValue = tableValue;
     this.type = this.inferType();
   }
 
@@ -91,8 +89,8 @@ export class IOState {
         return new IOState({ numberValue: 0 });
       case IOStateType.StringArray:
         return new IOState({ stringArrayValue: [] });
-      case IOStateType.Tensor:
-        return new IOState({ tensor: tf.tensor2d([], [0, 0]) });
+      case IOStateType.Table:
+        return new IOState({ tableValue: [] });
       case IOStateType.Empty:
         return new IOState({});
     }
@@ -103,7 +101,7 @@ export class IOState {
       stringValue: object.stringValue,
       numberValue: object.numberValue,
       stringArrayValue: object.stringArrayValue,
-      tensor: object.tensor,
+      tableValue: object.tableValue,
     });
   }
 
@@ -115,14 +113,14 @@ export class IOState {
       return IOStateType.String;
     } else if (this.numberValue !== null) {
       return IOStateType.Number;
-    } else if (this.tensor !== null) {
-      return IOStateType.Tensor;
+    } else if (this.tableValue !== null) {
+      return IOStateType.Table;
     }
 
     return IOStateType.Empty;
   }
 
-  public getValue(): string | number | string[] | tf.Tensor | null {
+  public getValue(): string | number | string[] | string[][] | null {
     switch (this.type) {
       case IOStateType.String:
         return this.stringValue;
@@ -130,19 +128,19 @@ export class IOState {
         return this.numberValue;
       case IOStateType.StringArray:
         return this.stringArrayValue;
-      case IOStateType.Tensor:
-        return this.tensor;
+      case IOStateType.Table:
+        return this.tableValue;
       case IOStateType.Empty:
         return null;
     }
   }
 
-  public getStateDict(): Record<string, (string | number | string[] | tf.Tensor | null)> {
+  public getStateDict(): Record<string, (string | number | string[] | string[][] | null)> {
     return {
       stringValue: this.stringValue,
       numberValue: this.numberValue,
       stringArrayValue: this.stringArrayValue,
-      tensor: this.tensor,
+      tableValue: this.tableValue,
     };
   }
 
@@ -156,7 +154,7 @@ export class IOState {
     if (this.stringArrayValue !== null) {
       return false;
     }
-    if (this.tensor !== null) {
+    if (this.tableValue !== null) {
       return false;
     }
     return true;

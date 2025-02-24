@@ -1,4 +1,3 @@
-import * as tf from '@tensorflow/tfjs';
 import {
   NodeType,
   NodeRunType,
@@ -1024,7 +1023,7 @@ export class CSVNode extends BaseSyncNode {
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [IOState.ofType(IOStateType.StringArray)];
+    this.outputState = [IOState.ofType(IOStateType.Table)];
   }
 
   _run(inputValues: IOState[]): IOState[] {
@@ -1045,7 +1044,7 @@ export class CSVNode extends BaseSyncNode {
       return row.split(this.properties.separator.value as string);
     });
     this.outputState[0] = new IOState({
-      tensor: tf.tensor2d(result),
+      tableValue: result,
     });
     this.properties.filename.value = file.name;
   }
