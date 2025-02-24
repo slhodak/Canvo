@@ -221,9 +221,6 @@ function selectInputsByIndices(inputValues: IOState[], indexSelections: (number 
 
 export abstract class BaseSyncNode extends BaseNode {
   public run(inputValues: IOState[]): IOState[] {
-    // index-selector: if the node is doing index selection, pick the index
-    // from each outputState in the array
-    // index selection will be per input. selectedIndices
     const selectedInputValues = selectInputsByIndices(inputValues, this.indexSelections);
     const runResult = this._run(selectedInputValues);
     this.cacheOrClearIOState(runResult);
