@@ -232,7 +232,8 @@ export abstract class BaseSyncNode extends BaseNode {
 
 export abstract class BaseAsyncNode extends BaseNode {
   public async run(inputValues: IOState[]): Promise<IOState[]> {
-    const runResult = await this._run(inputValues);
+    const selectedInputValues = selectInputsByIndices(inputValues, this.indexSelections);
+    const runResult = await this._run(selectedInputValues);
     this.cacheOrClearIOState(runResult);
     return runResult;
   }
