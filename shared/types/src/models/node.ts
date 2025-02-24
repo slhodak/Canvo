@@ -15,7 +15,7 @@ export enum NodeType {
   Replace = 'replace',
   Pick = 'pick',
   Cache = 'cache',
-  CSV = 'csv',
+  CSV = 'CSV',
 }
 
 // A source node is not dependent on other nodes, and will cache its output state

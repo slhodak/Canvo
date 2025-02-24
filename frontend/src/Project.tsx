@@ -37,6 +37,8 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       setViewText(node.node.outputState[0]?.numberValue.toString() || '');
     } else if (node.node.outputState[0]?.stringArrayValue) {
       setViewText(node.node.outputState[0]?.stringArrayValue.join("\n") || '');
+    } else if (node.node.outputState[0]?.tensor) {
+      setViewText(node.node.outputState[0]?.tensor.toString() || '');
     } else {
       console.debug('Displayed node has no output state');
       setViewText('');

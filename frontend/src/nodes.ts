@@ -1,3 +1,4 @@
+import * as tf from '@tensorflow/tfjs';
 import {
   NodeType,
   NodeRunType,
@@ -970,13 +971,37 @@ export class CSVNode extends BaseSyncNode {
     coordinates: Coordinates,
     label: string = 'csv',
     display: boolean = false,
+    filename: string = '',
+    separator: string = ',',
+    lineTerminator: string = '\n',
     outputState: IOState[] = [],
   ) {
-    super(id, authorId, projectId, 'CSV', label, display, NodeType.CSV, 0, 1, coordinates, NodeRunType.Run, {
+    super(id, authorId, projectId, 'CSV', label, display, NodeType.CSV, 0, 1, coordinates, NodeRunType.Source, {
+      file: {
+        type: NodePropertyType.File,
+        label: 'File',
+        value: '',
+        editable: true,
+        displayed: true,
+      },
+      filename: {
+        type: NodePropertyType.String,
+        label: 'Filename',
+        value: filename,
+        editable: false,
+        displayed: true,
+      },
       separator: {
         type: NodePropertyType.String,
         label: 'Separator',
-        value: ',',
+        value: separator,
+        editable: true,
+        displayed: true,
+      },
+      lineTerminator: {
+        type: NodePropertyType.String,
+        label: 'Line Terminator',
+        value: lineTerminator,
         editable: true,
         displayed: true,
       }
@@ -991,6 +1016,9 @@ export class CSVNode extends BaseSyncNode {
       object.coordinates,
       object.label,
       object.display,
+      object.properties.filename.value as string,
+      object.properties.separator.value as string,
+      object.properties.lineTerminator.value as string,
       object.outputState,
     );
   }
@@ -1000,6 +1028,26 @@ export class CSVNode extends BaseSyncNode {
   }
 
   _run(inputValues: IOState[]): IOState[] {
-    return inputValues;
+    return this.outputState;
+  }
+
+  // TODO: See if there is a more efficent way to do this with tensorflow.js. Keep in mind files can be large
+  async handleFileSelect(file: File) {
+    const fileString = await file.text();
+    // Convert the file string to a 2d array
+    const rows = fileString.split(this.properties.lineTerminator.value as string);
+    const result = rows.map(row => {
+      // If the line has a trailing comma, remove it
+      // But if the last column can be null, keep it. 
+      // So far we have no way to tell if a column can be null, so for now assume it can't be
+      if (row.endsWith(this.properties.separator.value as string)) {
+        row = row.slice(0, -1);
+      }
+      return row.split(this.properties.separator.value as string);
+    });
+    this.outputState[0] = new IOState({
+      tensor: tf.tensor2d(result),
+    });
+    this.properties.filename.value = file.name;
   }
 }
