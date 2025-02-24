@@ -1,6 +1,6 @@
 import './OutputView.css';
 import { IOState, IOStateType } from '../../shared/types/src/models/node';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import * as tf from '@tensorflow/tfjs';
 
 interface OutputViewProps {
@@ -42,6 +42,10 @@ const OutputView = ({ outputState }: OutputViewProps) => {
         return 'None';
     }
   }, [selectedStateType, outputState]);
+
+  useEffect(() => {
+    setSelectedStateType(outputState.type);
+  }, [outputState]);
 
   return (
     <div className="output-view-container">
