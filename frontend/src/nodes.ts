@@ -298,7 +298,7 @@ export class MergeNode extends BaseSyncNode {
     label: string = 'merge',
     display: boolean = false,
     separator: string = ' ',
-    outputState: IOState[] = [defaultIOStates[IOStateType.String], defaultIOStates[IOStateType.String]],
+    outputState: IOState[] = [IOState.ofType(IOStateType.String), IOState.ofType(IOStateType.String)],
     indexSelections: (number | null)[] = [null, null],
   ) {
     super(id, authorId, projectId, 'Merge', label, display, NodeType.Merge, 2, 1, coordinates, NodeRunType.Run, {
