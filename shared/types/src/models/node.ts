@@ -50,53 +50,52 @@ export interface Coordinates {
   y: number;
 }
 
-export interface IOState {
-  stringValue: string | null;
-  numberValue: number | null;
-  stringArrayValue: string[] | null;
-  tensor: tf.Tensor | null;
-}
-
 export enum IOStateType {
   String = 'string',
   Number = 'number',
   StringArray = 'stringArray',
   Tensor = 'tensor',
+  Empty = 'empty',
 }
 
-export const emptyIOState: IOState = {
-  stringValue: null,
-  numberValue: null,
-  stringArrayValue: null,
-  tensor: null,
-};
+export class IOState {
+  public stringValue: string | null;
+  public numberValue: number | null;
+  public stringArrayValue: string[] | null;
+  public tensor: tf.Tensor | null;
 
-export const defaultIOStates: Record<IOStateType, IOState> = {
-  [IOStateType.String]: {
-    stringValue: '',
-    numberValue: null,
-    stringArrayValue: null,
-    tensor: null,
-  },
-  [IOStateType.Number]: {
-    stringValue: null,
-    numberValue: null,
-    stringArrayValue: null,
-    tensor: null,
-  },
-  [IOStateType.StringArray]: {
-    stringValue: null,
-    numberValue: null,
-    stringArrayValue: [],
-    tensor: null,
-  },
-  [IOStateType.Tensor]: {
-    stringValue: null,
-    numberValue: null,
-    stringArrayValue: null,
-    tensor: tf.tensor2d([], [0, 0]),
-  },
-};
+  constructor({
+    stringValue = null,
+    numberValue = null,
+    stringArrayValue = null,
+    tensor = null,
+  }: {
+    stringValue?: string | null;
+    numberValue?: number | null;
+    stringArrayValue?: string[] | null;
+    tensor?: tf.Tensor | null;
+  }) {
+    this.stringValue = stringValue;
+    this.numberValue = numberValue;
+    this.stringArrayValue = stringArrayValue;
+    this.tensor = tensor;
+  }
+
+  public static ofType(type: IOStateType): IOState {
+    switch (type) {
+      case IOStateType.String:
+        return new IOState({ stringValue: '' });
+      case IOStateType.Number:
+        return new IOState({ numberValue: 0 });
+      case IOStateType.StringArray:
+        return new IOState({ stringArrayValue: [] });
+      case IOStateType.Tensor:
+        return new IOState({ tensor: tf.tensor2d([], [0, 0]) });
+      case IOStateType.Empty:
+        return new IOState({});
+    }
+  }
+}
 
 // index-selector: the node may need to do index selection on its input.
 // this means that it expects a string input
@@ -213,11 +212,9 @@ function selectInputsByIndices(inputValues: IOState[], indexSelections: (number 
       continue;
     }
 
-    selectedInputValues.push({
+    selectedInputValues.push(new IOState({
       stringValue: inputStringArrayValue[selectedIndexForInput],
-      numberValue: null,
-      stringArrayValue: null,
-    });
+    }));
   }
   return selectedInputValues;
 }

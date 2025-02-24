@@ -7,7 +7,6 @@ import {
   IOState,
   Coordinates,
   IOStateType,
-  defaultIOStates,
   NodePropertyType,
 } from '../../shared/types/src/models/node';
 import { LLMResponse } from '../../shared/types/src/models/LLMResponse';
@@ -50,26 +49,18 @@ export class TextNode extends BaseSyncNode {
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.String]];
+    this.outputState = [IOState.ofType(IOStateType.String)];
   }
 
   public override setProperty(key: string, value: string | number) {
     this.properties[key].value = value;
-    this.outputState = [{
-      stringValue: value as string,
-      numberValue: null,
-      stringArrayValue: null,
-    }];
+    this.outputState = [new IOState({ stringValue: value as string })];
     updateNode(this);
   }
 
   // Every node accepts an array of input values, but sometimes that array is empty
   _run(inputValues: IOState[]): IOState[] {
-    return [{
-      stringValue: this.properties.text.value as string,
-      numberValue: null,
-      stringArrayValue: null,
-    }];
+    return [new IOState({ stringValue: this.properties.text.value as string })];
   }
 }
 
@@ -109,14 +100,14 @@ export class FetchNode extends BaseAsyncNode {
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.String]];
+    this.outputState = [IOState.ofType(IOStateType.String)];
   }
 
   async _run(inputValues: IOState[]): Promise<IOState[]> {
     const url = this.properties.url.value as string;
     if (!url) {
       console.warn(`Will not run FetchNode, no URL provided for node ${this.nodeId}`);
-      return [defaultIOStates[IOStateType.String]];
+      return [IOState.ofType(IOStateType.String)];
     }
 
     const response = await fetch(`${SERVER_URL}/api/run_fetch`, {
@@ -129,14 +120,10 @@ export class FetchNode extends BaseAsyncNode {
     });
     const data = await response.json();
     if (data.status === 'success') {
-      return [{
-        stringValue: data.text,
-        numberValue: null,
-        stringArrayValue: null,
-      }];
+      return [new IOState({ stringValue: data.text })];
     } else {
       console.error('Error running fetch:', data.error);
-      return [defaultIOStates[IOStateType.String]];
+      return [IOState.ofType(IOStateType.String)];
     }
   }
 }
@@ -179,14 +166,14 @@ export class PromptNode extends BaseAsyncNode {
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.String]];
+    this.outputState = [IOState.ofType(IOStateType.String)];
   }
 
   async _run(inputValues: IOState[]): Promise<IOState[]> {
-    if (!inputValues[0]) return [defaultIOStates[IOStateType.String]];
+    if (!inputValues[0]) return [IOState.ofType(IOStateType.String)];
 
     if (!this.properties.prompt.value || this.properties.prompt.value === '') {
-      return [defaultIOStates[IOStateType.String]];
+      return [IOState.ofType(IOStateType.String)];
     }
 
     // Call the LLM with the prompt and the input text
@@ -206,18 +193,14 @@ export class PromptNode extends BaseAsyncNode {
       });
       const data: LLMResponse = await response.json() as LLMResponse;
       if (data.status === 'success') {
-        return [{
-          stringValue: data.result,
-          numberValue: null,
-          stringArrayValue: null,
-        }];
+        return [new IOState({ stringValue: data.result })];
       } else {
         console.error('Error running prompt:', data.error);
-        return [defaultIOStates[IOStateType.String]];
+        return [IOState.ofType(IOStateType.String)];
       }
     } catch (error) {
       console.error('Error running prompt:', error);
-      return [defaultIOStates[IOStateType.String]];
+      return [IOState.ofType(IOStateType.String)];
     }
   }
 }
@@ -274,7 +257,7 @@ export class SaveNode extends BaseAsyncNode {
     const inputText = inputValues[0]?.stringValue;
     if (!inputText) {
       this.properties.status.value = 'No input to save';
-      return [defaultIOStates[IOStateType.String]];
+      return [IOState.ofType(IOStateType.String)];
     }
 
     try {
@@ -302,7 +285,7 @@ export class SaveNode extends BaseAsyncNode {
       this.properties.status.value = `Error saving file: ${error instanceof Error ? error.message : 'Unknown error'}`;
     }
 
-    return [defaultIOStates[IOStateType.String]];
+    return [IOState.ofType(IOStateType.String)];
   }
 }
 
@@ -344,7 +327,7 @@ export class MergeNode extends BaseSyncNode {
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.String]];
+    this.outputState = [IOState.ofType(IOStateType.String)];
   }
 
   _run(inputValues: IOState[]): IOState[] {
@@ -361,11 +344,7 @@ export class MergeNode extends BaseSyncNode {
       }
     }
 
-    return [{
-      stringValue: mergedResult,
-      numberValue: null,
-      stringArrayValue: null,
-    }];
+    return [new IOState({ stringValue: mergedResult })];
   }
 }
 
@@ -407,7 +386,7 @@ export class SplitNode extends BaseSyncNode {
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.StringArray]];
+    this.outputState = [IOState.ofType(IOStateType.StringArray)];
   }
 
   _run(inputValues: IOState[]): IOState[] {
@@ -415,15 +394,11 @@ export class SplitNode extends BaseSyncNode {
     const separator = this.properties.separator.value as string;
     const inputText = inputValues[0]?.stringValue as string;
     if (!inputText) {
-      return [defaultIOStates[IOStateType.StringArray]];
+      return [IOState.ofType(IOStateType.StringArray)];
     }
 
     const parts = inputText.split(separator);
-    return [{
-      stringValue: null,
-      numberValue: null,
-      stringArrayValue: parts,
-    }];
+    return [new IOState({ stringArrayValue: parts })];
   }
 }
 
@@ -470,7 +445,7 @@ export class FileNode extends BaseSyncNode {
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.String]];
+    this.outputState = [IOState.ofType(IOStateType.String)];
   }
 
   _run(inputValues: IOState[]): IOState[] {
@@ -480,11 +455,9 @@ export class FileNode extends BaseSyncNode {
   // Kind of unusual behavior to have the input computed here instead of '_run',
   // but I don't want to save the File object to a property so 'runNode' can access it later.
   async handleFileSelect(file: File) {
-    this.outputState[0] = {
+    this.outputState[0] = new IOState({
       stringValue: await file.text(),
-      numberValue: null,
-      stringArrayValue: null,
-    };
+    });
     this.properties.filename.value = file.name;
   }
 }
@@ -527,25 +500,21 @@ export class EditNode extends BaseSyncNode {
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.String]];
+    this.outputState = [IOState.ofType(IOStateType.String)];
   }
 
   _run(inputValues: IOState[]): IOState[] {
     if (!inputValues[0]) {
-      return [defaultIOStates[IOStateType.String]];
+      return [IOState.ofType(IOStateType.String)];
     }
 
     const content = inputValues[0].stringValue as string;
     if (!content) {
-      return [defaultIOStates[IOStateType.String]];
+      return [IOState.ofType(IOStateType.String)];
     }
 
     this.properties.content.value = content;
-    return [{
-      stringValue: content,
-      numberValue: null,
-      stringArrayValue: null,
-    }];
+    return [new IOState({ stringValue: content })];
   }
 }
 
@@ -614,11 +583,11 @@ export class EmbedNode extends BaseAsyncNode {
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.String]];
+    this.outputState = [IOState.ofType(IOStateType.String)];
   }
 
   async _run(inputValues: IOState[]): Promise<IOState[]> {
-    if (!inputValues[0]?.stringValue) return [defaultIOStates[IOStateType.String]];
+    if (!inputValues[0]?.stringValue) return [IOState.ofType(IOStateType.String)];
 
     try {
       this.properties.status.value = 'Processing...';
@@ -638,13 +607,13 @@ export class EmbedNode extends BaseAsyncNode {
 
       if (!response.ok) {
         this.properties.status.value = `Error: ${response.statusText}`;
-        return [defaultIOStates[IOStateType.String]];
+        return [IOState.ofType(IOStateType.String)];
       }
 
       const result = await response.json();
       if (result.status === 'failed') {
         this.properties.status.value = `Error: ${result.error}`;
-        return [defaultIOStates[IOStateType.String]];
+        return [IOState.ofType(IOStateType.String)];
       }
 
       // Set success status with chunk count
@@ -652,18 +621,14 @@ export class EmbedNode extends BaseAsyncNode {
       this.properties.status.value = result.message;
 
       // Pass on the document ID to the next node
-      const outputState = [{
-        stringValue: this.properties.documentId.value as string,
-        numberValue: null,
-        stringArrayValue: null,
-      }];
+      const outputState = [new IOState({ stringValue: this.properties.documentId.value as string })];
       updateNode(this);
       return outputState;
     } catch (error: unknown) {
       console.error('Error in EmbedNode:', error);
       this.properties.status.value = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
       this.properties.documentId.value = '';
-      return [defaultIOStates[IOStateType.String]];
+      return [IOState.ofType(IOStateType.String)];
     }
   }
 }
@@ -745,11 +710,11 @@ export class SearchNode extends BaseAsyncNode {
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.StringArray]];
+    this.outputState = [IOState.ofType(IOStateType.StringArray)];
   }
 
   async _run(inputValues: IOState[]): Promise<IOState[]> {
-    if (!inputValues[0]?.stringValue) return [defaultIOStates[IOStateType.StringArray]];
+    if (!inputValues[0]?.stringValue) return [IOState.ofType(IOStateType.StringArray)];
 
     this.properties.documentId.value = inputValues[0].stringValue as string;
     try {
@@ -771,7 +736,7 @@ export class SearchNode extends BaseAsyncNode {
 
       if (!aiResponse.ok) {
         this.properties.status.value = `Error: ${aiResponse.statusText}`;
-        return [defaultIOStates[IOStateType.StringArray]];
+        return [IOState.ofType(IOStateType.StringArray)];
       }
 
       const result = await aiResponse.json();
@@ -779,15 +744,11 @@ export class SearchNode extends BaseAsyncNode {
       updateNode(this);
 
       // Output the results as a string array
-      return [{
-        stringValue: null,
-        numberValue: null,
-        stringArrayValue: result.search_results,
-      }];
+      return [new IOState({ stringArrayValue: result.search_results })];
     } catch (error: unknown) {
       console.error('Error in SearchNode:', error);
       this.properties.status.value = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
-      return [defaultIOStates[IOStateType.StringArray]];
+      return [IOState.ofType(IOStateType.StringArray)];
     }
   }
 }
@@ -828,12 +789,12 @@ export class JoinNode extends BaseSyncNode {
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.StringArray]];
+    this.outputState = [IOState.ofType(IOStateType.StringArray)];
   }
 
   _run(inputValues: IOState[]): IOState[] {
     if (!inputValues[0]?.stringArrayValue) {
-      return [defaultIOStates[IOStateType.StringArray]];
+      return [IOState.ofType(IOStateType.StringArray)];
     }
 
     // Join the array elements with the separator
@@ -841,11 +802,7 @@ export class JoinNode extends BaseSyncNode {
       this.properties.separator.value as string
     );
 
-    return [{
-      stringValue: joinedString,
-      numberValue: null,
-      stringArrayValue: null,
-    }];
+    return [new IOState({ stringValue: joinedString })];
   }
 }
 
@@ -893,22 +850,18 @@ export class ReplaceNode extends BaseSyncNode {
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.String]];
+    this.outputState = [IOState.ofType(IOStateType.String)];
   }
 
   _run(inputValues: IOState[]): IOState[] {
-    if (!inputValues[0]?.stringValue) return [defaultIOStates[IOStateType.String]];
+    if (!inputValues[0]?.stringValue) return [IOState.ofType(IOStateType.String)];
 
     const search = this.properties.search.value as string;
     const replace = this.properties.replace.value as string;
 
     const replacedString = inputValues[0].stringValue.replaceAll(search, replace);
 
-    return [{
-      stringValue: replacedString,
-      numberValue: null,
-      stringArrayValue: null,
-    }];
+    return [new IOState({ stringValue: replacedString })];
   }
 }
 
@@ -949,20 +902,16 @@ export class PickNode extends BaseSyncNode {
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.String]];
+    this.outputState = [IOState.ofType(IOStateType.String)];
   }
 
   _run(inputValues: IOState[]): IOState[] {
-    if (!inputValues[0]?.stringArrayValue) return [defaultIOStates[IOStateType.String]];
+    if (!inputValues[0]?.stringArrayValue) return [IOState.ofType(IOStateType.String)];
 
     const index = this.properties.index.value as number;
     const pickedString = inputValues[0].stringArrayValue[index];
 
-    return [{
-      stringValue: pickedString,
-      numberValue: null,
-      stringArrayValue: null,
-    }];
+    return [new IOState({ stringValue: pickedString })];
   }
 }
 
@@ -1003,7 +952,7 @@ export class CacheNode extends BaseSyncNode {
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.String]];
+    this.outputState = [IOState.ofType(IOStateType.String)];
   }
 
   _run(inputValues: IOState[]): IOState[] {
@@ -1047,7 +996,7 @@ export class CSVNode extends BaseSyncNode {
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.StringArray]];
+    this.outputState = [IOState.ofType(IOStateType.StringArray)];
   }
 
   _run(inputValues: IOState[]): IOState[] {

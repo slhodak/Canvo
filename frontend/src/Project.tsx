@@ -2,7 +2,7 @@ import './Project.css';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { VisualNode, VisualConnection } from './NetworkTypes';
-import { BaseNode, NodeRunType, IOState, emptyIOState, IOStateType } from '../../shared/types/src/models/node';
+import { BaseNode, NodeRunType, IOState, IOStateType } from '../../shared/types/src/models/node';
 import { Connection } from '../../shared/types/src/models/connection';
 import { ConnectionUtils as cu, NodeUtils as nu } from './Utils';
 import NetworkEditor from './NetworkEditor';
@@ -205,14 +205,14 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       const inputNode = nodes[conn.connection.fromNode];
       if (!inputNode) {
         console.warn("Input node not found for connection:", conn.connection.connectionId);
-        inputValues.push(emptyIOState);
+        inputValues.push(IOState.ofType(IOStateType.Empty));
         continue;
       };
 
       const outputState = inputNode.node.outputState[conn.connection.fromOutput];
       if (outputState === null) {
         console.warn("Output state not found for connection:", conn.connection.connectionId);
-        inputValues.push(emptyIOState);
+        inputValues.push(IOState.ofType(IOStateType.Empty));
         continue;
       }
 
