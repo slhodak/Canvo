@@ -63,6 +63,7 @@ export class IOState {
   public numberValue: number | null;
   public stringArrayValue: string[] | null;
   public tensor: tf.Tensor | null;
+  public type: IOStateType;
 
   constructor({
     stringValue = null,
@@ -79,6 +80,7 @@ export class IOState {
     this.numberValue = numberValue;
     this.stringArrayValue = stringArrayValue;
     this.tensor = tensor;
+    this.type = this.inferType();
   }
 
   public static ofType(type: IOStateType): IOState {
@@ -94,6 +96,21 @@ export class IOState {
       case IOStateType.Empty:
         return new IOState({});
     }
+  }
+
+  // For now, IOState can only have one type
+  private inferType(): IOStateType {
+    if (this.stringArrayValue !== null) {
+      return IOStateType.StringArray;
+    } else if (this.stringValue !== null) {
+      return IOStateType.String;
+    } else if (this.numberValue !== null) {
+      return IOStateType.Number;
+    } else if (this.tensor !== null) {
+      return IOStateType.Tensor;
+    }
+
+    return IOStateType.Empty;
   }
 }
 

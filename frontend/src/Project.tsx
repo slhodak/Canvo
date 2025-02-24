@@ -380,7 +380,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       console.error(`Error while enabling index selection: no output state found for node ${fromNodeId} output ${fromOutput}`);
       return;
     }
-    const fromNodeOutputType = nu.inferOutputType(fromNodeIOState);
+    const fromNodeOutputType = fromNodeIOState.type;
     const toNodeInputType = toNode.node.inputTypes[inputIndex];
     if (fromNodeOutputType == IOStateType.StringArray && toNodeInputType == IOStateType.String) {
       toNode.node.indexSelections[inputIndex] = 0;
