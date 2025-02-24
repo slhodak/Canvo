@@ -1,3 +1,5 @@
+import * as tf from '@tensorflow/tfjs';
+
 export enum NodeType {
   Text = 'text',
   Fetch = 'fetch',
@@ -13,6 +15,7 @@ export enum NodeType {
   Replace = 'replace',
   Pick = 'pick',
   Cache = 'cache',
+  CSV = 'csv',
 }
 
 // A source node is not dependent on other nodes, and will cache its output state
@@ -51,18 +54,21 @@ export interface IOState {
   stringValue: string | null;
   numberValue: number | null;
   stringArrayValue: string[] | null;
+  tensor: tf.Tensor | null;
 }
 
 export enum IOStateType {
   String = 'string',
   Number = 'number',
   StringArray = 'stringArray',
+  Tensor = 'tensor',
 }
 
 export const emptyIOState: IOState = {
   stringValue: null,
   numberValue: null,
   stringArrayValue: null,
+  tensor: null,
 };
 
 export const defaultIOStates: Record<IOStateType, IOState> = {
@@ -70,16 +76,25 @@ export const defaultIOStates: Record<IOStateType, IOState> = {
     stringValue: '',
     numberValue: null,
     stringArrayValue: null,
+    tensor: null,
   },
   [IOStateType.Number]: {
     stringValue: null,
     numberValue: null,
     stringArrayValue: null,
+    tensor: null,
   },
   [IOStateType.StringArray]: {
     stringValue: null,
     numberValue: null,
     stringArrayValue: [],
+    tensor: null,
+  },
+  [IOStateType.Tensor]: {
+    stringValue: null,
+    numberValue: null,
+    stringArrayValue: null,
+    tensor: tf.tensor2d([], [0, 0]),
   },
 };
 

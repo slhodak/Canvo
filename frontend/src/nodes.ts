@@ -1011,3 +1011,46 @@ export class CacheNode extends BaseSyncNode {
     return inputValues;
   }
 }
+
+// The CSV node reads a file and converts it to a 2d array
+export class CSVNode extends BaseSyncNode {
+  constructor(
+    id: string,
+    authorId: string,
+    projectId: string,
+    coordinates: Coordinates,
+    label: string = 'csv',
+    display: boolean = false,
+    outputState: IOState[] = [],
+  ) {
+    super(id, authorId, projectId, 'CSV', label, display, NodeType.CSV, 0, 1, coordinates, NodeRunType.Run, {
+      separator: {
+        type: NodePropertyType.String,
+        label: 'Separator',
+        value: ',',
+        editable: true,
+        displayed: true,
+      }
+    }, [IOStateType.StringArray], outputState);
+  }
+
+  public static override fromObject(object: BaseNode): BaseNode {
+    return new CSVNode(
+      object.nodeId,
+      object.authorId,
+      object.projectId,
+      object.coordinates,
+      object.label,
+      object.display,
+      object.outputState,
+    );
+  }
+
+  protected override resetOutputState(): void {
+    this.outputState = [defaultIOStates[IOStateType.StringArray]];
+  }
+
+  _run(inputValues: IOState[]): IOState[] {
+    return inputValues;
+  }
+}
