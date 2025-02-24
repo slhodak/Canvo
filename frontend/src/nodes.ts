@@ -1031,7 +1031,6 @@ export class CSVNode extends BaseSyncNode {
     return this.outputState;
   }
 
-  // TODO: See if there is a more efficent way to do this with tensorflow.js. Keep in mind files can be large
   async handleFileSelect(file: File) {
     const fileString = await file.text();
     // Convert the file string to a 2d array
