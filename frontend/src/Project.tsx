@@ -39,6 +39,26 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     }
   }
 
+  const updateDisplayedNode = async (node: VisualNode) => {
+    node.node.display = !node.node.display;
+    // If this node is being displayed, undisplay all other nodes
+    if (node.node.display) {
+      const newNodes = { ...nodes };
+      Object.values(newNodes).forEach(n => {
+        if (n.node.display && n.node.nodeId !== node.node.nodeId) {
+          n.node.display = false;
+        }
+      });
+      setNodes(newNodes);
+      if (node.node.nodeRunType === NodeRunType.Run) {
+        await runNode(node);
+      }
+      updateViewState(node);
+    } else {
+      setViewState(IOState.ofType(IOStateType.String));
+    }
+  }
+
   //////////////////////////////
   // Fetch Nodes & Connections
   //////////////////////////////
@@ -259,26 +279,6 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       await runNode(node);
     }
   }, [runNode]);
-
-  const updateDisplayedNode = async (node: VisualNode) => {
-    node.node.display = !node.node.display;
-    // If this node is being displayed, undisplay all other nodes
-    if (node.node.display) {
-      const newNodes = { ...nodes };
-      Object.values(newNodes).forEach(n => {
-        if (n.node.display && n.node.nodeId !== node.node.nodeId) {
-          n.node.display = false;
-        }
-      });
-      setNodes(newNodes);
-      if (node.node.nodeRunType === NodeRunType.Run) {
-        await runNode(node);
-      }
-      updateViewState(node);
-    } else {
-      setViewState(IOState.ofType(IOStateType.String));
-    }
-  }
 
   //////////////////////////////
   // Sync Connections
