@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import './Menu.css';
-import BurgerMenu from "./assets/BurgerMenu";
 import PlusIcon from "./assets/PlusIcon";
 import { SERVER_URL } from "./constants";
 import { ProjectModel } from '../../shared/types/src/models/project';
@@ -109,11 +108,8 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
   }, []);
 
   return (
-    <div className={`menu-container ${isCollapsed ? 'collapsed' : 'expanded'}`}>
+    <div className="menu-container">
       <div className="menu-header-container">
-        <button className="collapse-button" onClick={() => setIsCollapsed(!isCollapsed)}>
-          <BurgerMenu isCollapsed={isCollapsed} strokeColor={"var(--font-color-light)"} />
-        </button>
         <h2 className="app-title-header">{isCollapsed ? 'C' : 'Canvo'}</h2>
       </div>
       {!isCollapsed && (

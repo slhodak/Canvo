@@ -10,16 +10,6 @@
   height: 100%;
 }
 
-.menu-container.collapsed {
-  transition: width 0.3s ease-in-out;
-  width: 62px;
-}
-
-.menu-container.expanded {
-  transition: width 0.3s ease-in-out;
-  width: 200px;
-}
-
 /* Menu Header */
 
 .menu-header-container {
@@ -35,29 +25,6 @@
 .menu-header-container h2 {
   margin: 0px;
   padding: 0px;
-}
-
-.collapse-button {
-  border: none;
-  background-color: transparent;
-  height: 30px;
-  width: 30px;
-  padding: 0px;
-  outline: none;
-}
-
-.collapse-button:focus {
-  outline: none;
-}
-
-.collapse-button .expanded {
-  transition: transform 0.3s ease-in-out;
-  transform: rotate(0deg);
-}
-
-.collapse-button .collapsed {
-  transition: transform 0.3s ease-in-out;
-  transform: rotate(90deg);
 }
 
 .app-title-header {
