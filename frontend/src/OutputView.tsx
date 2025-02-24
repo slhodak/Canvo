@@ -10,6 +10,7 @@ interface OutputViewProps {
 // Let there be multiple panes for the output view
 const OutputView = ({ outputState }: OutputViewProps) => {
   const [selectedStateType, setSelectedStateType] = useState<IOStateType>(outputState.type);
+  const validOutputTypes = Object.values(IOStateType).filter((type) => type !== IOStateType.Empty);
 
   const renderValue = useCallback((): string => {
     // Just because a state type is selected doesn't mean this output state has any value of that type
@@ -50,7 +51,7 @@ const OutputView = ({ outputState }: OutputViewProps) => {
   return (
     <div className="output-view-container">
       <div className="output-view-selector">
-        {Object.values(IOStateType).map((type) => {
+        {validOutputTypes.map((type) => {
           const isSelected = selectedStateType === type;
           return (
             <button

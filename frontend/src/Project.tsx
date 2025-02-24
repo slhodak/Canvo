@@ -32,7 +32,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   // Notice that this only displays the first output state
   const updateViewState = (node: VisualNode) => {
     const outputState = node.node.outputState[0];
-    if (outputState === null || outputState.isEmpty()) {
+    if (outputState === null || outputState === undefined || outputState.isEmpty()) {
       setViewState(IOState.ofType(IOStateType.String));
     } else {
       setViewState(outputState);
