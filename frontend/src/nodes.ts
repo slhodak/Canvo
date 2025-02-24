@@ -1,3 +1,4 @@
+import * as tf from '@tensorflow/tfjs';
 import {
   NodeType,
   NodeRunType,
@@ -7,7 +8,6 @@ import {
   IOState,
   Coordinates,
   IOStateType,
-  defaultIOStates,
   NodePropertyType,
 } from '../../shared/types/src/models/node';
 import { LLMResponse } from '../../shared/types/src/models/LLMResponse';
@@ -45,31 +45,23 @@ export class TextNode extends BaseSyncNode {
       object.label,
       object.display,
       object.properties.text.value as string,
-      object.outputState,
+      object.outputState.map(IOState.fromObject),
     );
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.String]];
+    this.outputState = [IOState.ofType(IOStateType.String)];
   }
 
   public override setProperty(key: string, value: string | number) {
     this.properties[key].value = value;
-    this.outputState = [{
-      stringValue: value as string,
-      numberValue: null,
-      stringArrayValue: null,
-    }];
+    this.outputState = [new IOState({ stringValue: value as string })];
     updateNode(this);
   }
 
   // Every node accepts an array of input values, but sometimes that array is empty
   _run(inputValues: IOState[]): IOState[] {
-    return [{
-      stringValue: this.properties.text.value as string,
-      numberValue: null,
-      stringArrayValue: null,
-    }];
+    return [new IOState({ stringValue: this.properties.text.value as string })];
   }
 }
 
@@ -104,19 +96,19 @@ export class FetchNode extends BaseAsyncNode {
       object.label,
       object.display,
       object.properties.url.value as string,
-      object.outputState,
+      object.outputState.map(IOState.fromObject),
     );
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.String]];
+    this.outputState = [IOState.ofType(IOStateType.String)];
   }
 
   async _run(inputValues: IOState[]): Promise<IOState[]> {
     const url = this.properties.url.value as string;
     if (!url) {
       console.warn(`Will not run FetchNode, no URL provided for node ${this.nodeId}`);
-      return [defaultIOStates[IOStateType.String]];
+      return [IOState.ofType(IOStateType.String)];
     }
 
     const response = await fetch(`${SERVER_URL}/api/run_fetch`, {
@@ -129,14 +121,10 @@ export class FetchNode extends BaseAsyncNode {
     });
     const data = await response.json();
     if (data.status === 'success') {
-      return [{
-        stringValue: data.text,
-        numberValue: null,
-        stringArrayValue: null,
-      }];
+      return [new IOState({ stringValue: data.text })];
     } else {
       console.error('Error running fetch:', data.error);
-      return [defaultIOStates[IOStateType.String]];
+      return [IOState.ofType(IOStateType.String)];
     }
   }
 }
@@ -173,20 +161,20 @@ export class PromptNode extends BaseAsyncNode {
       object.label,
       object.display,
       object.properties.prompt.value as string,
-      object.outputState,
+      object.outputState.map(IOState.fromObject),
       object.indexSelections
     );
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.String]];
+    this.outputState = [IOState.ofType(IOStateType.String)];
   }
 
   async _run(inputValues: IOState[]): Promise<IOState[]> {
-    if (!inputValues[0]) return [defaultIOStates[IOStateType.String]];
+    if (!inputValues[0]) return [IOState.ofType(IOStateType.String)];
 
     if (!this.properties.prompt.value || this.properties.prompt.value === '') {
-      return [defaultIOStates[IOStateType.String]];
+      return [IOState.ofType(IOStateType.String)];
     }
 
     // Call the LLM with the prompt and the input text
@@ -206,18 +194,14 @@ export class PromptNode extends BaseAsyncNode {
       });
       const data: LLMResponse = await response.json() as LLMResponse;
       if (data.status === 'success') {
-        return [{
-          stringValue: data.result,
-          numberValue: null,
-          stringArrayValue: null,
-        }];
+        return [new IOState({ stringValue: data.result })];
       } else {
         console.error('Error running prompt:', data.error);
-        return [defaultIOStates[IOStateType.String]];
+        return [IOState.ofType(IOStateType.String)];
       }
     } catch (error) {
       console.error('Error running prompt:', error);
-      return [defaultIOStates[IOStateType.String]];
+      return [IOState.ofType(IOStateType.String)];
     }
   }
 }
@@ -261,7 +245,7 @@ export class SaveNode extends BaseAsyncNode {
       object.label,
       object.display,
       object.properties.filename.value as string,
-      object.outputState,
+      object.outputState.map(IOState.fromObject),
       object.indexSelections
     );
   }
@@ -274,7 +258,7 @@ export class SaveNode extends BaseAsyncNode {
     const inputText = inputValues[0]?.stringValue;
     if (!inputText) {
       this.properties.status.value = 'No input to save';
-      return [defaultIOStates[IOStateType.String]];
+      return [IOState.ofType(IOStateType.String)];
     }
 
     try {
@@ -302,7 +286,7 @@ export class SaveNode extends BaseAsyncNode {
       this.properties.status.value = `Error saving file: ${error instanceof Error ? error.message : 'Unknown error'}`;
     }
 
-    return [defaultIOStates[IOStateType.String]];
+    return [IOState.ofType(IOStateType.String)];
   }
 }
 
@@ -315,7 +299,7 @@ export class MergeNode extends BaseSyncNode {
     label: string = 'merge',
     display: boolean = false,
     separator: string = ' ',
-    outputState: IOState[] = [defaultIOStates[IOStateType.String], defaultIOStates[IOStateType.String]],
+    outputState: IOState[] = [IOState.ofType(IOStateType.String), IOState.ofType(IOStateType.String)],
     indexSelections: (number | null)[] = [null, null],
   ) {
     super(id, authorId, projectId, 'Merge', label, display, NodeType.Merge, 2, 1, coordinates, NodeRunType.Run, {
@@ -338,13 +322,13 @@ export class MergeNode extends BaseSyncNode {
       object.label,
       object.display,
       object.properties.separator.value as string,
-      object.outputState,
+      object.outputState.map(IOState.fromObject),
       object.indexSelections
     );
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.String]];
+    this.outputState = [IOState.ofType(IOStateType.String)];
   }
 
   _run(inputValues: IOState[]): IOState[] {
@@ -361,11 +345,7 @@ export class MergeNode extends BaseSyncNode {
       }
     }
 
-    return [{
-      stringValue: mergedResult,
-      numberValue: null,
-      stringArrayValue: null,
-    }];
+    return [new IOState({ stringValue: mergedResult })];
   }
 }
 
@@ -401,13 +381,13 @@ export class SplitNode extends BaseSyncNode {
       object.label,
       object.display,
       object.properties.separator.value as string,
-      object.outputState,
+      object.outputState.map(IOState.fromObject),
       object.indexSelections
     );
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.StringArray]];
+    this.outputState = [IOState.ofType(IOStateType.StringArray)];
   }
 
   _run(inputValues: IOState[]): IOState[] {
@@ -415,15 +395,11 @@ export class SplitNode extends BaseSyncNode {
     const separator = this.properties.separator.value as string;
     const inputText = inputValues[0]?.stringValue as string;
     if (!inputText) {
-      return [defaultIOStates[IOStateType.StringArray]];
+      return [IOState.ofType(IOStateType.StringArray)];
     }
 
     const parts = inputText.split(separator);
-    return [{
-      stringValue: null,
-      numberValue: null,
-      stringArrayValue: parts,
-    }];
+    return [new IOState({ stringArrayValue: parts })];
   }
 }
 
@@ -465,12 +441,12 @@ export class FileNode extends BaseSyncNode {
       object.label,
       object.display,
       object.properties.filename.value as string,
-      object.outputState
+      object.outputState.map(IOState.fromObject),
     );
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.String]];
+    this.outputState = [IOState.ofType(IOStateType.String)];
   }
 
   _run(inputValues: IOState[]): IOState[] {
@@ -480,11 +456,9 @@ export class FileNode extends BaseSyncNode {
   // Kind of unusual behavior to have the input computed here instead of '_run',
   // but I don't want to save the File object to a property so 'runNode' can access it later.
   async handleFileSelect(file: File) {
-    this.outputState[0] = {
+    this.outputState[0] = new IOState({
       stringValue: await file.text(),
-      numberValue: null,
-      stringArrayValue: null,
-    };
+    });
     this.properties.filename.value = file.name;
   }
 }
@@ -521,31 +495,27 @@ export class EditNode extends BaseSyncNode {
       object.label,
       object.display,
       object.properties.content.value as string,
-      object.outputState,
+      object.outputState.map(IOState.fromObject),
       object.indexSelections
     );
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.String]];
+    this.outputState = [IOState.ofType(IOStateType.String)];
   }
 
   _run(inputValues: IOState[]): IOState[] {
     if (!inputValues[0]) {
-      return [defaultIOStates[IOStateType.String]];
+      return [IOState.ofType(IOStateType.String)];
     }
 
     const content = inputValues[0].stringValue as string;
     if (!content) {
-      return [defaultIOStates[IOStateType.String]];
+      return [IOState.ofType(IOStateType.String)];
     }
 
     this.properties.content.value = content;
-    return [{
-      stringValue: content,
-      numberValue: null,
-      stringArrayValue: null,
-    }];
+    return [new IOState({ stringValue: content })];
   }
 }
 
@@ -608,17 +578,17 @@ export class EmbedNode extends BaseAsyncNode {
       object.properties.chunkSize.value as number,
       object.properties.overlap.value as number,
       object.properties.status.value as string,
-      object.outputState,
+      object.outputState.map(IOState.fromObject),
       object.indexSelections
     );
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.String]];
+    this.outputState = [IOState.ofType(IOStateType.String)];
   }
 
   async _run(inputValues: IOState[]): Promise<IOState[]> {
-    if (!inputValues[0]?.stringValue) return [defaultIOStates[IOStateType.String]];
+    if (!inputValues[0]?.stringValue) return [IOState.ofType(IOStateType.String)];
 
     try {
       this.properties.status.value = 'Processing...';
@@ -638,13 +608,13 @@ export class EmbedNode extends BaseAsyncNode {
 
       if (!response.ok) {
         this.properties.status.value = `Error: ${response.statusText}`;
-        return [defaultIOStates[IOStateType.String]];
+        return [IOState.ofType(IOStateType.String)];
       }
 
       const result = await response.json();
       if (result.status === 'failed') {
         this.properties.status.value = `Error: ${result.error}`;
-        return [defaultIOStates[IOStateType.String]];
+        return [IOState.ofType(IOStateType.String)];
       }
 
       // Set success status with chunk count
@@ -652,18 +622,14 @@ export class EmbedNode extends BaseAsyncNode {
       this.properties.status.value = result.message;
 
       // Pass on the document ID to the next node
-      const outputState = [{
-        stringValue: this.properties.documentId.value as string,
-        numberValue: null,
-        stringArrayValue: null,
-      }];
+      const outputState = [new IOState({ stringValue: this.properties.documentId.value as string })];
       updateNode(this);
       return outputState;
     } catch (error: unknown) {
       console.error('Error in EmbedNode:', error);
       this.properties.status.value = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
       this.properties.documentId.value = '';
-      return [defaultIOStates[IOStateType.String]];
+      return [IOState.ofType(IOStateType.String)];
     }
   }
 }
@@ -739,17 +705,17 @@ export class SearchNode extends BaseAsyncNode {
       object.properties.status.value as string,
       object.properties.neighbors.value as number,
       object.properties.results.value as number,
-      object.outputState,
+      object.outputState.map(IOState.fromObject),
       object.indexSelections
     );
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.StringArray]];
+    this.outputState = [IOState.ofType(IOStateType.StringArray)];
   }
 
   async _run(inputValues: IOState[]): Promise<IOState[]> {
-    if (!inputValues[0]?.stringValue) return [defaultIOStates[IOStateType.StringArray]];
+    if (!inputValues[0]?.stringValue) return [IOState.ofType(IOStateType.StringArray)];
 
     this.properties.documentId.value = inputValues[0].stringValue as string;
     try {
@@ -771,7 +737,7 @@ export class SearchNode extends BaseAsyncNode {
 
       if (!aiResponse.ok) {
         this.properties.status.value = `Error: ${aiResponse.statusText}`;
-        return [defaultIOStates[IOStateType.StringArray]];
+        return [IOState.ofType(IOStateType.StringArray)];
       }
 
       const result = await aiResponse.json();
@@ -779,15 +745,11 @@ export class SearchNode extends BaseAsyncNode {
       updateNode(this);
 
       // Output the results as a string array
-      return [{
-        stringValue: null,
-        numberValue: null,
-        stringArrayValue: result.search_results,
-      }];
+      return [new IOState({ stringArrayValue: result.search_results })];
     } catch (error: unknown) {
       console.error('Error in SearchNode:', error);
       this.properties.status.value = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
-      return [defaultIOStates[IOStateType.StringArray]];
+      return [IOState.ofType(IOStateType.StringArray)];
     }
   }
 }
@@ -823,17 +785,17 @@ export class JoinNode extends BaseSyncNode {
       object.label,
       object.display,
       object.properties.separator.value as string,
-      object.outputState
+      object.outputState.map(IOState.fromObject),
     );
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.StringArray]];
+    this.outputState = [IOState.ofType(IOStateType.StringArray)];
   }
 
   _run(inputValues: IOState[]): IOState[] {
     if (!inputValues[0]?.stringArrayValue) {
-      return [defaultIOStates[IOStateType.StringArray]];
+      return [IOState.ofType(IOStateType.StringArray)];
     }
 
     // Join the array elements with the separator
@@ -841,11 +803,7 @@ export class JoinNode extends BaseSyncNode {
       this.properties.separator.value as string
     );
 
-    return [{
-      stringValue: joinedString,
-      numberValue: null,
-      stringArrayValue: null,
-    }];
+    return [new IOState({ stringValue: joinedString })];
   }
 }
 
@@ -887,28 +845,24 @@ export class ReplaceNode extends BaseSyncNode {
       object.coordinates,
       object.label,
       object.display,
-      object.outputState,
+      object.outputState.map(IOState.fromObject),
       object.indexSelections
     );
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.String]];
+    this.outputState = [IOState.ofType(IOStateType.String)];
   }
 
   _run(inputValues: IOState[]): IOState[] {
-    if (!inputValues[0]?.stringValue) return [defaultIOStates[IOStateType.String]];
+    if (!inputValues[0]?.stringValue) return [IOState.ofType(IOStateType.String)];
 
     const search = this.properties.search.value as string;
     const replace = this.properties.replace.value as string;
 
     const replacedString = inputValues[0].stringValue.replaceAll(search, replace);
 
-    return [{
-      stringValue: replacedString,
-      numberValue: null,
-      stringArrayValue: null,
-    }];
+    return [new IOState({ stringValue: replacedString })];
   }
 }
 
@@ -944,25 +898,21 @@ export class PickNode extends BaseSyncNode {
       object.label,
       object.display,
       object.properties.index.value as number,
-      object.outputState
+      object.outputState.map(IOState.fromObject),
     );
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.String]];
+    this.outputState = [IOState.ofType(IOStateType.String)];
   }
 
   _run(inputValues: IOState[]): IOState[] {
-    if (!inputValues[0]?.stringArrayValue) return [defaultIOStates[IOStateType.String]];
+    if (!inputValues[0]?.stringArrayValue) return [IOState.ofType(IOStateType.String)];
 
     const index = this.properties.index.value as number;
     const pickedString = inputValues[0].stringArrayValue[index];
 
-    return [{
-      stringValue: pickedString,
-      numberValue: null,
-      stringArrayValue: null,
-    }];
+    return [new IOState({ stringValue: pickedString })];
   }
 }
 
@@ -997,17 +947,107 @@ export class CacheNode extends BaseSyncNode {
       object.coordinates,
       object.label,
       object.display,
-      object.outputState,
+      object.outputState.map(IOState.fromObject),
       object.indexSelections
     );
   }
 
   protected override resetOutputState(): void {
-    this.outputState = [defaultIOStates[IOStateType.String]];
+    this.outputState = [IOState.ofType(IOStateType.String)];
   }
 
   _run(inputValues: IOState[]): IOState[] {
     this.properties.updatedAt.value = new Date().toLocaleString();
     return inputValues;
+  }
+}
+
+// The CSV node reads a file and converts it to a 2d array
+export class CSVNode extends BaseSyncNode {
+  constructor(
+    id: string,
+    authorId: string,
+    projectId: string,
+    coordinates: Coordinates,
+    label: string = 'csv',
+    display: boolean = false,
+    filename: string = '',
+    separator: string = ',',
+    lineTerminator: string = '\n',
+    outputState: IOState[] = [],
+  ) {
+    super(id, authorId, projectId, 'CSV', label, display, NodeType.CSV, 0, 1, coordinates, NodeRunType.Source, {
+      file: {
+        type: NodePropertyType.File,
+        label: 'File',
+        value: '',
+        editable: true,
+        displayed: true,
+      },
+      filename: {
+        type: NodePropertyType.String,
+        label: 'Filename',
+        value: filename,
+        editable: false,
+        displayed: true,
+      },
+      separator: {
+        type: NodePropertyType.String,
+        label: 'Separator',
+        value: separator,
+        editable: true,
+        displayed: true,
+      },
+      lineTerminator: {
+        type: NodePropertyType.String,
+        label: 'Line Terminator',
+        value: lineTerminator,
+        editable: true,
+        displayed: true,
+      }
+    }, [IOStateType.StringArray], outputState);
+  }
+
+  public static override fromObject(object: BaseNode): BaseNode {
+    return new CSVNode(
+      object.nodeId,
+      object.authorId,
+      object.projectId,
+      object.coordinates,
+      object.label,
+      object.display,
+      object.properties.filename.value as string,
+      object.properties.separator.value as string,
+      object.properties.lineTerminator.value as string,
+      object.outputState.map(IOState.fromObject),
+    );
+  }
+
+  protected override resetOutputState(): void {
+    this.outputState = [IOState.ofType(IOStateType.StringArray)];
+  }
+
+  _run(inputValues: IOState[]): IOState[] {
+    return this.outputState;
+  }
+
+  // TODO: See if there is a more efficent way to do this with tensorflow.js. Keep in mind files can be large
+  async handleFileSelect(file: File) {
+    const fileString = await file.text();
+    // Convert the file string to a 2d array
+    const rows = fileString.split(this.properties.lineTerminator.value as string);
+    const result = rows.map(row => {
+      // If the line has a trailing comma, remove it
+      // But if the last column can be null, keep it. 
+      // So far we have no way to tell if a column can be null, so for now assume it can't be
+      if (row.endsWith(this.properties.separator.value as string)) {
+        row = row.slice(0, -1);
+      }
+      return row.split(this.properties.separator.value as string);
+    });
+    this.outputState[0] = new IOState({
+      tensor: tf.tensor2d(result),
+    });
+    this.properties.filename.value = file.name;
   }
 }

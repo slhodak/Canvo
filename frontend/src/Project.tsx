@@ -2,7 +2,7 @@ import './Project.css';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { VisualNode, VisualConnection } from './NetworkTypes';
-import { BaseNode, NodeRunType, IOState, emptyIOState, IOStateType } from '../../shared/types/src/models/node';
+import { BaseNode, NodeRunType, IOState, IOStateType } from '../../shared/types/src/models/node';
 import { Connection } from '../../shared/types/src/models/connection';
 import { ConnectionUtils as cu, NodeUtils as nu } from './Utils';
 import NetworkEditor from './NetworkEditor';
@@ -27,19 +27,15 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   const prevNodesRef = useRef<NetworkNodes>({});
   const prevConnectionsRef = useRef<NetworkConnections>([]);
   const [selectedNode, setSelectedNode] = useState<VisualNode | null>(null);
-  const [viewText, setViewText] = useState<string>('');
+  const [viewState, setViewState] = useState<IOState>(IOState.ofType(IOStateType.String));
 
-  const updateViewText = (node: VisualNode) => {
-    // Notice that this only displays the first output state
-    if (node.node.outputState[0]?.stringValue) {
-      setViewText(node.node.outputState[0]?.stringValue || '');
-    } else if (node.node.outputState[0]?.numberValue) {
-      setViewText(node.node.outputState[0]?.numberValue.toString() || '');
-    } else if (node.node.outputState[0]?.stringArrayValue) {
-      setViewText(node.node.outputState[0]?.stringArrayValue.join("\n") || '');
+  // Notice that this only displays the first output state
+  const updateViewState = (node: VisualNode) => {
+    const outputState = node.node.outputState[0];
+    if (outputState === null || outputState === undefined || outputState.isEmpty()) {
+      setViewState(IOState.ofType(IOStateType.String));
     } else {
-      console.debug('Displayed node has no output state');
-      setViewText('');
+      setViewState(outputState);
     }
   }
 
@@ -77,7 +73,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
         // If any node is displaying, update the view text
         for (const node of Object.values(visualNodes)) {
           if (node.node.display) {
-            updateViewText(node);
+            updateViewState(node);
             break;
           }
         }
@@ -205,14 +201,14 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       const inputNode = nodes[conn.connection.fromNode];
       if (!inputNode) {
         console.warn("Input node not found for connection:", conn.connection.connectionId);
-        inputValues.push(emptyIOState);
+        inputValues.push(IOState.ofType(IOStateType.Empty));
         continue;
       };
 
       const outputState = inputNode.node.outputState[conn.connection.fromOutput];
       if (outputState === null) {
         console.warn("Output state not found for connection:", conn.connection.connectionId);
-        inputValues.push(emptyIOState);
+        inputValues.push(IOState.ofType(IOStateType.Empty));
         continue;
       }
 
@@ -253,7 +249,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     }
 
     if (node.node.display) {
-      updateViewText(node);
+      updateViewState(node);
     }
   }, [_runPriorDAG, _runNodeOnInput]);
 
@@ -278,9 +274,9 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       if (node.node.nodeRunType === NodeRunType.Run) {
         await runNode(node);
       }
-      updateViewText(node);
+      updateViewState(node);
     } else {
-      setViewText('');
+      setViewState(IOState.ofType(IOStateType.String));
     }
   }
 
@@ -378,7 +374,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       console.error(`Error while enabling index selection: no output state found for node ${fromNodeId} output ${fromOutput}`);
       return;
     }
-    const fromNodeOutputType = nu.inferOutputType(fromNodeIOState);
+    const fromNodeOutputType = fromNodeIOState.type;
     const toNodeInputType = toNode.node.inputTypes[inputIndex];
     if (fromNodeOutputType == IOStateType.StringArray && toNodeInputType == IOStateType.String) {
       toNode.node.indexSelections[inputIndex] = 0;
@@ -403,7 +399,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
 
   useEffect(() => {
     // Clear all state when switching projects
-    setViewText('');
+    setViewState(IOState.ofType(IOStateType.String));
     setSelectedNode(null);
     setConnections([]);
     setNodes({});
@@ -445,7 +441,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
 
         </div>
         <div className="right-pane">
-          <OutputView text={viewText} />
+          <OutputView outputState={viewState} />
         </div>
       </div>
     </div>

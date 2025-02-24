@@ -3,17 +3,50 @@
   height: 100%;
   background-color: var(--background-dark-2);
   padding: 4px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
 }
 
 .output-view-content {
   width: 100%;
-  height: 100%;
   background-color: var(--input-background-color);
   padding: 4px;
+  min-height: 100px;
+  height: 100%;
+}
+
+.output-view-selector {
+  display: flex;
+  flex-direction: row;
+  background-color: var(--background-dark-2);
+  gap: 2px;
+}
+
+.output-view-selector-item {
+  padding: 8px;
+  color: var(--text-color);
+  background-color: var(--background-dark-1);
+  border: none;
+}
+
+.output-view-selector-item:focus {
+  outline: 1px solid white;
+  outline-offset: -1px;
+}
+
+.output-view-selector-item.selected {
+  color: var(--text-color);
+  background-color: var(--input-background-color);
+  outline: none;
+}
+
+.output-view-selector-item.has-value {
+  border-top: 2px solid white;
 }
 
 .output-view-text {
   white-space: pre-wrap;
-  height: 100%;
   overflow-y: auto;
+  flex-shrink: 0;
 }

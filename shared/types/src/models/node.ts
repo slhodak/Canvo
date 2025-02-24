@@ -1,3 +1,5 @@
+import * as tf from '@tensorflow/tfjs';
+
 export enum NodeType {
   Text = 'text',
   Fetch = 'fetch',
@@ -13,6 +15,7 @@ export enum NodeType {
   Replace = 'replace',
   Pick = 'pick',
   Cache = 'cache',
+  CSV = 'CSV',
 }
 
 // A source node is not dependent on other nodes, and will cache its output state
@@ -47,41 +50,118 @@ export interface Coordinates {
   y: number;
 }
 
-export interface IOState {
-  stringValue: string | null;
-  numberValue: number | null;
-  stringArrayValue: string[] | null;
-}
-
 export enum IOStateType {
   String = 'string',
   Number = 'number',
   StringArray = 'stringArray',
+  Tensor = 'tensor',
+  Empty = 'empty',
 }
 
-export const emptyIOState: IOState = {
-  stringValue: null,
-  numberValue: null,
-  stringArrayValue: null,
-};
+export class IOState {
+  public stringValue: string | null;
+  public numberValue: number | null;
+  public stringArrayValue: string[] | null;
+  public tensor: tf.Tensor | null;
+  public type: IOStateType;
 
-export const defaultIOStates: Record<IOStateType, IOState> = {
-  [IOStateType.String]: {
-    stringValue: '',
-    numberValue: null,
-    stringArrayValue: null,
-  },
-  [IOStateType.Number]: {
-    stringValue: null,
-    numberValue: null,
-    stringArrayValue: null,
-  },
-  [IOStateType.StringArray]: {
-    stringValue: null,
-    numberValue: null,
-    stringArrayValue: [],
-  },
-};
+  constructor({
+    stringValue = null,
+    numberValue = null,
+    stringArrayValue = null,
+    tensor = null,
+  }: {
+    stringValue?: string | null;
+    numberValue?: number | null;
+    stringArrayValue?: string[] | null;
+    tensor?: tf.Tensor | null;
+  }) {
+    this.stringValue = stringValue;
+    this.numberValue = numberValue;
+    this.stringArrayValue = stringArrayValue;
+    this.tensor = tensor;
+    this.type = this.inferType();
+  }
+
+  public static ofType(type: IOStateType): IOState {
+    switch (type) {
+      case IOStateType.String:
+        return new IOState({ stringValue: '' });
+      case IOStateType.Number:
+        return new IOState({ numberValue: 0 });
+      case IOStateType.StringArray:
+        return new IOState({ stringArrayValue: [] });
+      case IOStateType.Tensor:
+        return new IOState({ tensor: tf.tensor2d([], [0, 0]) });
+      case IOStateType.Empty:
+        return new IOState({});
+    }
+  }
+
+  public static fromObject(object: IOState): IOState {
+    return new IOState({
+      stringValue: object.stringValue,
+      numberValue: object.numberValue,
+      stringArrayValue: object.stringArrayValue,
+      tensor: object.tensor,
+    });
+  }
+
+  // For now, IOState can only have one type
+  private inferType(): IOStateType {
+    if (this.stringArrayValue !== null) {
+      return IOStateType.StringArray;
+    } else if (this.stringValue !== null) {
+      return IOStateType.String;
+    } else if (this.numberValue !== null) {
+      return IOStateType.Number;
+    } else if (this.tensor !== null) {
+      return IOStateType.Tensor;
+    }
+
+    return IOStateType.Empty;
+  }
+
+  public getValue(): string | number | string[] | tf.Tensor | null {
+    switch (this.type) {
+      case IOStateType.String:
+        return this.stringValue;
+      case IOStateType.Number:
+        return this.numberValue;
+      case IOStateType.StringArray:
+        return this.stringArrayValue;
+      case IOStateType.Tensor:
+        return this.tensor;
+      case IOStateType.Empty:
+        return null;
+    }
+  }
+
+  public getStateDict(): Record<string, (string | number | string[] | tf.Tensor | null)> {
+    return {
+      stringValue: this.stringValue,
+      numberValue: this.numberValue,
+      stringArrayValue: this.stringArrayValue,
+      tensor: this.tensor,
+    };
+  }
+
+  public isEmpty(): boolean {
+    if (this.stringValue !== null) {
+      return false;
+    }
+    if (this.numberValue !== null) {
+      return false;
+    }
+    if (this.stringArrayValue !== null) {
+      return false;
+    }
+    if (this.tensor !== null) {
+      return false;
+    }
+    return true;
+  }
+}
 
 // index-selector: the node may need to do index selection on its input.
 // this means that it expects a string input
@@ -198,20 +278,15 @@ function selectInputsByIndices(inputValues: IOState[], indexSelections: (number 
       continue;
     }
 
-    selectedInputValues.push({
+    selectedInputValues.push(new IOState({
       stringValue: inputStringArrayValue[selectedIndexForInput],
-      numberValue: null,
-      stringArrayValue: null,
-    });
+    }));
   }
   return selectedInputValues;
 }
 
 export abstract class BaseSyncNode extends BaseNode {
   public run(inputValues: IOState[]): IOState[] {
-    // index-selector: if the node is doing index selection, pick the index
-    // from each outputState in the array
-    // index selection will be per input. selectedIndices
     const selectedInputValues = selectInputsByIndices(inputValues, this.indexSelections);
     const runResult = this._run(selectedInputValues);
     this.cacheOrClearIOState(runResult);
@@ -223,7 +298,8 @@ export abstract class BaseSyncNode extends BaseNode {
 
 export abstract class BaseAsyncNode extends BaseNode {
   public async run(inputValues: IOState[]): Promise<IOState[]> {
-    const runResult = await this._run(inputValues);
+    const selectedInputValues = selectInputsByIndices(inputValues, this.indexSelections);
+    const runResult = await this._run(selectedInputValues);
     this.cacheOrClearIOState(runResult);
     return runResult;
   }
