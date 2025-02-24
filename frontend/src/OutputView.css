@@ -30,9 +30,19 @@
   border: none;
 }
 
+.output-view-selector-item:focus {
+  outline: 1px solid white;
+  outline-offset: -1px;
+}
+
 .output-view-selector-item.selected {
   color: var(--text-color);
   background-color: var(--input-background-color);
+  outline: none;
+}
+
+.output-view-selector-item.has-value {
+  border-top: 2px solid white;
 }
 
 .output-view-text {

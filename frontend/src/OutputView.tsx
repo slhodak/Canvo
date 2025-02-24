@@ -50,7 +50,7 @@ const OutputView = ({ outputState }: OutputViewProps) => {
           const isSelected = selectedStateType === type;
           return (
             <button
-              className={`output-view-selector-item ${isSelected ? 'selected' : ''}`}
+              className={`output-view-selector-item ${isSelected ? 'selected' : ''} ${outputState.type === type ? 'has-value' : ''}`}
               onClick={() => setSelectedStateType(type)}>
               {type}
             </button>
