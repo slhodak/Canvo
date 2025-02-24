@@ -12,6 +12,7 @@ const OutputView = ({ outputState }: OutputViewProps) => {
   const [selectedStateType, setSelectedStateType] = useState<IOStateType>(outputState.type);
 
   const renderValue = useCallback((): string => {
+    // Just because a state type is selected doesn't mean this output state has any value of that type
     switch (selectedStateType) {
       case IOStateType.String:
         if (outputState.type === IOStateType.String) {
