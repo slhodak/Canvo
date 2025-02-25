@@ -2,7 +2,7 @@ import './Project.css';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { VisualNode, VisualConnection } from './NetworkTypes';
-import { BaseNode, NodeRunType, IOState, IOStateType } from '../../shared/types/src/models/node';
+import { BaseNode, NodeRunType, IOState, IOStateType, BaseAsyncNode, BaseSyncNode } from '../../shared/types/src/models/node';
 import { Connection } from '../../shared/types/src/models/connection';
 import { ConnectionUtils as cu, NodeUtils as nu } from './Utils';
 import NetworkEditor from './NetworkEditor';
@@ -199,11 +199,10 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
 
   // cache-expensive: calculate the output state of a node given its input states
   const _runNodeOnInput = useCallback(async (inputValues: IOState[], node: VisualNode, shouldSync: boolean = true): Promise<IOState[]> => {
-    if ('run' in node.node && typeof node.node.run === 'function') {
-      node.node.run(inputValues);
-    }
-    if ('asyncRun' in node.node && typeof node.node.asyncRun === 'function') {
-      await node.node.asyncRun(inputValues);
+    if (node.node instanceof BaseSyncNode) {
+      return node.node.run(inputValues);
+    } else if (node.node instanceof BaseAsyncNode) {
+      return await node.node.run(inputValues);
     }
 
     if (shouldSync) {

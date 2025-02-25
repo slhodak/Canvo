@@ -161,10 +161,6 @@ export class IOState {
   }
 }
 
-// index-selector: the node may need to do index selection on its input.
-// this means that it expects a string input
-// but is receiving a string[] input
-// and it will have to pick an index to read from
 export abstract class BaseNode {
   public nodeId: string;
   public projectId: string;
@@ -180,6 +176,7 @@ export abstract class BaseNode {
   public coordinates: Coordinates;
   public nodeRunType: NodeRunType;
   public properties: Record<string, NodeProperty> = {};
+  // The indexSelections array is used to select an element from an array input if the node expects a string input
   public indexSelections: (number | null)[] = [];
 
   constructor(

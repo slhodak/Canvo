@@ -173,6 +173,7 @@ export class PromptNode extends BaseAsyncNode {
     if (!inputValues[0]) return [IOState.ofType(IOStateType.String)];
 
     if (!this.properties.prompt.value || this.properties.prompt.value === '') {
+      console.warn("Will not run PromptNode without a prompt", this.nodeId);
       return [IOState.ofType(IOStateType.String)];
     }
 
