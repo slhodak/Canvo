@@ -30,8 +30,10 @@ const HowTo: React.FC<HowToProps> = ({ isOpen, onClose }) => {
   return (
     <div className="howto-overlay">
       <div className="howto-content" ref={contentRef}>
-        <button className="howto-close" onClick={onClose}>×</button>
-        <h2>How To Use Canvo</h2>
+        <div className="howto-content-header">
+          <h2>How To Use Canvo</h2>
+          <button className="howto-close" onClick={onClose}>×</button>
+        </div>
 
         <section>
           <h2>tl;dr</h2>

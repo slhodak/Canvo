@@ -12,9 +12,9 @@
 }
 
 .howto-content {
-  background: white;
+  background: var(--background-dark-2);
   padding: 2rem;
-  border-radius: 8px;
+  border-radius: 1px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   max-width: 600px;
   width: 90%;
@@ -23,30 +23,36 @@
   position: relative;
 }
 
+.howto-content h2 {
+  margin-top: 0;
+  font-size: 1.8rem;
+}
+
+.howto-content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.howto-content-header h2 {
+  margin-bottom: 0px;
+}
+
 .howto-close {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
+  padding: 10px;
+  line-height: 0.8rem;
   background: none;
   border: none;
+  color: var(--font-color-light);
   font-size: 1.5rem;
+  border-radius: 1px;
   cursor: pointer;
-  color: #666;
-  padding: 0.5rem;
-  line-height: 1;
-  border-radius: 4px;
   transition: background-color 0.2s;
 }
 
 .howto-close:hover {
-  background-color: #f0f0f0;
-}
-
-.howto-content h2 {
-  margin-top: 0;
-  margin-bottom: 1.5rem;
-  color: #333;
-  font-size: 1.8rem;
+  background-color: var(--background-dark-3);
 }
 
 .howto-content section {
@@ -54,7 +60,6 @@
 }
 
 .howto-content h3 {
-  color: #444;
   margin-bottom: 0.8rem;
   font-size: 1.3rem;
 }
@@ -66,10 +71,5 @@
 
 .howto-content li {
   margin-bottom: 0.5rem;
-  color: #555;
   line-height: 1.5;
-}
-
-.howto-content strong {
-  color: #333;
 }
