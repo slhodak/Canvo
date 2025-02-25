@@ -6,6 +6,7 @@ import { ProjectModel } from '../../shared/types/src/models/project';
 import { BaseNode } from '../../shared/types/src/models/node';
 import { Connection } from '../../shared/types/src/models/connection';
 import { camelizeColumns, formatIntegerArray } from './util';
+import { TransactionType } from '../../shared/types/src/models/tokens';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -313,21 +314,21 @@ export namespace Database {
     }
   }
 
-  // Optional: Add a function to log token transactions
   export async function logTokenTransaction(
     userId: string,
     amount: number,
-    operation: 'deduct' | 'add',
-    reason: string
+    transactionType: TransactionType,
   ): Promise<void> {
+    const transactionId = uuidv4();
     await db.none(`
       INSERT INTO token_transactions (
         user_id, 
+        transaction_id,
         amount, 
-        operation,
-        reason
+        transaction_type,
+        created_at
       )
-      VALUES ($1, $2, $3, $4)
-    `, [userId, amount, operation, reason]);
+      VALUES ($1, $2, $3, $4, $5)
+    `, [userId, transactionId, amount, transactionType, new Date()]);
   }
 }

@@ -11,6 +11,7 @@ import stytch from 'stytch';
 import { validateNode } from './util';
 import { LLMResponse } from '../../shared/types/src/models/LLMResponse';
 import schedule from 'node-schedule';
+import { TransactionType } from '../../shared/types/src/models/tokens';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -664,7 +665,7 @@ aiRouter.post('/run_prompt', async (req: Request, res: Response) => {
 
   // Check token balance
   const tokenBalance = await db.getUserTokenBalance(user.userId);
-  if (!tokenBalance || tokenBalance < PROMPT_COST) {
+  if (tokenBalance === null || tokenBalance < PROMPT_COST) {
     return res.status(403).json({ status: "failed", error: "Insufficient tokens" });
   }
 
@@ -677,6 +678,7 @@ aiRouter.post('/run_prompt', async (req: Request, res: Response) => {
 
   const result = await runPrompt(prompt, input);
   await db.deductTokens(user.userId, PROMPT_COST);
+  await db.logTokenTransaction(user.userId, PROMPT_COST, TransactionType.Spend);
   return res.json({ status: "success", result });
 });
 
@@ -693,7 +695,7 @@ aiRouter.post('/embed', async (req: Request, res: Response) => {
 
   // Check token balance
   const tokenBalance = await db.getUserTokenBalance(user.userId);
-  if (!tokenBalance || tokenBalance < EMBEDDING_COST) {
+  if (tokenBalance === null || tokenBalance < EMBEDDING_COST) {
     return res.status(403).json({ status: "failed", error: "Insufficient tokens" });
   }
 
@@ -709,6 +711,7 @@ aiRouter.post('/embed', async (req: Request, res: Response) => {
 
     // Deduct tokens after successful operation
     await db.deductTokens(user.userId, EMBEDDING_COST);
+    await db.logTokenTransaction(user.userId, EMBEDDING_COST, TransactionType.Spend);
 
     return res.json(result);
   } catch (error) {
@@ -730,7 +733,7 @@ aiRouter.post('/search', async (req: Request, res: Response) => {
 
   // Check token balance
   const tokenBalance = await db.getUserTokenBalance(user.userId);
-  if (!tokenBalance || tokenBalance < SEARCH_COST) {
+  if (tokenBalance === null || tokenBalance < SEARCH_COST) {
     return res.status(403).json({ status: "failed", error: "Insufficient tokens" });
   }
 
@@ -748,6 +751,7 @@ aiRouter.post('/search', async (req: Request, res: Response) => {
 
     // Deduct tokens after successful operation
     await db.deductTokens(user.userId, SEARCH_COST);
+    await db.logTokenTransaction(user.userId, SEARCH_COST, TransactionType.Spend);
 
     return res.json(result);
   } catch (error) {
@@ -776,6 +780,7 @@ tokenRouter.post('/add', async (req: Request, res: Response) => {
     }
 
     await db.addTokens(user.userId, amount);
+    await db.logTokenTransaction(user.userId, amount, TransactionType.Purchase);
     return res.json({ status: "success" });
   } catch (error) {
     if (error instanceof Error) {
@@ -793,7 +798,7 @@ tokenRouter.get('/get_balance', async (req: Request, res: Response) => {
     }
 
     const tokenBalance = await db.getUserTokenBalance(user.userId);
-    if (!tokenBalance) {
+    if (tokenBalance === null) {
       return res.status(404).json({ status: "failed", error: "No token balance found for user" });
     }
 
@@ -811,13 +816,16 @@ tokenRouter.get('/get_balance', async (req: Request, res: Response) => {
 ////////////////////////////////////////////////////////////
 
 const rule = new schedule.RecurrenceRule();
-rule.minute = process.env.NODE_ENV === 'production' ? '0' : '*'; // In Prod, add tokens at the top of the hour
-rule.second = process.env.NODE_ENV === 'development' ? '*/10' : '*'; // In Dev, add tokens every 10 seconds
-schedule.scheduleJob(rule, async () => {
+if (process.env.NODE_ENV === 'production') {
+  rule.minute = 0;
+} else {
+  rule.second = 0;
+}
+const job = schedule.scheduleJob(rule, async () => {
   const users = await db.getAllUsers();
   for (const user of users) {
     const tokenBalance = await db.getUserTokenBalance(user.userId);
-    if (!tokenBalance) {
+    if (tokenBalance === null) {
       console.warn(`No token balance found for user ${user.userId}`);
       continue;
     }
@@ -827,6 +835,7 @@ schedule.scheduleJob(rule, async () => {
       const addAmount = diff > 50 ? 50 : diff;
       console.log(`Granting ${addAmount} tokens to user ${user.userId}`);
       await db.addTokens(user.userId, addAmount);
+      await db.logTokenTransaction(user.userId, addAmount, TransactionType.AutoAdd);
     }
   }
 });
