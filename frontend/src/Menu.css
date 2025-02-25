@@ -20,6 +20,7 @@
   gap: 4px;
   margin-top: 4px;
   margin-bottom: 12px;
+  width: 100%;
 }
 
 .menu-header-container h2 {
@@ -29,6 +30,28 @@
 
 .app-title-header {
   line-height: 1.0;
+}
+
+.help-button {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid var(--font-color-light);
+  background: transparent;
+  color: var(--font-color-light);
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.help-button:hover {
+  background: var(--font-color-light);
+  color: var(--background-dark-2);
 }
 
 /* Menu Body */

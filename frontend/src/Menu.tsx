@@ -5,6 +5,7 @@ import { SERVER_URL } from "./constants";
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { TrashIcon } from "./assets/TrashIcon";
 import { UserModel } from '../../shared/types/src/models/user';
+import HowTo from './HowTo';
 
 interface MenuProps {
   user: UserModel;
@@ -17,6 +18,7 @@ interface MenuProps {
 const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [tokenBalance, setTokenBalance] = useState(0);
+  const [isHowToOpen, setIsHowToOpen] = useState(false);
 
   const createProject = async () => {
     try {
@@ -111,6 +113,13 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
     <div className="menu-container">
       <div className="menu-header-container">
         <h2 className="app-title-header">{isCollapsed ? 'C' : 'Canvo'}</h2>
+        <button
+          className="help-button"
+          onClick={() => setIsHowToOpen(true)}
+          title="Show Help"
+        >
+          ?
+        </button>
       </div>
       {!isCollapsed && (
         <div className="menu-body-container">
@@ -140,6 +149,7 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
           </div>
         </div>
       )}
+      <HowTo isOpen={isHowToOpen} onClose={() => setIsHowToOpen(false)} />
     </div>
   )
 }
