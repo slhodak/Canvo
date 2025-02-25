@@ -78,8 +78,8 @@ const HowTo: React.FC<HowToProps> = ({ isOpen, onClose }) => {
 
         <section>
           <h3>Tokens</h3>
-          <li>You start with 100 tokens</li>
-          <li>You will get 10 new tokens, up to a maximum of 100, every hour</li>
+          <li>You can have up to 500 tokens</li>
+          <li>You will get up to 50 new tokens every hour</li>
           <li>Running the PromptNode costs 5 tokens</li>
           <li>Embedding a document costs 1 token</li>
           <li>Searching embeddings costs 1 token</li>
