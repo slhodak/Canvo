@@ -80,7 +80,10 @@ const OutputView = ({ outputState }: OutputViewProps) => {
           <div className="output-view-string-array">
             <div className="output-view-string-array-items">
               {outputState.stringArrayValue?.map((value, index) => (
-                <div key={`string-array-value-${index}`} className="output-view-string-array-item">{value}</div>
+                <div key={`string-array-value-${index}`} className="output-view-string-array-item">
+                  <div className="output-view-string-array-item-index">{index}</div>
+                  <div className="output-view-string-array-item-value">{value}</div>
+                </div>
               ))}
             </div>
           </div>

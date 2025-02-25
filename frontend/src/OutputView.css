@@ -63,8 +63,21 @@
 }
 
 .output-view-string-array-item {
+  display: flex;
+  flex-direction: row;
   white-space: pre-wrap;
   border-bottom: 1px solid var(--background-dark-3);
+}
+
+.output-view-string-array-item-index {
+  background-color: var(--background-dark-1);
+  text-align: center;
+  color: rgb(130, 130, 130);
+  min-width: 20px;
+}
+
+.output-view-string-array-item-value {
+  padding-left: 4px;
 }
 
 /* Table */
