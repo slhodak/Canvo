@@ -207,7 +207,7 @@ interface FilePropertyInputProps extends PropertyInputProps {
 }
 
 const FilePropertyInput = ({ propertyKey, label, node, updateNode }: FilePropertyInputProps) => {
-  const handlePropertyChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !('handleFileSelect' in node.node)) return;
 
@@ -221,7 +221,7 @@ const FilePropertyInput = ({ propertyKey, label, node, updateNode }: FilePropert
       <div className="parameters-pane-file-input">
         <input
           type="file"
-          onChange={handlePropertyChange}
+          onChange={handleFileSelect}
           style={{ display: 'none' }}
           id={`file-input-${node.id}`}
         />
