@@ -7,6 +7,8 @@ import { TrashIcon } from "./assets/TrashIcon";
 import { UserModel } from '../../shared/types/src/models/user';
 import HowTo from './HowTo';
 
+const ENV = import.meta.env.VITE_ENV;
+
 interface MenuProps {
   user: UserModel;
   project: ProjectModel | null;
@@ -143,7 +145,9 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
             <p className="menu-user-info">User: <span className="menu-user-email">{user.email}</span></p>
             <div className="menu-user-tokens-container">
               <p className="menu-user-info">Balance: <span className="menu-user-tokens">{tokenBalance} tokens</span></p>
-              <button className="add-token-button" onClick={addTokens}>+1 token</button>
+              {ENV === 'dev' && (
+                <button className="add-token-button" onClick={addTokens}>+1 token</button>
+              )}
             </div>
             <button className="logout-button" onClick={handleLogout}>Log Out</button>
           </div>
