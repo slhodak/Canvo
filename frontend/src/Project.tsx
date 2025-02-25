@@ -197,18 +197,19 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   // Run & Select Nodes
   //////////////////////////////
 
-  // cache-expensive: calculate the output state of a node given its input states
   const _runNodeOnInput = useCallback(async (inputValues: IOState[], node: VisualNode, shouldSync: boolean = true): Promise<IOState[]> => {
+    let outputValues: IOState[] = [];
     if (node.node instanceof BaseSyncNode) {
-      return node.node.run(inputValues);
+      outputValues = node.node.run(inputValues);
     } else if (node.node instanceof BaseAsyncNode) {
-      return await node.node.run(inputValues);
+      outputValues = await node.node.run(inputValues);
     }
 
     if (shouldSync) {
       await syncNodeUpdate(node.node);
     }
-    return [];
+
+    return outputValues;
   }, []);
 
   // For each input connection to this node, get or calculate the input from that connection
@@ -257,6 +258,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     return inputValues;
   }, [nodes, connections, _runNodeOnInput]);
 
+  // TODO: I question the wisdom of syncing every prior rerun node in the DAG
   const runNode = useCallback(async (node: VisualNode, shouldSync: boolean = true) => {
     switch (node.node.nodeRunType) {
       case NodeRunType.Source:
