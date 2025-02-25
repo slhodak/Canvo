@@ -12,6 +12,8 @@ import {
 import { LLMResponse } from '../../shared/types/src/models/LLMResponse';
 import { updateNode } from './api';
 import { SERVER_URL } from './constants';
+import mammoth from 'mammoth';
+import { FileUtils as fu } from './Utils';
 
 export class TextNode extends BaseSyncNode {
   constructor(
@@ -456,10 +458,40 @@ export class FileNode extends BaseSyncNode {
   // Kind of unusual behavior to have the input computed here instead of '_run',
   // but I don't want to save the File object to a property so 'runNode' can access it later.
   async handleFileSelect(file: File) {
-    this.outputState[0] = new IOState({
-      stringValue: await file.text(),
-    });
     this.properties.filename.value = file.name;
+    // Convert Word docx to html 
+    if (file.type == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        this.outputState[0] = new IOState({
+          stringValue: result.value,
+        });
+      } catch (error) {
+        console.error('Error converting Word docx to html:', error);
+        this.outputState[0] = new IOState({
+          stringValue: 'Error converting Word docx to html',
+        });
+        this.properties.filename.value = '';
+      }
+    } else if (file.type == 'text/plain') {
+      this.outputState[0] = new IOState({
+        stringValue: await file.text(),
+      });
+    } else {
+      const extension = file.name.split('.').pop();
+      if (extension && fu.textFileExtensions.includes(extension.toLowerCase())) {
+        const result = await file.text();
+        this.outputState[0] = new IOState({
+          stringValue: result,
+        });
+      } else {
+        console.warn('Unsupported file type:', file.type);
+        this.outputState[0] = new IOState({
+          stringValue: 'Unsupported file type',
+        });
+      }
+    }
   }
 }
 
