@@ -31,34 +31,47 @@ const HowTo: React.FC<HowToProps> = ({ isOpen, onClose }) => {
     <div className="howto-overlay">
       <div className="howto-content" ref={contentRef}>
         <button className="howto-close" onClick={onClose}>×</button>
-        <h2>How to Use the Network Editor</h2>
+        <h2>How To Use Canvo</h2>
 
         <section>
-          <h3>Basic Operations</h3>
+          <h2>tl;dr</h2>
+          <li>Tab to add, delete to create, right click to pan, scroll to zoom, connect outputs to inputs, display using the little rectangle on the left of the node</li>
+          <li>Start by creating a new Project</li>
+        </section>
+
+        <section>
+          <h3>The Network Editor</h3>
           <ul>
-            <li>Double-click on the canvas to add a new node</li>
-            <li>Click and drag nodes to move them</li>
-            <li>Click a node to select it and view its parameters</li>
+            <li>Use the Tab key while hovering over the canvas to open the node selection menu</li>
+            <li>Click on a node or start typing and hit Enter to select one by name</li>
+            <li>Right click and drag in the editor to pan around</li>
+            <li>Use the scroll wheel to zoom in and out</li>
+            <li>The delete or backspace key deletes the selected node</li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>Nodes</h3>
+          <ul>
             <li>Drag from one node's output to another node's input to connect them</li>
+            <li>Choose a node to display by clicking on the rectangle on the left side of the node</li>
+            <li>Some nodes must be run manually by clicking on the "play" icon to the right of the node</li>
+            <li>AI nodes cost tokens to run</li>
+            <li>Nodes have different types of outputs and inputs</li>
+            <li>If you connect an output that sends an array to an input that expects a single value, the Parameters pane will show an Inputs parameter that lets you choose the index of the array input to operate on, for each input of the node</li>
           </ul>
         </section>
 
         <section>
-          <h3>Node Types</h3>
-          <ul>
-            <li><strong>Source Nodes:</strong> Provide initial data input</li>
-            <li><strong>Run Nodes:</strong> Process input and produce output</li>
-            <li><strong>Cache Nodes:</strong> Store intermediate results</li>
-          </ul>
+          <h3>The Parameters Pane</h3>
+          <li>The Parameters pane will show the parameters for the selected node</li>
+          <li>See the last note in the "Nodes" section pertaining to array outputs</li>
         </section>
 
         <section>
-          <h3>Tips</h3>
-          <ul>
-            <li>Use the parameters pane to configure selected nodes</li>
-            <li>The output view shows results from displayed nodes</li>
-            <li>Connections automatically validate compatible input/output types</li>
-          </ul>
+          <h3>The Output Pane</h3>
+          <li>The Output pane on the right shows the output of the currently displayed node</li>
+          <li>The tabs at the top of the pane allow you to select different types of output, but nodes typically have only one at a time</li>
         </section>
       </div>
     </div>
