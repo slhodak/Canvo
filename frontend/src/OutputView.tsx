@@ -6,6 +6,14 @@ interface OutputViewProps {
   outputState: IOState;
 }
 
+const SelectorDisplayNames: Record<IOStateType, string> = {
+  [IOStateType.String]: 'Text',
+  [IOStateType.Number]: 'Number',
+  [IOStateType.StringArray]: 'Text Array',
+  [IOStateType.Table]: 'Table',
+  [IOStateType.Empty]: 'None',
+}
+
 // Let there be multiple panes for the output view
 const OutputView = ({ outputState }: OutputViewProps) => {
   const [selectedStateType, setSelectedStateType] = useState<IOStateType>(outputState.type);
@@ -57,7 +65,7 @@ const OutputView = ({ outputState }: OutputViewProps) => {
               key={type}
               className={`output-view-selector-item ${isSelected ? 'selected' : ''} ${outputState.type === type ? 'has-value' : ''}`}
               onClick={() => setSelectedStateType(type)}>
-              {type}
+              {SelectorDisplayNames[type]}
             </button>
           );
         })}
@@ -69,7 +77,13 @@ const OutputView = ({ outputState }: OutputViewProps) => {
         ) : selectedStateType === IOStateType.Number ? (
           <div className="output-view-number">{renderValue()}</div>
         ) : selectedStateType === IOStateType.StringArray ? (
-          <div className="output-view-string-array">{renderValue()}</div>
+          <div className="output-view-string-array">
+            <div className="output-view-string-array-items">
+              {outputState.stringArrayValue?.map((value, index) => (
+                <div key={`string-array-value-${index}`} className="output-view-string-array-item">{value}</div>
+              ))}
+            </div>
+          </div>
         ) : selectedStateType === IOStateType.Table ? (
           <TableView outputState={outputState} />
         ): (

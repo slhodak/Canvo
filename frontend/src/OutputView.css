@@ -53,6 +53,20 @@
   white-space: pre-wrap;
 }
 
+/* String Array */
+
+/* .output-view-string-array {} */
+
+.output-view-string-array-items {
+  display: flex;
+  flex-direction: column;
+}
+
+.output-view-string-array-item {
+  white-space: pre-wrap;
+  border-bottom: 1px solid var(--background-dark-3);
+}
+
 /* Table */
 
 .output-view-table {
