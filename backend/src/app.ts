@@ -34,6 +34,7 @@ if (!AI_SERVICE_URL) {
   throw new Error('Cannot start server: AI_SERVICE_URL is not set');
 }
 
+const MAX_TOKENS = 500;
 // Token costs for different operations
 const EMBEDDING_COST = 1;  // Cost per document embedded
 const SEARCH_COST = 1;    // Cost per search query
@@ -821,9 +822,9 @@ schedule.scheduleJob(rule, async () => {
       continue;
     }
 
-    if (tokenBalance < 100) {
-      const diff = 100 - tokenBalance;
-      const addAmount = diff > 10 ? 10 : diff;
+    if (tokenBalance < MAX_TOKENS) {
+      const diff = MAX_TOKENS - tokenBalance;
+      const addAmount = diff > 50 ? 50 : diff;
       console.log(`Granting ${addAmount} tokens to user ${user.userId}`);
       await db.addTokens(user.userId, addAmount);
     }
