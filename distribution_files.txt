@@ -11,6 +11,7 @@ ai-service/.env.production
 ai-service/db/migrations/
 ai-service/ai-service/main.py
 ai-service/ai-service/semantic_search.py
+ai-service/ai-service/database.py
 ai-service/README.md
 
 frontend/dist/
