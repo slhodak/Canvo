@@ -96,6 +96,10 @@ export const NodeUtils = {
   }
 }
 
+export const FileUtils = {
+  textFileExtensions: ["md", "txt"],
+}
+
 export const ConnectionUtils = {
   visualConnectionId(fromNodeId: string, fromOutput: number, toNodeId: string, toInput: number): string {
     return `${fromNodeId}-${toNodeId}-${fromOutput}-${toInput}`;

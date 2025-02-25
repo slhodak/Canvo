@@ -13,6 +13,7 @@ import { LLMResponse } from '../../shared/types/src/models/LLMResponse';
 import { updateNode } from './api';
 import { SERVER_URL } from './constants';
 import mammoth from 'mammoth';
+import { FileUtils as fu } from './Utils';
 
 export class TextNode extends BaseSyncNode {
   constructor(
@@ -478,8 +479,8 @@ export class FileNode extends BaseSyncNode {
         stringValue: await file.text(),
       });
     } else {
-      if (file.name.endsWith('.md')) {
-        // Convert markdown to html
+      const extension = file.name.split('.').pop();
+      if (extension && fu.textFileExtensions.includes(extension.toLowerCase())) {
         const result = await file.text();
         this.outputState[0] = new IOState({
           stringValue: result,
