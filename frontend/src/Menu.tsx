@@ -7,8 +7,6 @@ import { TrashIcon } from "./assets/TrashIcon";
 import { UserModel } from '../../shared/types/src/models/user';
 import HowTo from './HowTo';
 
-const ENV = import.meta.env.VITE_ENV;
-
 interface MenuProps {
   user: UserModel;
   project: ProjectModel | null;
@@ -56,32 +54,6 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
       console.error('Error deleting project:', error);
     }
   }
-
-  const addTokens = async () => {
-    try {
-      const response = await fetch(`${SERVER_URL}/token/add`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ amount: 1 }),
-      });
-      const data = await response.json();
-      if (data.status === 'success') {
-        // Refresh token balance
-        const balanceResponse = await fetch(`${SERVER_URL}/token/get_balance`, {
-          credentials: 'include',
-        });
-        const balanceData = await balanceResponse.json();
-        if (balanceData.status === 'success') {
-          setTokenBalance(balanceData.tokenBalance);
-        }
-      }
-    } catch (error) {
-      console.error('Error adding tokens:', error);
-    }
-  };
 
   const handleLogout = async () => {
     try {
@@ -145,9 +117,6 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
             <p className="menu-user-info">User: <span className="menu-user-email">{user.email}</span></p>
             <div className="menu-user-tokens-container">
               <p className="menu-user-info">Balance: <span className="menu-user-tokens">{tokenBalance} tokens</span></p>
-              {ENV === 'dev' && (
-                <button className="add-token-button" onClick={addTokens}>+1 token</button>
-              )}
             </div>
             <button className="logout-button" onClick={handleLogout}>Log Out</button>
           </div>

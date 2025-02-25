@@ -41,6 +41,11 @@ export namespace Database {
     return user;
   }
 
+  export async function getAllUsers(): Promise<UserModel[]> {
+    const users = await db.any('SELECT id, user_id, email FROM users');
+    return users;
+  }
+
   ////////////////////////////////////////////////////////////////////////////////
   // Sessions
   ////////////////////////////////////////////////////////////////////////////////
@@ -247,15 +252,14 @@ export namespace Database {
   // Token Management
   ////////////////////////////////////////////////////////////////////////////////
 
-  export async function getUserTokenBalance(userId: string): Promise<number> {
+  export async function getUserTokenBalance(userId: string): Promise<number | null> {
     const result = await db.oneOrNone(`
       SELECT token_balance 
       FROM user_token_balance 
       WHERE user_id = $1
     `, [userId]);
 
-    // If no record exists, return 0 balance
-    return result?.tokenBalance ?? 0;
+    return result?.tokenBalance ?? null;
   }
 
   export async function deductTokens(userId: string, amount: number): Promise<void> {

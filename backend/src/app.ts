@@ -10,6 +10,8 @@ import { runPrompt } from './llm';
 import stytch from 'stytch';
 import { validateNode } from './util';
 import { LLMResponse } from '../../shared/types/src/models/LLMResponse';
+import schedule from 'node-schedule';
+
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 const app: Express = express();
@@ -35,7 +37,7 @@ if (!AI_SERVICE_URL) {
 // Token costs for different operations
 const EMBEDDING_COST = 1;  // Cost per document embedded
 const SEARCH_COST = 1;    // Cost per search query
-const PROMPT_COST = 1;   // Cost per prompt run
+const PROMPT_COST = 5;   // Cost per prompt run
 
 // Set up Stytch Authentication
 
@@ -661,7 +663,7 @@ aiRouter.post('/run_prompt', async (req: Request, res: Response) => {
 
   // Check token balance
   const tokenBalance = await db.getUserTokenBalance(user.userId);
-  if (tokenBalance < PROMPT_COST) {
+  if (!tokenBalance || tokenBalance < PROMPT_COST) {
     return res.status(403).json({ status: "failed", error: "Insufficient tokens" });
   }
 
@@ -690,7 +692,7 @@ aiRouter.post('/embed', async (req: Request, res: Response) => {
 
   // Check token balance
   const tokenBalance = await db.getUserTokenBalance(user.userId);
-  if (tokenBalance < EMBEDDING_COST) {
+  if (!tokenBalance || tokenBalance < EMBEDDING_COST) {
     return res.status(403).json({ status: "failed", error: "Insufficient tokens" });
   }
 
@@ -727,7 +729,7 @@ aiRouter.post('/search', async (req: Request, res: Response) => {
 
   // Check token balance
   const tokenBalance = await db.getUserTokenBalance(user.userId);
-  if (tokenBalance < SEARCH_COST) {
+  if (!tokenBalance || tokenBalance < SEARCH_COST) {
     return res.status(403).json({ status: "failed", error: "Insufficient tokens" });
   }
 
@@ -790,6 +792,10 @@ tokenRouter.get('/get_balance', async (req: Request, res: Response) => {
     }
 
     const tokenBalance = await db.getUserTokenBalance(user.userId);
+    if (!tokenBalance) {
+      return res.status(404).json({ status: "failed", error: "No token balance found for user" });
+    }
+
     return res.json({ status: "success", tokenBalance });
   } catch (error) {
     if (error instanceof Error) {
@@ -800,9 +806,31 @@ tokenRouter.get('/get_balance', async (req: Request, res: Response) => {
 });
 
 ////////////////////////////////////////////////////////////
-// Start Server
+// Cron Job to add tokens to users
 ////////////////////////////////////////////////////////////
 
+const rule = new schedule.RecurrenceRule();
+rule.minute = process.env.NODE_ENV === 'production' ? '0' : '*'; // In Prod, add tokens at the top of the hour
+rule.second = process.env.NODE_ENV === 'development' ? '*/10' : '*'; // In Dev, add tokens every 10 seconds
+schedule.scheduleJob(rule, async () => {
+  const users = await db.getAllUsers();
+  for (const user of users) {
+    const tokenBalance = await db.getUserTokenBalance(user.userId);
+    if (!tokenBalance) {
+      console.warn(`No token balance found for user ${user.userId}`);
+      continue;
+    }
+
+    if (tokenBalance < 100) {
+      const diff = 100 - tokenBalance;
+      const addAmount = diff > 10 ? 10 : diff;
+      console.log(`Granting ${addAmount} tokens to user ${user.userId}`);
+      await db.addTokens(user.userId, addAmount);
+    }
+  }
+});
+
+// Start Server
 // Routes
 app.use('/auth', authRouter);
 app.use('/api', apiRouter);
