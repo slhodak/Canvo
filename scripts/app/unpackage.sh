@@ -111,5 +111,8 @@ fi
 # Copy the ai-service production env file to plain .env
 cp ~/canvo/ai-service/.env.production ~/canvo/ai-service/.env
 
+# If the docker container is not running, start it
+docker start pgvector
+
 # There must be an canvo-ai.service file in /etc/systemd/system/
 sudo systemctl restart canvo-ai
