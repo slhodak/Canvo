@@ -40,22 +40,27 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   }
 
   const updateDisplayedNode = async (node: VisualNode) => {
+    // In every case where a node display is changed, ensure it is synced too
     node.node.display = !node.node.display;
-    // If this node is being displayed, undisplay all other nodes
     if (node.node.display) {
+      // If this node is being displayed, undisplay all other nodes
       const newNodes = { ...nodes };
       Object.values(newNodes).forEach(n => {
         if (n.node.display && n.node.nodeId !== node.node.nodeId) {
           n.node.display = false;
+          syncNodeUpdate(n.node);
         }
       });
       setNodes(newNodes);
       if (node.node.nodeRunType === NodeRunType.Run) {
-        await runNode(node);
+        await runNode(node); // runNode will sync the node after it is run
+      } else {
+        syncNodeUpdate(node.node);
       }
       updateViewState(node);
     } else {
       setViewState(IOState.ofType(IOStateType.String));
+      syncNodeUpdate(node.node);
     }
   }
 
