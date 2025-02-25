@@ -6,6 +6,7 @@ import { ProjectModel } from '../../shared/types/src/models/project';
 import { BaseNode } from '../../shared/types/src/models/node';
 import { Connection } from '../../shared/types/src/models/connection';
 import { camelizeColumns, formatIntegerArray } from './util';
+import { TransactionType } from '../../shared/types/src/models/tokens';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -39,6 +40,11 @@ export namespace Database {
   export async function getUser(email: string): Promise<UserModel | null> {
     const user = await db.oneOrNone('SELECT id, user_id, email FROM users WHERE email = $1', [email]);
     return user;
+  }
+
+  export async function getAllUsers(): Promise<UserModel[]> {
+    const users = await db.any('SELECT id, user_id, email FROM users');
+    return users;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -247,15 +253,14 @@ export namespace Database {
   // Token Management
   ////////////////////////////////////////////////////////////////////////////////
 
-  export async function getUserTokenBalance(userId: string): Promise<number> {
+  export async function getUserTokenBalance(userId: string): Promise<number | null> {
     const result = await db.oneOrNone(`
       SELECT token_balance 
       FROM user_token_balance 
       WHERE user_id = $1
     `, [userId]);
 
-    // If no record exists, return 0 balance
-    return result?.tokenBalance ?? 0;
+    return result?.tokenBalance ?? null;
   }
 
   export async function deductTokens(userId: string, amount: number): Promise<void> {
@@ -309,21 +314,21 @@ export namespace Database {
     }
   }
 
-  // Optional: Add a function to log token transactions
   export async function logTokenTransaction(
     userId: string,
     amount: number,
-    operation: 'deduct' | 'add',
-    reason: string
+    transactionType: TransactionType,
   ): Promise<void> {
+    const transactionId = uuidv4();
     await db.none(`
       INSERT INTO token_transactions (
         user_id, 
+        transaction_id,
         amount, 
-        operation,
-        reason
+        transaction_type,
+        created_at
       )
-      VALUES ($1, $2, $3, $4)
-    `, [userId, amount, operation, reason]);
+      VALUES ($1, $2, $3, $4, $5)
+    `, [userId, transactionId, amount, transactionType, new Date()]);
   }
 }

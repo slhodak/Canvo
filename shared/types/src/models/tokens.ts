@@ -1,7 +1,7 @@
 export enum TransactionType {
   Purchase = 'purchase',
   Spend = 'spend',
-  Bonus = 'bonus',
+  AutoAdd = 'auto-add',
 }
 
 export interface TokenTransaction {

@@ -10,6 +10,9 @@ import { runPrompt } from './llm';
 import stytch from 'stytch';
 import { validateNode } from './util';
 import { LLMResponse } from '../../shared/types/src/models/LLMResponse';
+import schedule from 'node-schedule';
+import { TransactionType } from '../../shared/types/src/models/tokens';
+
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 const app: Express = express();
@@ -32,10 +35,11 @@ if (!AI_SERVICE_URL) {
   throw new Error('Cannot start server: AI_SERVICE_URL is not set');
 }
 
+const MAX_TOKENS = 500;
 // Token costs for different operations
 const EMBEDDING_COST = 1;  // Cost per document embedded
 const SEARCH_COST = 1;    // Cost per search query
-const PROMPT_COST = 1;   // Cost per prompt run
+const PROMPT_COST = 5;   // Cost per prompt run
 
 // Set up Stytch Authentication
 
@@ -661,7 +665,7 @@ aiRouter.post('/run_prompt', async (req: Request, res: Response) => {
 
   // Check token balance
   const tokenBalance = await db.getUserTokenBalance(user.userId);
-  if (tokenBalance < PROMPT_COST) {
+  if (tokenBalance === null || tokenBalance < PROMPT_COST) {
     return res.status(403).json({ status: "failed", error: "Insufficient tokens" });
   }
 
@@ -674,6 +678,7 @@ aiRouter.post('/run_prompt', async (req: Request, res: Response) => {
 
   const result = await runPrompt(prompt, input);
   await db.deductTokens(user.userId, PROMPT_COST);
+  await db.logTokenTransaction(user.userId, PROMPT_COST, TransactionType.Spend);
   return res.json({ status: "success", result });
 });
 
@@ -690,7 +695,7 @@ aiRouter.post('/embed', async (req: Request, res: Response) => {
 
   // Check token balance
   const tokenBalance = await db.getUserTokenBalance(user.userId);
-  if (tokenBalance < EMBEDDING_COST) {
+  if (tokenBalance === null || tokenBalance < EMBEDDING_COST) {
     return res.status(403).json({ status: "failed", error: "Insufficient tokens" });
   }
 
@@ -706,6 +711,7 @@ aiRouter.post('/embed', async (req: Request, res: Response) => {
 
     // Deduct tokens after successful operation
     await db.deductTokens(user.userId, EMBEDDING_COST);
+    await db.logTokenTransaction(user.userId, EMBEDDING_COST, TransactionType.Spend);
 
     return res.json(result);
   } catch (error) {
@@ -727,7 +733,7 @@ aiRouter.post('/search', async (req: Request, res: Response) => {
 
   // Check token balance
   const tokenBalance = await db.getUserTokenBalance(user.userId);
-  if (tokenBalance < SEARCH_COST) {
+  if (tokenBalance === null || tokenBalance < SEARCH_COST) {
     return res.status(403).json({ status: "failed", error: "Insufficient tokens" });
   }
 
@@ -745,6 +751,7 @@ aiRouter.post('/search', async (req: Request, res: Response) => {
 
     // Deduct tokens after successful operation
     await db.deductTokens(user.userId, SEARCH_COST);
+    await db.logTokenTransaction(user.userId, SEARCH_COST, TransactionType.Spend);
 
     return res.json(result);
   } catch (error) {
@@ -773,6 +780,7 @@ tokenRouter.post('/add', async (req: Request, res: Response) => {
     }
 
     await db.addTokens(user.userId, amount);
+    await db.logTokenTransaction(user.userId, amount, TransactionType.Purchase);
     return res.json({ status: "success" });
   } catch (error) {
     if (error instanceof Error) {
@@ -790,6 +798,10 @@ tokenRouter.get('/get_balance', async (req: Request, res: Response) => {
     }
 
     const tokenBalance = await db.getUserTokenBalance(user.userId);
+    if (tokenBalance === null) {
+      return res.status(404).json({ status: "failed", error: "No token balance found for user" });
+    }
+
     return res.json({ status: "success", tokenBalance });
   } catch (error) {
     if (error instanceof Error) {
@@ -800,9 +812,35 @@ tokenRouter.get('/get_balance', async (req: Request, res: Response) => {
 });
 
 ////////////////////////////////////////////////////////////
-// Start Server
+// Cron Job to add tokens to users
 ////////////////////////////////////////////////////////////
 
+const rule = new schedule.RecurrenceRule();
+if (process.env.NODE_ENV === 'production') {
+  rule.minute = 0;
+} else {
+  rule.second = 0;
+}
+const job = schedule.scheduleJob(rule, async () => {
+  const users = await db.getAllUsers();
+  for (const user of users) {
+    const tokenBalance = await db.getUserTokenBalance(user.userId);
+    if (tokenBalance === null) {
+      console.warn(`No token balance found for user ${user.userId}`);
+      continue;
+    }
+
+    if (tokenBalance < MAX_TOKENS) {
+      const diff = MAX_TOKENS - tokenBalance;
+      const addAmount = diff > 50 ? 50 : diff;
+      console.log(`Granting ${addAmount} tokens to user ${user.userId}`);
+      await db.addTokens(user.userId, addAmount);
+      await db.logTokenTransaction(user.userId, addAmount, TransactionType.AutoAdd);
+    }
+  }
+});
+
+// Start Server
 // Routes
 app.use('/auth', authRouter);
 app.use('/api', apiRouter);
