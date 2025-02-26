@@ -36,17 +36,16 @@ export const NodeGroups = {
   Output: [NodeType.Save],
 }
 
-// A source node is not dependent on other nodes, and will cache its output state
-// A cache node runs an expensive or non-deterministic function, and will cache its output state
-// A run node runs a cheap and deterministic function, and will not cache its output state
-// A None node has no outputs, like a Save node
-// When traversing the DAG, read from Cache and Source nodes, and run Run nodes
-// Cache nodes can only be run manually
+// Whether the node should run automatically or manually
 export enum NodeRunType {
-  Source = 'source',
+  Auto = 'auto',
+  Manual = 'manual',
+}
+
+// Whether the node should save its output state or simply pass on its outputs while calculating the DAG
+export enum NodeCacheType {
   Cache = 'cache',
-  Run = 'run',
-  None = 'none',
+  NoCache = 'no_cache',
 }
 
 export enum NodePropertyType {
@@ -205,7 +204,8 @@ export abstract class BaseNode {
   public inputTypes: IOStateType[] = [];
   public outputState: IOState[] = [];
   public coordinates: Coordinates;
-  public nodeRunType: NodeRunType;
+  public runType: NodeRunType;
+  public cacheType: NodeCacheType;
   public properties: Record<string, NodeProperty> = {};
   // The indexSelections array is used to select an element from an array input if the node expects a string input
   public indexSelections: (number | null)[] = [];
@@ -221,7 +221,8 @@ export abstract class BaseNode {
     inputs: number,
     outputs: number,
     coordinates: Coordinates,
-    nodeRunType: NodeRunType,
+    runType: NodeRunType,
+    cacheType: NodeCacheType,
     properties: Record<string, NodeProperty> = {},
     inputTypes: IOStateType[] = [],
     outputState: IOState[] = [],
@@ -237,7 +238,8 @@ export abstract class BaseNode {
     this.inputs = inputs;
     this.outputs = outputs;
     this.coordinates = coordinates;
-    this.nodeRunType = nodeRunType;
+    this.runType = runType;
+    this.cacheType = cacheType;
     this.properties = properties;
     this.outputState = outputState;
     this.inputTypes = inputTypes;
@@ -266,17 +268,15 @@ export abstract class BaseNode {
   }
 
   public cacheOrClearIOState(runResult: IOState[]) {
-    switch (this.nodeRunType) {
-      case NodeRunType.Source:
-      case NodeRunType.Cache:
+    switch (this.cacheType) {
+      case NodeCacheType.Cache:
         this.outputState = runResult;
         break;
-      case NodeRunType.Run:
-        // To make a Run node displayable, cache its output state
+      case NodeCacheType.NoCache:
+        // Only save the output state if the node is displayed, while it is displayed
         if (this.display) {
           this.outputState = runResult;
         } else {
-          // When not displaying a Run node, reset its output state
           this.resetOutputState();
         }
         break;

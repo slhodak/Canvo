@@ -8,6 +8,7 @@ import {
   Coordinates,
   IOStateType,
   NodePropertyType,
+  NodeCacheType,
 } from '../../shared/types/src/models/node';
 import { LLMResponse } from '../../shared/types/src/models/LLMResponse';
 import { updateNode } from './api';
@@ -26,7 +27,7 @@ export class TextNode extends BaseSyncNode {
     text: string = '',
     outputState: IOState[] = [],
   ) {
-    super(id, authorId, projectId, 'Text', label, display, NodeType.Text, 0, 1, coordinates, NodeRunType.Source, {
+    super(id, authorId, projectId, 'Text', label, display, NodeType.Text, 0, 1, coordinates, NodeRunType.Auto, NodeCacheType.NoCache, {
       text: {
         type: NodePropertyType.String,
         label: 'Text',
@@ -77,7 +78,7 @@ export class FetchNode extends BaseAsyncNode {
     url: string = '',
     outputState: IOState[] = [],
   ) {
-    super(id, authorId, projectId, 'Fetch', label, display, NodeType.Fetch, 0, 1, coordinates, NodeRunType.Cache, {
+    super(id, authorId, projectId, 'Fetch', label, display, NodeType.Fetch, 0, 1, coordinates, NodeRunType.Auto, NodeCacheType.NoCache, {
       url: {
         type: NodePropertyType.String,
         label: 'URL',
@@ -142,7 +143,7 @@ export class PromptNode extends BaseAsyncNode {
     outputState: IOState[] = [],
     indexSelections: (number | null)[] = [],
   ) {
-    super(id, authorId, projectId, 'Prompt', label, display, NodeType.Prompt, 1, 1, coordinates, NodeRunType.Cache, {
+    super(id, authorId, projectId, 'Prompt', label, display, NodeType.Prompt, 1, 1, coordinates, NodeRunType.Auto, NodeCacheType.NoCache, {
       prompt: {
         type: NodePropertyType.String,
         label: 'Prompt',
@@ -220,7 +221,7 @@ export class SaveNode extends BaseAsyncNode {
     outputState: IOState[] = [],
     indexSelections: (number | null)[] = [],
   ) {
-    super(id, authorId, projectId, 'Save', label, display, NodeType.Save, 1, 0, coordinates, NodeRunType.None, {
+    super(id, authorId, projectId, 'Save', label, display, NodeType.Save, 1, 0, coordinates, NodeRunType.Manual, NodeCacheType.NoCache, {
       filename: {
         type: NodePropertyType.String,
         label: 'Filename',
@@ -304,7 +305,7 @@ export class MergeNode extends BaseSyncNode {
     outputState: IOState[] = [IOState.ofType(IOStateType.String), IOState.ofType(IOStateType.String)],
     indexSelections: (number | null)[] = [null, null],
   ) {
-    super(id, authorId, projectId, 'Merge', label, display, NodeType.Merge, 2, 1, coordinates, NodeRunType.Run, {
+    super(id, authorId, projectId, 'Merge', label, display, NodeType.Merge, 2, 1, coordinates, NodeRunType.Auto, NodeCacheType.NoCache, {
       separator: {
         type: NodePropertyType.String,
         label: 'Separator',
@@ -363,7 +364,7 @@ export class SplitNode extends BaseSyncNode {
     outputState: IOState[] = [],
     indexSelections: (number | null)[] = [],
   ) {
-    super(id, authorId, projectId, 'Split', label, display, NodeType.Split, 1, 1, coordinates, NodeRunType.Run, {
+    super(id, authorId, projectId, 'Split', label, display, NodeType.Split, 1, 1, coordinates, NodeRunType.Auto, NodeCacheType.NoCache, {
       separator: {
         type: NodePropertyType.String,
         label: 'Separator',
@@ -416,7 +417,7 @@ export class FileNode extends BaseSyncNode {
     filename: string = '',
     outputState: IOState[] = [],
   ) {
-    super(id, authorId, projectId, 'File', label, display, NodeType.File, 0, 1, coordinates, NodeRunType.Source, {
+    super(id, authorId, projectId, 'File', label, display, NodeType.File, 0, 1, coordinates, NodeRunType.Auto, NodeCacheType.NoCache, {
       filename: {
         type: NodePropertyType.String,
         label: 'Filename',
@@ -507,7 +508,7 @@ export class EditNode extends BaseSyncNode {
     outputState: IOState[] = [],
     indexSelections: (number | null)[] = [],
   ) {
-    super(id, authorId, projectId, 'Edit', label, display, NodeType.Edit, 1, 1, coordinates, NodeRunType.Cache, {
+    super(id, authorId, projectId, 'Edit', label, display, NodeType.Edit, 1, 1, coordinates, NodeRunType.Auto, NodeCacheType.NoCache, {
       content: {
         type: NodePropertyType.String,
         label: 'Content',
@@ -566,7 +567,7 @@ export class EmbedNode extends BaseAsyncNode {
     outputState: IOState[] = [],
     indexSelections: (number | null)[] = [],
   ) {
-    super(id, authorId, projectId, 'Embed', label, display, NodeType.Embed, 1, 1, coordinates, NodeRunType.Cache, {
+    super(id, authorId, projectId, 'Embed', label, display, NodeType.Embed, 1, 1, coordinates, NodeRunType.Manual, NodeCacheType.Cache, {
       documentId: {
         type: NodePropertyType.String,
         label: 'Document ID',
@@ -684,7 +685,7 @@ export class SearchNode extends BaseAsyncNode {
   ) {
     // Actually this is not expensive and perhaps should be a Run node. But that's just because
     // we currently use a pretty low-dimension embedding model.
-    super(id, authorId, projectId, 'Search', label, display, NodeType.Search, 1, 1, coordinates, NodeRunType.Cache, {
+    super(id, authorId, projectId, 'Search', label, display, NodeType.Search, 1, 1, coordinates, NodeRunType.Manual, NodeCacheType.Cache, {
       documentId: {
         type: NodePropertyType.String,
         label: 'Document ID',
@@ -797,7 +798,7 @@ export class JoinNode extends BaseSyncNode {
     separator: string = '\n',
     outputState: IOState[] = [],
   ) {
-    super(id, authorId, projectId, 'Join', label, display, NodeType.Join, 1, 1, coordinates, NodeRunType.Run, {
+    super(id, authorId, projectId, 'Join', label, display, NodeType.Join, 1, 1, coordinates, NodeRunType.Auto, NodeCacheType.NoCache, {
       separator: {
         type: NodePropertyType.String,
         label: 'Separator',
@@ -851,7 +852,7 @@ export class ReplaceNode extends BaseSyncNode {
     outputState: IOState[] = [],
     indexSelections: (number | null)[] = [],
   ) {
-    super(id, authorId, projectId, 'Replace', label, display, NodeType.Replace, 1, 1, coordinates, NodeRunType.Run, {
+    super(id, authorId, projectId, 'Replace', label, display, NodeType.Replace, 1, 1, coordinates, NodeRunType.Auto, NodeCacheType.NoCache, {
       search: {
         type: NodePropertyType.String,
         label: 'Search',
@@ -910,7 +911,7 @@ export class PickNode extends BaseSyncNode {
     index: number = 0,
     outputState: IOState[] = [],
   ) {
-    super(id, authorId, projectId, 'Pick', label, display, NodeType.Pick, 1, 1, coordinates, NodeRunType.Run, {
+    super(id, authorId, projectId, 'Pick', label, display, NodeType.Pick, 1, 1, coordinates, NodeRunType.Auto, NodeCacheType.NoCache, {
       index: {
         type: NodePropertyType.Number,
         label: 'Index',
@@ -960,7 +961,7 @@ export class CacheNode extends BaseSyncNode {
     outputState: IOState[] = [],
     indexSelections: (number | null)[] = [],
   ) {
-    super(id, authorId, projectId, 'Cache', label, display, NodeType.Cache, 1, 1, coordinates, NodeRunType.Cache, {
+    super(id, authorId, projectId, 'Cache', label, display, NodeType.Cache, 1, 1, coordinates, NodeRunType.Manual, NodeCacheType.Cache, {
       updatedAt: {
         type: NodePropertyType.String,
         label: 'Last Updated',
@@ -1008,7 +1009,7 @@ export class CSVNode extends BaseSyncNode {
     lineTerminator: string = '\n',
     outputState: IOState[] = [],
   ) {
-    super(id, authorId, projectId, 'CSV', label, display, NodeType.CSV, 0, 1, coordinates, NodeRunType.Source, {
+    super(id, authorId, projectId, 'CSV', label, display, NodeType.CSV, 0, 1, coordinates, NodeRunType.Auto, NodeCacheType.Cache, {
       file: {
         type: NodePropertyType.File,
         label: 'File',
@@ -1104,7 +1105,7 @@ export class StatsNode extends BaseSyncNode {
     outputState: IOState[] = [],
     indexSelections: (number | null)[] = [],
   ) {
-    super(id, authorId, projectId, 'Stats', label, display, NodeType.Stats, 1, 1, coordinates, NodeRunType.Run,
+    super(id, authorId, projectId, 'Stats', label, display, NodeType.Stats, 1, 1, coordinates, NodeRunType.Auto, NodeCacheType.NoCache,
       {
         wordCounts: {
           type: NodePropertyType.Boolean,
@@ -1213,7 +1214,7 @@ export class ChatNode extends BaseAsyncNode {
     outputState: IOState[] = [],
     indexSelections: (number | null)[] = [],
   ) {
-    super(id, authorId, projectId, 'Chat', label, display, NodeType.Chat, 0, 1, coordinates, NodeRunType.Source, {
+    super(id, authorId, projectId, 'Chat', label, display, NodeType.Chat, 0, 1, coordinates, NodeRunType.Manual, NodeCacheType.Cache, {
       prompt: {
         type: NodePropertyType.String,
         label: 'Prompt',
