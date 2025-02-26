@@ -22,17 +22,11 @@ const App = ({ user }: AppProps) => {
     setProjects(data.projects);
   }
 
-  const handleProjectTitleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!project) return;
+  // Update the project title on the server and in the projects list
+  const handleProjectTitleChange = async (event: React.ChangeEvent<HTMLInputElement>): Promise<boolean> => {
+    if (!project) return false;
 
     const newTitle = event.target.value;
-    setProject({ ...project, title: newTitle });
-    await updateProjectTitle(project.title, newTitle);
-  }
-
-  const updateProjectTitle = async (originalTitle: string, newTitle: string) => {
-    if (!project) return;
-
     try {
       const response = await fetch(`${SERVER_URL}/api/update_project_title`, {
         method: 'POST',
@@ -43,15 +37,21 @@ const App = ({ user }: AppProps) => {
         body: JSON.stringify({ projectId: project.projectId, title: newTitle }),
       });
       const data = await response.json();
-      if (data.status == 'success') {
-        await fetchAllProjects();
+      if (data.status === 'success') {
+        // Update the project in the projects list
+        setProjects(prev => prev.map(p =>
+          p.projectId === project.projectId
+            ? { ...p, title: newTitle }
+            : p
+        ));
+        return true;
       } else {
         console.error('Error updating project title:', data.error);
-        setProject({ ...project, title: originalTitle });
+        return false;
       }
     } catch (error) {
       console.error('Error updating project title:', error);
-      setProject({ ...project, title: originalTitle });
+      return false;
     }
   }
 

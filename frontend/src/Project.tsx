@@ -15,7 +15,7 @@ import { updateNode as syncNodeUpdate } from './api';
 interface ProjectProps {
   user: UserModel;
   project: ProjectModel;
-  handleProjectTitleChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  handleProjectTitleChange: (event: React.ChangeEvent<HTMLInputElement>) => Promise<boolean>;
 }
 
 type NetworkNodes = Record<string, VisualNode>;
@@ -28,6 +28,24 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   const prevConnectionsRef = useRef<NetworkConnections>([]);
   const [selectedNode, setSelectedNode] = useState<VisualNode | null>(null);
   const [viewState, setViewState] = useState<IOState>(IOState.ofType(IOStateType.String));
+  const [projectTitle, setProjectTitle] = useState(project.title);
+
+  // Update a local copy of the title instead of the project.title itself so that each change does not trigger a re-render
+  const handleLocalTitleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newTitle = event.target.value;
+    setProjectTitle(newTitle);
+    const updateSuccessful = await handleProjectTitleChange(event);
+    // If the server update fails, revert to the original title, otherwise update the project object
+    if (!updateSuccessful) {
+      setProjectTitle(project.title);
+    } else {
+      project.title = newTitle;
+    }
+  };
+
+  useEffect(() => {
+    setProjectTitle(project.title);
+  }, [project.title]);
 
   // Notice that this only displays the first output state
   const updateViewState = (node: VisualNode) => {
@@ -418,7 +436,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   return (
     <div className="project-container">
       <div className="project-header">
-        <input type="text" className="project-title-input" value={project?.title} onChange={handleProjectTitleChange} />
+        <input type="text" className="project-title-input" value={projectTitle} onChange={handleLocalTitleChange} />
       </div>
 
       <div className="project-panes">
