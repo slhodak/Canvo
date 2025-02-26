@@ -2,7 +2,7 @@
   "name": "backend",
   "license": "UNLICENSED",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "scripts": {
     "start": "yarn run pm2 start ecosystem.config.js",
     "restart": "yarn run pm2 restart ecosystem.config.js",
