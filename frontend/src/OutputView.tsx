@@ -14,7 +14,6 @@ const SelectorDisplayNames: Record<IOStateType, string> = {
   [IOStateType.Empty]: 'None',
 }
 
-// Let there be multiple panes for the output view
 const OutputView = ({ outputState }: OutputViewProps) => {
   const [selectedStateType, setSelectedStateType] = useState<IOStateType>(outputState.type);
   const validOutputTypes = Object.values(IOStateType).filter((type) => type !== IOStateType.Empty);
