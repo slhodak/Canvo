@@ -126,7 +126,7 @@ const PropertyInputContainer = ({ propertyKey, property, node, updateNode }: Pro
 }
 
 ////////////////////////////////////////////////////////////
-// TextPropertyInput
+// Shared Property Input Props
 ////////////////////////////////////////////////////////////
 
 interface PropertyInputProps {
@@ -136,6 +136,10 @@ interface PropertyInputProps {
   node: VisualNode;
   updateNode: (updatedNode: VisualNode, shouldSync?: boolean) => void;
 }
+
+////////////////////////////////////////////////////////////
+// TextPropertyInput
+////////////////////////////////////////////////////////////
 
 interface TextPropertyInputProps extends PropertyInputProps {
   initialValue: string;
