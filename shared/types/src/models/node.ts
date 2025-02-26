@@ -20,15 +20,18 @@ export enum NodeType {
   // Special
   Cache = 'cache',
   Pick = 'pick',
-  Save = 'save',
   Stats = 'stats',
+
+  // Output
+  Save = 'save',
 }
 
 export const NodeGroups = {
   Source: [NodeType.Text, NodeType.File, NodeType.CSV, NodeType.Fetch],
   Basic: [NodeType.Merge, NodeType.Split, NodeType.Join, NodeType.Replace, NodeType.Edit],
   Intelligent: [NodeType.Prompt, NodeType.Embed, NodeType.Search],
-  Special: [NodeType.Cache, NodeType.Pick, NodeType.Save, NodeType.Stats],
+  Utility: [NodeType.Cache, NodeType.Pick, NodeType.Stats],
+  Output: [NodeType.Save],
 }
 
 // A source node is not dependent on other nodes, and will cache its output state
