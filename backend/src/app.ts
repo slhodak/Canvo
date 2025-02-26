@@ -213,7 +213,7 @@ authRouter.get('/check', async (req: Request, res: Response) => {
   const sessionToken = req.cookies?.session_token;
   if (sessionToken === undefined) {
     // This prevents the frontend from showing a 'failed' message if there was no session token to check
-    return res.json({ status: 'neutral' });
+    return res.json({ status: 'failed' });
   }
 
   const success = await checkSessionToken(sessionToken);
