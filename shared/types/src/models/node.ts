@@ -1,19 +1,37 @@
 export enum NodeType {
+  // Sources
   Text = 'text',
+  File = 'file',
+  CSV = 'CSV',
   Fetch = 'fetch',
-  Prompt = 'prompt',
-  Save = 'save',
+
+  // Basic text processing
   Merge = 'merge',
   Split = 'split',
-  File = 'file',
-  Edit = 'edit',
-  Embed = 'embed',
-  Search = 'search',
   Join = 'join',
   Replace = 'replace',
-  Pick = 'pick',
+  Edit = 'edit',
+
+  // AI-Enabled
+  Prompt = 'prompt',
+  Embed = 'embed',
+  Search = 'search',
+
+  // Special
   Cache = 'cache',
-  CSV = 'CSV',
+  Pick = 'pick',
+  Stats = 'stats',
+
+  // Output
+  Save = 'save',
+}
+
+export const NodeGroups = {
+  Source: [NodeType.Text, NodeType.File, NodeType.CSV, NodeType.Fetch],
+  Basic: [NodeType.Merge, NodeType.Split, NodeType.Join, NodeType.Replace, NodeType.Edit],
+  Intelligent: [NodeType.Prompt, NodeType.Embed, NodeType.Search],
+  Utility: [NodeType.Cache, NodeType.Pick, NodeType.Stats],
+  Output: [NodeType.Save],
 }
 
 // A source node is not dependent on other nodes, and will cache its output state
@@ -33,12 +51,15 @@ export enum NodePropertyType {
   String = 'string',
   Number = 'number',
   File = 'file',
+  Boolean = 'boolean',
 }
+
+type NodePropertyValue = string | number | boolean;
 
 export interface NodeProperty {
   type: NodePropertyType;
   label: string;
-  value: string | number;
+  value: NodePropertyValue;
   editable: boolean;
   displayed: boolean;
 }
@@ -230,7 +251,7 @@ export abstract class BaseNode {
     throw new Error('Not implemented');
   }
 
-  public setProperty(key: string, value: string | number) {
+  public setProperty(key: string, value: NodePropertyValue) {
     this.properties[key].value = value;
   }
 

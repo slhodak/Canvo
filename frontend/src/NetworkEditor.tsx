@@ -3,7 +3,7 @@ import './NetworkEditor.css';
 import { VisualNode, VisualConnection, DragState, WireState } from './NetworkTypes';
 import { Node } from './Node';
 import { ConnectionUtils as cu, NetworkEditorUtils as neu } from './Utils';
-import { Coordinates, NodeType } from '../../shared/types/src/models/node';
+import { Coordinates, NodeType, NodeGroups } from '../../shared/types/src/models/node';
 import { Connection } from '../../shared/types/src/models/connection';
 import { NodeUtils as nu } from './Utils';
 import { ProjectModel } from '../../shared/types/src/models/project';
@@ -46,6 +46,7 @@ const NetworkEditor = ({
   const [isHoveringEditor, setIsHoveringEditor] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<Coordinates>({ x: 0, y: 0 });
+  const [selectedDropdownOption, setSelectedDropdownOption] = useState<NodeType | null>(null);
   const [dragState, setDragState] = useState<DragState>({
     isDragging: false,
     nodeId: null,
@@ -384,11 +385,8 @@ const NetworkEditor = ({
 
   const handleSearchKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && searchTerm !== '') {
-      const firstMatch = Object.values(NodeType).find(type =>
-        type.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      if (firstMatch) {
-        handleNewNodeClick(firstMatch);
+      if (selectedDropdownOption) {
+        handleNewNodeClick(selectedDropdownOption);
       }
     }
   };
@@ -476,6 +474,7 @@ const NetworkEditor = ({
           setSearchTerm={setSearchTerm}
           onClickDropdownOption={handleNewNodeClick}
           handleSearchKeyDown={handleSearchKeyDown}
+          setSelectedDropdownOption={setSelectedDropdownOption}
         />
       }
     </div>
@@ -492,9 +491,28 @@ interface DropdownProps {
   setSearchTerm: (searchTerm: string) => void;
   onClickDropdownOption: (nodeType: NodeType) => void;
   handleSearchKeyDown: (e: React.KeyboardEvent) => void;
+  setSelectedDropdownOption: (nodeType: NodeType) => void;
 }
 
-const Dropdown = ({ showDropdown, searchTerm, dropdownPosition, setSearchTerm, onClickDropdownOption, handleSearchKeyDown }: DropdownProps) => {
+const Dropdown = ({ showDropdown, searchTerm, dropdownPosition, setSearchTerm, onClickDropdownOption, handleSearchKeyDown, setSelectedDropdownOption }: DropdownProps) => {
+  const [firstMatch, setFirstMatch] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Find first matching node type
+    if (searchTerm) {
+      const searchTermLower = searchTerm.toLowerCase();
+      for (const nodeTypes of Object.values(NodeGroups)) {
+        for (const nodeType of nodeTypes) {
+          if (nodeType.toLowerCase().startsWith(searchTermLower)) {
+            setFirstMatch(nodeType);
+            setSelectedDropdownOption(nodeType as NodeType);
+            break;
+          }
+        }
+      }
+    }
+  }, [searchTerm, setSelectedDropdownOption]);
+
   return (
     <div
       className={`app-dropdown ${showDropdown ? 'visible' : ''}`}
@@ -513,20 +531,22 @@ const Dropdown = ({ showDropdown, searchTerm, dropdownPosition, setSearchTerm, o
         placeholder="Search nodes..."
         onClick={(e) => e.stopPropagation()}
       />
-      {Object.values(NodeType)
-        .map((nodeType, index) => {
-          const isFirstMatch = searchTerm !== "" &&
-            index === Object.values(NodeType).findIndex(type =>
-              type.toLowerCase().includes(searchTerm.toLowerCase())
+
+      {Object.entries(NodeGroups)
+        .map(([groupName, nodeTypes]) => {
+          const result = [];
+          result.push(<div key={groupName} className="app-dropdown-group-header">{groupName}</div>);
+          for (const nodeType of nodeTypes) {
+            result.push(
+              <DropdownOption
+                key={nodeType}
+                label={nodeType}
+                onClick={() => onClickDropdownOption(nodeType)}
+                isHighlighted={nodeType === firstMatch}
+              />
             );
-          return (
-            <DropdownOption
-              key={nodeType}
-              label={nodeType}
-              onClick={() => onClickDropdownOption(nodeType)}
-              isHighlighted={isFirstMatch}
-            />
-          );
+          }
+          return result;
         })}
     </div>
   );

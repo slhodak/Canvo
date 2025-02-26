@@ -48,12 +48,6 @@
   display: block;
 }
 
-.app-dropdown-option {
-  padding: 0px 4px;
-  cursor: pointer;
-  color: var(--text-color);
-}
-
 .app-dropdown-option:hover {
   background-color: rgb(40, 20, 142);
   font-weight: bold;
@@ -67,7 +61,21 @@
   outline: none;
 }
 
+.app-dropdown-group-header {
+  padding: 0px 4px;
+  color: var(--background-dark-5);
+  font-weight: bold;
+  font-size: 0.7rem;
+  cursor: default;
+}
+
 .app-dropdown-option.highlighted {
   background-color: rgb(40, 20, 142);
   font-weight: bold;
+}
+
+.app-dropdown-option {
+  padding: 0px 4px;
+  cursor: pointer;
+  color: var(--text-color);
 }

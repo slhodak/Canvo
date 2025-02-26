@@ -110,6 +110,15 @@ const PropertyInputContainer = ({ propertyKey, property, node, updateNode }: Pro
         node={node}
         updateNode={updateNode}
       />;
+    case NodePropertyType.Boolean:
+      return <BooleanPropertyInput
+        propertyKey={propertyKey}
+        label={property.label}
+        editable={property.editable}
+        initialValue={property.value as boolean}
+        node={node}
+        updateNode={updateNode}
+      />;
 
     default:
       return null;
@@ -235,3 +244,27 @@ const FilePropertyInput = ({ propertyKey, label, node, updateNode }: FilePropert
     </div>
   );
 };
+
+////////////////////////////////////////////////////////////
+// BooleanPropertyInput
+////////////////////////////////////////////////////////////
+
+interface BooleanPropertyInputProps extends PropertyInputProps {
+  initialValue: boolean;
+}
+
+const BooleanPropertyInput = ({ propertyKey, label, editable, initialValue, node, updateNode }: BooleanPropertyInputProps) => {
+  const handlePropertyChange = (newValue: boolean) => {
+    node.node.setProperty(propertyKey, newValue);
+    updateNode(node);
+  }
+
+  return <div key={propertyKey} className="parameters-pane-property-container boolean-property">
+    <label className="parameters-pane-property-label">{label}</label>
+    {editable ? (
+      <input type="checkbox" checked={initialValue} onChange={(e) => handlePropertyChange(e.target.checked)} />
+    ) : (
+      <div className="parameters-pane-property-value">{initialValue ? "True" : "False"}</div>
+    )}
+  </div>
+}
