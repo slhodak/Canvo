@@ -36,6 +36,7 @@ if (!AI_SERVICE_URL) {
 }
 
 const MAX_TOKENS = 500;
+const TOKEN_AUTO_ADD_AMOUNT = 50;
 // Token costs for different operations
 const EMBEDDING_COST = 1;  // Cost per document embedded
 const SEARCH_COST = 1;    // Cost per search query
@@ -826,13 +827,15 @@ const job = schedule.scheduleJob(rule, async () => {
   for (const user of users) {
     const tokenBalance = await db.getUserTokenBalance(user.userId);
     if (tokenBalance === null) {
-      console.warn(`No token balance found for user ${user.userId}`);
+      console.warn(`No token balance found for user ${user.userId}, will initialize with ${TOKEN_AUTO_ADD_AMOUNT} tokens`);
+      await db.addTokens(user.userId, TOKEN_AUTO_ADD_AMOUNT);
+      await db.logTokenTransaction(user.userId, TOKEN_AUTO_ADD_AMOUNT, TransactionType.AutoAdd);
       continue;
     }
 
     if (tokenBalance < MAX_TOKENS) {
       const diff = MAX_TOKENS - tokenBalance;
-      const addAmount = diff > 50 ? 50 : diff;
+      const addAmount = diff > TOKEN_AUTO_ADD_AMOUNT ? TOKEN_AUTO_ADD_AMOUNT : diff;
       console.log(`Granting ${addAmount} tokens to user ${user.userId}`);
       await db.addTokens(user.userId, addAmount);
       await db.logTokenTransaction(user.userId, addAmount, TransactionType.AutoAdd);
