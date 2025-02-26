@@ -3,7 +3,7 @@ import './NetworkEditor.css';
 import { VisualNode, VisualConnection, DragState, WireState } from './NetworkTypes';
 import { Node } from './Node';
 import { ConnectionUtils as cu, NetworkEditorUtils as neu } from './Utils';
-import { Coordinates, NodeType } from '../../shared/types/src/models/node';
+import { Coordinates, NodeType, NodeGroups } from '../../shared/types/src/models/node';
 import { Connection } from '../../shared/types/src/models/connection';
 import { NodeUtils as nu } from './Utils';
 import { ProjectModel } from '../../shared/types/src/models/project';
@@ -513,20 +513,22 @@ const Dropdown = ({ showDropdown, searchTerm, dropdownPosition, setSearchTerm, o
         placeholder="Search nodes..."
         onClick={(e) => e.stopPropagation()}
       />
-      {Object.values(NodeType)
-        .map((nodeType, index) => {
-          const isFirstMatch = searchTerm !== "" &&
-            index === Object.values(NodeType).findIndex(type =>
-              type.toLowerCase().includes(searchTerm.toLowerCase())
+
+      {Object.entries(NodeGroups)
+        .map(([groupName, nodeTypes]) => {
+          const result = [];
+          result.push(<div className="app-dropdown-group-header">{groupName}</div>);
+          for (const nodeType of nodeTypes) {
+            result.push(
+              <DropdownOption
+                key={nodeType}
+                label={nodeType}
+                onClick={() => onClickDropdownOption(nodeType)}
+                isHighlighted={false}
+              />
             );
-          return (
-            <DropdownOption
-              key={nodeType}
-              label={nodeType}
-              onClick={() => onClickDropdownOption(nodeType)}
-              isHighlighted={isFirstMatch}
-            />
-          );
+          }
+          return result;
         })}
     </div>
   );
