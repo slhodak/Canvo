@@ -1,6 +1,6 @@
 import './OutputView.css';
 import { IOState, IOStateType } from '../../shared/types/src/models/node';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 interface OutputViewProps {
   outputState: IOState;
@@ -18,38 +18,6 @@ const SelectorDisplayNames: Record<IOStateType, string> = {
 const OutputView = ({ outputState }: OutputViewProps) => {
   const [selectedStateType, setSelectedStateType] = useState<IOStateType>(outputState.type);
   const validOutputTypes = Object.values(IOStateType).filter((type) => type !== IOStateType.Empty);
-
-  const renderValue = useCallback((): string => {
-    // Just because a state type is selected doesn't mean this output state has any value of that type
-    switch (selectedStateType) {
-      case IOStateType.String:
-        if (outputState.type === IOStateType.String) {
-          return outputState.getValue() as string;
-        } else {
-          return 'N/A';
-        }
-      case IOStateType.Number:
-        if (outputState.type === IOStateType.Number) {
-          return (outputState.getValue() as number).toString();
-        } else {
-          return 'N/A';
-        }
-      case IOStateType.StringArray:
-        if (outputState.type === IOStateType.StringArray) {
-          return (outputState.getValue() as string[]).join(', ');
-        } else {
-          return 'N/A';
-        }
-      case IOStateType.Table:
-        if (outputState.type === IOStateType.Table) {
-          return (outputState.getValue() as string[][]).join(', ');
-        } else {
-          return 'N/A';
-        }
-      default:
-        return 'None';
-    }
-  }, [selectedStateType, outputState]);
 
   useEffect(() => {
     setSelectedStateType(outputState.type);
@@ -73,9 +41,9 @@ const OutputView = ({ outputState }: OutputViewProps) => {
       <div className="output-view-content">
         {/* Room for different kinds of display components based on output type */}
         {selectedStateType === IOStateType.String ? (
-          <div className="output-view-text">{renderValue()}</div>
+          <div className="output-view-text">{outputState.stringValue}</div>
         ) : selectedStateType === IOStateType.Number ? (
-          <div className="output-view-number">{renderValue()}</div>
+          <div className="output-view-number">{outputState.numberValue}</div>
         ) : selectedStateType === IOStateType.StringArray ? (
           <div className="output-view-string-array">
             <div className="output-view-string-array-items">
