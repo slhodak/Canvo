@@ -13,6 +13,7 @@ export enum NodeType {
   Edit = 'edit',
 
   // AI-Enabled
+  Chat = 'chat',
   Prompt = 'prompt',
   Embed = 'embed',
   Search = 'search',
@@ -26,10 +27,11 @@ export enum NodeType {
   Save = 'save',
 }
 
+// Must add the node type here for it to be available in the Add Node Dropdown
 export const NodeGroups = {
   Source: [NodeType.Text, NodeType.File, NodeType.CSV, NodeType.Fetch],
   Basic: [NodeType.Merge, NodeType.Split, NodeType.Join, NodeType.Replace, NodeType.Edit],
-  Intelligent: [NodeType.Prompt, NodeType.Embed, NodeType.Search],
+  Intelligent: [NodeType.Chat, NodeType.Prompt, NodeType.Embed, NodeType.Search],
   Utility: [NodeType.Cache, NodeType.Pick, NodeType.Stats],
   Output: [NodeType.Save],
 }
@@ -179,6 +181,14 @@ export class IOState {
       return false;
     }
     return true;
+  }
+
+  public appendString(string: string) {
+    if (this.stringValue === null) {
+      this.stringValue = string;
+    } else {
+      this.stringValue += string;
+    }
   }
 }
 

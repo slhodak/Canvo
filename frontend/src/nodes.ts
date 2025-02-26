@@ -1197,3 +1197,74 @@ export class StatsNode extends BaseSyncNode {
     return [new IOState({ tableValue: statsTable })];
   }
 }
+
+// The Chat node allows the user to chat with a model
+// It has a parameter for the current prompt/user input
+// Output is whole history of the chat, to which new prompts and responses are added on the completion of each run
+export class ChatNode extends BaseAsyncNode {
+  constructor(
+    id: string,
+    authorId: string,
+    projectId: string,
+    coordinates: Coordinates,
+    label: string = 'chat',
+    display: boolean = false,
+    prompt: string = '',
+    outputState: IOState[] = [],
+    indexSelections: (number | null)[] = [],
+  ) {
+    super(id, authorId, projectId, 'Chat', label, display, NodeType.Chat, 0, 1, coordinates, NodeRunType.Source, {
+      prompt: {
+        type: NodePropertyType.String,
+        label: 'Prompt',
+        value: prompt,
+        editable: true,
+        displayed: true,
+      },
+    }, [IOStateType.String], outputState, indexSelections);
+  }
+
+  public static override fromObject(object: BaseNode): BaseNode {
+    return new ChatNode(
+      object.nodeId,
+      object.authorId,
+      object.projectId,
+      object.coordinates,
+      object.label,
+      object.display,
+      object.properties.prompt.value as string,
+      object.outputState.map(IOState.fromObject),
+      object.indexSelections
+    );
+  }
+
+  protected override resetOutputState(): void {
+    this.outputState = [IOState.ofType(IOStateType.String)];
+  }
+
+  // Call the LLM with the current prompt and add the response to the history
+  async _run(inputValues: IOState[]): Promise<IOState[]> {
+    const prompt = inputValues[0]?.stringValue;
+    if (!prompt) return this.outputState;
+
+    try {
+      const response = await fetch(`${SERVER_URL}/ai/chat`, {
+        credentials: 'include',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ projectId: this.projectId, nodeId: this.nodeId, prompt }),
+      });
+      const data: LLMResponse = await response.json();
+      if (!this.outputState[0]) {
+        this.outputState[0] = new IOState({ stringValue: '' });
+      }
+      this.outputState[0].appendString(`${prompt}\n${data.result}\n\n`);
+      return this.outputState;
+    } catch (error) {
+      console.error('Error in ChatNode:', error);
+      return this.outputState;
+    }
+  }
+}

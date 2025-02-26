@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 import path from 'path';
 import { Database as db } from './db';
 import { UserModel } from '../../shared/types/src/models/user';
-import { runPrompt } from './llm';
+import { runPrompt, runSimpleChat, calculateChatCost } from './llm';
 import stytch from 'stytch';
 import { validateNode } from './util';
 import { LLMResponse } from '../../shared/types/src/models/LLMResponse';
@@ -658,6 +658,30 @@ aiRouter.use('/', (req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
+aiRouter.post('/chat', async (req: Request, res: Response) => {
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
+  }
+
+  const { projectId, nodeId, prompt } = req.body;
+  if (!projectId || !nodeId || !prompt) {
+    return res.status(400).json({ status: "failed", error: "No projectId or nodeId or prompt provided" });
+  }
+
+  // Check token balance
+  const cost = await calculateChatCost(prompt);
+  const tokenBalance = await db.getUserTokenBalance(user.userId);
+  if (tokenBalance === null || tokenBalance < cost) {
+    return res.status(403).json({ status: "failed", error: "Insufficient tokens for this prompt", cost: cost, balance: tokenBalance });
+  }
+
+  const result = await runSimpleChat(prompt);
+  await db.deductTokens(user.userId, cost);
+  await db.logTokenTransaction(user.userId, cost, TransactionType.Spend);
+  return res.json({ status: "success", result });
+});
+
 aiRouter.post('/run_prompt', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
   if (!user) {
@@ -670,8 +694,6 @@ aiRouter.post('/run_prompt', async (req: Request, res: Response) => {
     return res.status(403).json({ status: "failed", error: "Insufficient tokens" });
   }
 
-  // TODO: The prompt node could have multiple inputs?
-  // Should we just get the prompt node info from the backend assuming it was already synced, or expect it in the request?
   const { projectId, nodeId, prompt, input } = req.body;
   if (!projectId || !nodeId || !prompt || !input) {
     return res.status(400).json({ status: "failed", error: "No projectId or nodeId or prompt or input provided" });

@@ -236,7 +236,10 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   // If this node is a Run node, run it once you've gathered all the input values
   const _runPriorDAG = useCallback(async (node: VisualNode, shouldSync: boolean = true): Promise<IOState[]> => {
     const inputConnections = connections.filter(conn => conn.connection.toNode === node.node.nodeId);
-    if (inputConnections.length === 0 && node.node.nodeRunType) {
+    // TODO: Deal with the below question
+    // Assumes that any non-source node will/must have at least one input connection
+    // But there are cache nodes that need to be run manually -- must they all require input connections?
+    if (inputConnections.length === 0 && node.node.nodeRunType !== NodeRunType.Source) {
       console.debug('Node has no input connections');
       return [];
     }
