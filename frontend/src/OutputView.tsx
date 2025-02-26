@@ -38,7 +38,7 @@ const OutputView = ({ outputState }: OutputViewProps) => {
         })}
       </div>
       <div className="output-view-content">
-        {/* Room for different kinds of display components based on output type */}
+        {/* Different kinds of display components based on output type */}
         {selectedStateType === IOStateType.String ? (
           <div className="output-view-text">{outputState.stringValue}</div>
         ) : selectedStateType === IOStateType.Number ? (
