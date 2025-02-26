@@ -14,6 +14,7 @@ export enum NodeType {
   Pick = 'pick',
   Cache = 'cache',
   CSV = 'CSV',
+  Stats = 'stats',
 }
 
 // A source node is not dependent on other nodes, and will cache its output state

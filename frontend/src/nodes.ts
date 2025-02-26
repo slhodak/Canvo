@@ -1082,3 +1082,95 @@ export class CSVNode extends BaseSyncNode {
     this.properties.filename.value = file.name;
   }
 }
+
+// Computes statistics about a string. Outputs a table with the statistics.
+// The input is a string, and the output is a table with the statistics.
+// The statistics are:
+// - Number of characters
+// - Number of words
+// - Number of sentences
+// - Number of paragraphs
+// - Number of bytes
+// - Counts of words
+// - Counts of characters
+export class StatsNode extends BaseSyncNode {
+  constructor(
+    id: string,
+    authorId: string,
+    projectId: string,
+    coordinates: Coordinates,
+    label: string = 'stats',
+    display: boolean = false,
+    outputState: IOState[] = [],
+    indexSelections: (number | null)[] = [],
+  ) {
+    super(id, authorId, projectId, 'Stats', label, display, NodeType.Stats, 1, 1, coordinates, NodeRunType.Run,
+      {}, // No properties
+      [IOStateType.String], outputState, indexSelections);
+  }
+
+  public static override fromObject(object: BaseNode): BaseNode {
+    return new StatsNode(
+      object.nodeId,
+      object.authorId,
+      object.projectId,
+      object.coordinates,
+      object.label,
+      object.display,
+      object.outputState.map(IOState.fromObject),
+      object.indexSelections
+    );
+  }
+
+  protected override resetOutputState(): void {
+    this.outputState = [IOState.ofType(IOStateType.Table)];
+  }
+
+  _run(inputValues: IOState[]): IOState[] {
+    const input = inputValues[0]?.stringValue;
+    if (!input) return this.outputState;
+
+    const basicStats = {
+      characters: input.length,
+      words: input.split(/\s+/).filter(Boolean).length,
+      sentences: input.split(/[.!?]/).filter(Boolean).length,
+      paragraphs: input.split(/\n\n/).filter(Boolean).length,
+      bytes: new TextEncoder().encode(input).length,
+    }
+    const counts = {
+      word: input.split(/\s+/).filter(Boolean).reduce((acc, word) => {
+        acc[word] = (acc[word] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>),
+      character: input.split('').reduce((acc, char) => {
+        const displayChar = char === ' ' ? 'Space' : char === '\n' ? 'Newline' : char;
+        acc[displayChar] = (acc[displayChar] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>),
+    };
+
+    // Sort word counts by frequency (descending)
+    counts.word = Object.fromEntries(
+      Object.entries(counts.word).sort(([,a], [,b]) => b - a)
+    );
+    // Sort character counts by frequency (descending) 
+    counts.character = Object.fromEntries(
+      Object.entries(counts.character).sort(([,a], [,b]) => b - a)
+    );
+
+    const statsTable = []
+    for (const [key, value] of Object.entries(basicStats)) {
+      statsTable.push([key, value.toString()]);
+    }
+    statsTable.push(['Word Counts']);
+    for (const [key, value] of Object.entries(counts.word)) {
+      statsTable.push([key, value.toString()]);
+    }
+    statsTable.push(['Character Counts']);
+    for (const [key, value] of Object.entries(counts.character)) {
+      statsTable.push([key, value.toString()]);
+    }
+
+    return [new IOState({ tableValue: statsTable })];
+  }
+}

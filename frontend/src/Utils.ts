@@ -1,6 +1,6 @@
 import { VisualNode } from "./NetworkTypes";
 import { BaseNode, NodeType, Coordinates } from "../../shared/types/src/models/node";
-import { TextNode, PromptNode, SaveNode, MergeNode, SplitNode, FileNode, EditNode, EmbedNode, SearchNode, JoinNode, ReplaceNode, FetchNode, PickNode, CacheNode, CSVNode } from "./nodes";
+import { TextNode, PromptNode, SaveNode, MergeNode, SplitNode, FileNode, EditNode, EmbedNode, SearchNode, JoinNode, ReplaceNode, FetchNode, PickNode, CacheNode, CSVNode, StatsNode } from "./nodes";
 
 export const NetworkEditorUtils = {
   NODE_WIDTH: 100,
@@ -53,6 +53,8 @@ export const NodeUtils = {
         return new CacheNode(nodeId, authorId, projectId, coordinates);
       case NodeType.CSV:
         return new CSVNode(nodeId, authorId, projectId, coordinates);
+      case NodeType.Stats:
+        return new StatsNode(nodeId, authorId, projectId, coordinates);
       default:
         return null;
     }
@@ -90,6 +92,8 @@ export const NodeUtils = {
         return CacheNode.fromObject(object);
       case NodeType.CSV:
         return CSVNode.fromObject(object);
+      case NodeType.Stats:
+        return StatsNode.fromObject(object);
       default:
         return null;
     }

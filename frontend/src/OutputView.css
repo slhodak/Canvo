@@ -99,6 +99,7 @@
   width: var(--table-cell-width);
   flex-shrink: 0;
   border-right: 1px solid var(--background-dark-1);
+  padding: 1px 0px 1px 6px;
 }
 
 .output-view-table-body {
@@ -117,4 +118,6 @@
   border-right: 1px solid var(--background-dark-1);
   padding: 1px 0px 1px 6px;
   flex-shrink: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
