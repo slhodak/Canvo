@@ -34,12 +34,15 @@ export enum NodePropertyType {
   String = 'string',
   Number = 'number',
   File = 'file',
+  Boolean = 'boolean',
 }
+
+type NodePropertyValue = string | number | boolean;
 
 export interface NodeProperty {
   type: NodePropertyType;
   label: string;
-  value: string | number;
+  value: NodePropertyValue;
   editable: boolean;
   displayed: boolean;
 }
@@ -231,7 +234,7 @@ export abstract class BaseNode {
     throw new Error('Not implemented');
   }
 
-  public setProperty(key: string, value: string | number) {
+  public setProperty(key: string, value: NodePropertyValue) {
     this.properties[key].value = value;
   }
 

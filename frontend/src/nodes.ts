@@ -1105,7 +1105,22 @@ export class StatsNode extends BaseSyncNode {
     indexSelections: (number | null)[] = [],
   ) {
     super(id, authorId, projectId, 'Stats', label, display, NodeType.Stats, 1, 1, coordinates, NodeRunType.Run,
-      {}, // No properties
+      {
+        wordCounts: {
+          type: NodePropertyType.Boolean,
+          label: 'Count Words',
+          value: false,
+          editable: true,
+          displayed: true,
+        },
+        characterCounts: {
+          type: NodePropertyType.Boolean,
+          label: 'Count Characters',
+          value: false,
+          editable: true,
+          displayed: true,
+        }
+      },
       [IOStateType.String], outputState, indexSelections);
   }
 
@@ -1137,39 +1152,46 @@ export class StatsNode extends BaseSyncNode {
       paragraphs: input.split(/\n\n/).filter(Boolean).length,
       bytes: new TextEncoder().encode(input).length,
     }
-    const counts = {
-      word: input.split(/\s+/).filter(Boolean).reduce((acc, word) => {
-        acc[word] = (acc[word] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>),
-      character: input.split('').reduce((acc, char) => {
-        const displayChar = char === ' ' ? 'Space' : char === '\n' ? 'Newline' : char;
-        acc[displayChar] = (acc[displayChar] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>),
-    };
-
-    // Sort word counts by frequency (descending)
-    counts.word = Object.fromEntries(
-      Object.entries(counts.word).sort(([,a], [,b]) => b - a)
-    );
-    // Sort character counts by frequency (descending) 
-    counts.character = Object.fromEntries(
-      Object.entries(counts.character).sort(([,a], [,b]) => b - a)
-    );
 
     const statsTable = []
     statsTable.push(['Basic Stats']);
     for (const [key, value] of Object.entries(basicStats)) {
       statsTable.push([key, value.toString()]);
     }
-    statsTable.push(['Word Counts']);
-    for (const [key, value] of Object.entries(counts.word)) {
-      statsTable.push([key, value.toString()]);
+
+    const counts = {
+      word: {} as Record<string, number>,
+      character: {} as Record<string, number>,
     }
-    statsTable.push(['Character Counts']);
-    for (const [key, value] of Object.entries(counts.character)) {
-      statsTable.push([key, value.toString()]);
+    if (this.properties.wordCounts.value === true) {
+      counts.word = input.split(/\s+/).filter(Boolean).reduce((acc, word) => {
+        acc[word] = (acc[word] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>)
+      // Sort by frequency (descending)
+      counts.word = Object.fromEntries(
+        Object.entries(counts.word).sort(([,a], [,b]) => b - a)
+      );
+      statsTable.push(['Word Counts']);
+      for (const [key, value] of Object.entries(counts.word)) {
+        statsTable.push([key, value.toString()]);
+      }
+    }
+
+    if (this.properties.characterCounts.value === true) {
+      counts.character = input.split('').reduce((acc, char) => {
+        const displayChar = char === ' ' ? 'Space' : char === '\n' ? 'Newline' : char;
+        acc[displayChar] = (acc[displayChar] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>)
+      // Sort by frequency (descending) 
+      counts.character = Object.fromEntries(
+        Object.entries(counts.character).sort(([,a], [,b]) => b - a)
+      );
+      statsTable.push(['Character Counts']);
+      for (const [key, value] of Object.entries(counts.character)) {
+        statsTable.push([key, value.toString()]);
+      }
     }
 
     return [new IOState({ tableValue: statsTable })];
