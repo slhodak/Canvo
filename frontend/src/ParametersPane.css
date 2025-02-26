@@ -70,6 +70,7 @@
 .parameters-pane-property-container {
   display: flex;
   flex-direction: row;
+  border-bottom: 1px solid var(--background-dark-4);
 }
 
 .parameters-pane-property-container.text-property {
@@ -111,15 +112,26 @@
 }
 
 .parameters-pane-file-button {
-  width: 100%;
-  padding: 8px;
+  height: 20px;
+  width: 100px;
+  padding: 0px;
   background-color: #f0f0f0;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 3px;
   cursor: pointer;
   font-size: 14px;
+  vertical-align: top;
 }
 
 .parameters-pane-file-button:hover {
   background-color: #e0e0e0;
+}
+
+/* Boolean Property */
+
+.parameters-pane-property-container.boolean-property input[type="checkbox"] {
+  height: 16px;
+  width: 16px;
+  border-radius: 2px;
+  align-self: center;
 }

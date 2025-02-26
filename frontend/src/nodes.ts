@@ -1170,7 +1170,7 @@ export class StatsNode extends BaseSyncNode {
       }, {} as Record<string, number>)
       // Sort by frequency (descending)
       counts.word = Object.fromEntries(
-        Object.entries(counts.word).sort(([,a], [,b]) => b - a)
+        Object.entries(counts.word).sort(([, a], [, b]) => b - a)
       );
       statsTable.push(['Word Counts']);
       for (const [key, value] of Object.entries(counts.word)) {
@@ -1186,7 +1186,7 @@ export class StatsNode extends BaseSyncNode {
       }, {} as Record<string, number>)
       // Sort by frequency (descending) 
       counts.character = Object.fromEntries(
-        Object.entries(counts.character).sort(([,a], [,b]) => b - a)
+        Object.entries(counts.character).sort(([, a], [, b]) => b - a)
       );
       statsTable.push(['Character Counts']);
       for (const [key, value] of Object.entries(counts.character)) {
