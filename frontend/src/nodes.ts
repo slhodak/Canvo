@@ -1159,6 +1159,7 @@ export class StatsNode extends BaseSyncNode {
     );
 
     const statsTable = []
+    statsTable.push(['Basic Stats']);
     for (const [key, value] of Object.entries(basicStats)) {
       statsTable.push([key, value.toString()]);
     }
