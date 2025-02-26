@@ -1,8 +1,9 @@
 import './OutputView.css';
 import { IOState, IOStateType } from '../../shared/types/src/models/node';
 import { useState, useEffect } from 'react';
+import TableView from './TableView';
 
-interface OutputViewProps {
+export interface OutputViewProps {
   outputState: IOState;
 }
 
@@ -65,34 +66,3 @@ const OutputView = ({ outputState }: OutputViewProps) => {
 };
 
 export default OutputView;
-
-const TableView = ({ outputState }: OutputViewProps) => {
-  return (
-    <div className="output-view-table">
-      {outputState.tableValue?.[0] ? (
-        <>
-          <div className="output-view-table-header">
-            {outputState.tableValue?.[0]?.map((header, index) => (
-              <div key={`table-header-${index}`} className="output-view-table-header-item">
-                {header}
-              </div>
-            ))}
-          </div>
-          <div className="output-view-table-body">
-            {outputState.tableValue?.slice(1).map((row, index) => (
-              <div key={`table-row-${index}`} className="output-view-table-row">
-                {row.map((cell, cellIndex) => (
-                  <div key={`table-cell-${cellIndex}`} className="output-view-table-cell">
-                    {cell}
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        </>
-      ) : (
-        <div className="output-view-table-header">No data</div>
-      )}
-        </div>
-      );
-}
