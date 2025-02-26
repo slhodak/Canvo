@@ -30,16 +30,18 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   const [viewState, setViewState] = useState<IOState>(IOState.ofType(IOStateType.String));
   const [projectTitle, setProjectTitle] = useState(project.title);
 
-  // Update a local copy of the title instead of the project.title itself so that each change does not trigger a re-render
+  // Update a controlled copy of the title instead of the project.title itself so that each change does not trigger a re-render
+  // And keep the project.title in sync with the local copy
   const handleLocalTitleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const originalTitle = project.title;
     const newTitle = event.target.value;
+    project.title = newTitle;
     setProjectTitle(newTitle);
     const updateSuccessful = await handleProjectTitleChange(event);
-    // If the server update fails, revert to the original title, otherwise update the project object
+    // If the server update fails, revert to the original title
     if (!updateSuccessful) {
-      setProjectTitle(project.title);
-    } else {
-      project.title = newTitle;
+      project.title = originalTitle;
+      setProjectTitle(originalTitle);
     }
   };
 
