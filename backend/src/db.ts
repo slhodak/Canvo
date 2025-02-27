@@ -7,6 +7,7 @@ import { BaseNode } from '../../shared/types/src/models/node';
 import { Connection } from '../../shared/types/src/models/connection';
 import { camelizeColumns, formatIntegerArray } from './util';
 import { TransactionType } from '../../shared/types/src/models/tokens';
+import { SubscriptionModel, PlanModel, BillingTransactionModel } from '../../shared/types/src/models/subscription';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -45,6 +46,34 @@ export namespace Database {
   export async function getAllUsers(): Promise<UserModel[]> {
     const users = await db.any('SELECT id, user_id, email FROM users');
     return users;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // Subscriptions
+  ////////////////////////////////////////////////////////////////////////////////
+
+  export async function getSubscription(userId: string): Promise<SubscriptionModel | null> {
+    const subscription = await db.oneOrNone('SELECT id, subscription_id, user_id, plan_id, start_date, end_date, status FROM subscriptions WHERE user_id = $1', [userId]);
+    return subscription;
+  }
+
+  export async function getPlan(planId: string): Promise<PlanModel | null> {
+    const plan = await db.oneOrNone('SELECT id, plan_id, name, description, price FROM plans WHERE plan_id = $1', [planId]);
+    return plan;
+  }
+
+  export async function getBillingTransactions(subscriptionId: string): Promise<BillingTransactionModel[]> {
+    const billingTransactions = await db.any('SELECT id, subscription_id, created_at, amount, status FROM billing_transactions WHERE subscription_id = $1', [subscriptionId]);
+    return billingTransactions;
+  }
+
+  export async function createBillingTransaction(subscriptionId: string, amount: number, success: boolean, memo: string) {
+    const billingTransactionId = uuidv4();
+    await db.none(`
+      INSERT INTO billing_transactions (
+        id, subscription_id, created_at, amount, success, memo
+      ) VALUES ($1, $2, $3, $4, $5, $6)
+    `, [billingTransactionId, subscriptionId, new Date(), amount, success, memo]);
   }
 
   ////////////////////////////////////////////////////////////////////////////////

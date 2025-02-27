@@ -14,8 +14,10 @@ export enum SubscriptionStatus {
 // Once a cancelled_active subscription reaches the end date, paid services will cease
 
 // Let the code decide how many tokens to award per period for each subscription
+// Every user object is created with a subscription,
+// Depending on how they onboarded, it will be either the free plan or the paid plan
 
-export class Subscription {
+export class SubscriptionModel {
   constructor(
     public id: number,
     public subscriptionId: string,
@@ -29,7 +31,7 @@ export class Subscription {
   ) { }
 }
 
-export class Plan {
+export class PlanModel {
   constructor(
     public id: number,
     public planId: string,
@@ -41,7 +43,7 @@ export class Plan {
   ) { }
 }
 
-export class BillingTransaction {
+export class BillingTransactionModel {
   constructor(
     public id: number,
     public subscriptionId: string,

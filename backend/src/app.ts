@@ -248,6 +248,58 @@ authRouter.post('/logout', async (req: Request, res: Response) => {
   }
 });
 
+
+////////////////////////////////////////////////////////////
+// Subscriptions & Billing
+////////////////////////////////////////////////////////////
+
+const subscriptionRouter = Router();
+subscriptionRouter.use('/', authenticate);
+
+subscriptionRouter.get('/get_subscription', async (req: Request, res: Response) => {
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ error: "Could not find user email from session token" });
+  }
+
+  const subscription = await db.getSubscription(user.userId);
+  if (!subscription) {
+    return res.status(404).json({ error: "Could not find subscription for user" });
+  }
+
+  return res.json({ status: 'success', subscription });
+});
+
+subscriptionRouter.get('/get_plan', async (req: Request, res: Response) => {
+  const planId = req.params.planId;
+  const plan = await db.getPlan(planId);
+  if (!plan) {
+    return res.status(404).json({ error: "Could not find plan" });
+  }
+
+  return res.json({ status: 'success', plan });
+});
+
+subscriptionRouter.post('/update_subscription', async (req: Request, res: Response) => {
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ error: "Could not find user email from session token" });
+  }
+
+  const subscription = await db.getSubscription(user.userId);
+  if (!subscription) {
+    return res.status(404).json({ error: "Could not find subscription for user" });
+  }
+
+  const planId = req.body.planId;
+  const plan = await db.getPlan(planId);
+  if (!plan) {
+    return res.status(404).json({ error: "Could not find plan" });
+  }
+
+  return res.json({ status: 'success' });
+});
+
 ////////////////////////////////////////////////////////////
 // API Routes
 ////////////////////////////////////////////////////////////
