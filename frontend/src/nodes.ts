@@ -27,7 +27,7 @@ export class TextNode extends BaseSyncNode {
     text: string = '',
     outputState: IOState[] = [],
   ) {
-    super(id, authorId, projectId, 'Text', label, display, NodeType.Text, 0, 1, coordinates, NodeRunType.Auto, NodeCacheType.NoCache, {
+    super(id, authorId, projectId, 'Text', label, display, NodeType.Text, 0, 1, coordinates, NodeRunType.Auto, NodeCacheType.Cache, {
       text: {
         type: NodePropertyType.String,
         label: 'Text',
@@ -78,7 +78,7 @@ export class FetchNode extends BaseAsyncNode {
     url: string = '',
     outputState: IOState[] = [],
   ) {
-    super(id, authorId, projectId, 'Fetch', label, display, NodeType.Fetch, 0, 1, coordinates, NodeRunType.Auto, NodeCacheType.NoCache, {
+    super(id, authorId, projectId, 'Fetch', label, display, NodeType.Fetch, 0, 1, coordinates, NodeRunType.Auto, NodeCacheType.Cache, {
       url: {
         type: NodePropertyType.String,
         label: 'URL',

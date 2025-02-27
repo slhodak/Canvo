@@ -236,12 +236,6 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   // If this node is a Run node, run it once you've gathered all the input values
   const _runPriorDAG = useCallback(async (node: VisualNode, shouldSync: boolean = true): Promise<IOState[]> => {
     const inputConnections = connections.filter(conn => conn.connection.toNode === node.node.nodeId);
-    // Cannot get any new input values if the node has neither cached output nor input connections
-    if (inputConnections.length === 0 && node.node.cacheType === NodeCacheType.NoCache) {
-      console.debug('Node has no input connections');
-      return [];
-    }
-
     const inputValues: IOState[] = [];
     for (const conn of inputConnections) {
       const inputNode = nodes[conn.connection.fromNode];
