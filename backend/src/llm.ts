@@ -3,6 +3,10 @@ import dotenv from "dotenv";
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
+// Costs in Canvo tokens
+const CHAT_BASE_COST = 2;    // Cost per chat message
+const CHAT_MARGINAL_COST = 0.05; // Additional cost per word in chat
+
 const openai = new OpenAI();
 
 const model = 'gpt-4o-mini';
@@ -20,13 +24,10 @@ const systemPrompt = `
   The person might work on the other side of the street.
 `;
 
-async function callChatCompletion(prompt: string, inputText: string): Promise<string> {
+async function callChatCompletion(messages: { role: string, name: string, content: string }[]): Promise<string> {
   const completion = await openai.chat.completions.create({
     model: model,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: `Input text: '${inputText}'\nPrompt: '${prompt}'` }
-    ],
+    messages: messages as OpenAI.Chat.ChatCompletionMessageParam[],
     temperature: 0.7,
     n: 1
   });
@@ -40,7 +41,11 @@ async function callChatCompletion(prompt: string, inputText: string): Promise<st
 
 export async function runPrompt(prompt: string, input: string): Promise<string> {
   try {
-    const response = await callChatCompletion(prompt, input);
+    const messages = [
+      { role: 'developer', name: 'developer', content: systemPrompt },
+      { role: 'user', name: 'user', content: `Input text: '${input}'\nPrompt: '${prompt}'` }
+    ]
+    const response = await callChatCompletion(messages);
     return response;
   } catch (error) {
     if (error instanceof Error) {
@@ -50,3 +55,25 @@ export async function runPrompt(prompt: string, input: string): Promise<string> 
   }
 }
 
+export async function runSimpleChat(messages: { role: string, name: string, content: string }[], brevity: boolean): Promise<string> {
+  // Can you insert developer messages into the message history? Even if you can -- don't do it twice
+  // if (brevity) {
+  //   messages.push({ role: 'developer', name: 'developer', content: 'Please keep the response reasonably concise.' })
+  // }
+
+  try {
+    const response = await callChatCompletion(messages);
+    return response;
+  } catch (error) {
+    if (error instanceof Error) {
+      return error.message;
+    }
+    return "An unknown error occurred";
+  }
+}
+
+export async function calculateChatCost(prompt: string): Promise<number> {
+  let cost = CHAT_BASE_COST;
+  cost += prompt.length * CHAT_MARGINAL_COST;
+  return Math.round(cost);
+}

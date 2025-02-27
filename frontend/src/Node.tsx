@@ -157,7 +157,7 @@ export const Node = ({ node, isSelected, isDisplaying, connections, wireState, u
       </text>
 
       {/* Play Button */}
-      {node.node.nodeRunType === NodeRunType.Cache && (
+      {node.node.runType === NodeRunType.Manual && (
         <foreignObject
           x={node.x + neu.NODE_WIDTH + 5}
           y={node.y + (neu.NODE_HEIGHT / 2) - 10}
@@ -169,7 +169,7 @@ export const Node = ({ node, isSelected, isDisplaying, connections, wireState, u
               className="node-play-button"
               onClick={(e) => {
                 e.stopPropagation();
-                runNode(node, true);
+                runNode(node);
               }}
               title="Run node"
             >

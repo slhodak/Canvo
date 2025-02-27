@@ -8,6 +8,7 @@ import {
   Coordinates,
   IOStateType,
   NodePropertyType,
+  NodeCacheType,
 } from '../../shared/types/src/models/node';
 import { LLMResponse } from '../../shared/types/src/models/LLMResponse';
 import { updateNode } from './api';
@@ -26,7 +27,7 @@ export class TextNode extends BaseSyncNode {
     text: string = '',
     outputState: IOState[] = [],
   ) {
-    super(id, authorId, projectId, 'Text', label, display, NodeType.Text, 0, 1, coordinates, NodeRunType.Source, {
+    super(id, authorId, projectId, 'Text', label, display, NodeType.Text, 0, 1, coordinates, NodeRunType.Auto, NodeCacheType.Cache, {
       text: {
         type: NodePropertyType.String,
         label: 'Text',
@@ -77,7 +78,7 @@ export class FetchNode extends BaseAsyncNode {
     url: string = '',
     outputState: IOState[] = [],
   ) {
-    super(id, authorId, projectId, 'Fetch', label, display, NodeType.Fetch, 0, 1, coordinates, NodeRunType.Cache, {
+    super(id, authorId, projectId, 'Fetch', label, display, NodeType.Fetch, 0, 1, coordinates, NodeRunType.Auto, NodeCacheType.Cache, {
       url: {
         type: NodePropertyType.String,
         label: 'URL',
@@ -142,7 +143,7 @@ export class PromptNode extends BaseAsyncNode {
     outputState: IOState[] = [],
     indexSelections: (number | null)[] = [],
   ) {
-    super(id, authorId, projectId, 'Prompt', label, display, NodeType.Prompt, 1, 1, coordinates, NodeRunType.Cache, {
+    super(id, authorId, projectId, 'Prompt', label, display, NodeType.Prompt, 1, 1, coordinates, NodeRunType.Manual, NodeCacheType.Cache, {
       prompt: {
         type: NodePropertyType.String,
         label: 'Prompt',
@@ -220,7 +221,7 @@ export class SaveNode extends BaseAsyncNode {
     outputState: IOState[] = [],
     indexSelections: (number | null)[] = [],
   ) {
-    super(id, authorId, projectId, 'Save', label, display, NodeType.Save, 1, 0, coordinates, NodeRunType.None, {
+    super(id, authorId, projectId, 'Save', label, display, NodeType.Save, 1, 0, coordinates, NodeRunType.Manual, NodeCacheType.NoCache, {
       filename: {
         type: NodePropertyType.String,
         label: 'Filename',
@@ -304,7 +305,7 @@ export class MergeNode extends BaseSyncNode {
     outputState: IOState[] = [IOState.ofType(IOStateType.String), IOState.ofType(IOStateType.String)],
     indexSelections: (number | null)[] = [null, null],
   ) {
-    super(id, authorId, projectId, 'Merge', label, display, NodeType.Merge, 2, 1, coordinates, NodeRunType.Run, {
+    super(id, authorId, projectId, 'Merge', label, display, NodeType.Merge, 2, 1, coordinates, NodeRunType.Auto, NodeCacheType.NoCache, {
       separator: {
         type: NodePropertyType.String,
         label: 'Separator',
@@ -363,7 +364,7 @@ export class SplitNode extends BaseSyncNode {
     outputState: IOState[] = [],
     indexSelections: (number | null)[] = [],
   ) {
-    super(id, authorId, projectId, 'Split', label, display, NodeType.Split, 1, 1, coordinates, NodeRunType.Run, {
+    super(id, authorId, projectId, 'Split', label, display, NodeType.Split, 1, 1, coordinates, NodeRunType.Auto, NodeCacheType.NoCache, {
       separator: {
         type: NodePropertyType.String,
         label: 'Separator',
@@ -416,7 +417,7 @@ export class FileNode extends BaseSyncNode {
     filename: string = '',
     outputState: IOState[] = [],
   ) {
-    super(id, authorId, projectId, 'File', label, display, NodeType.File, 0, 1, coordinates, NodeRunType.Source, {
+    super(id, authorId, projectId, 'File', label, display, NodeType.File, 0, 1, coordinates, NodeRunType.None, NodeCacheType.Cache, {
       filename: {
         type: NodePropertyType.String,
         label: 'Filename',
@@ -507,7 +508,7 @@ export class EditNode extends BaseSyncNode {
     outputState: IOState[] = [],
     indexSelections: (number | null)[] = [],
   ) {
-    super(id, authorId, projectId, 'Edit', label, display, NodeType.Edit, 1, 1, coordinates, NodeRunType.Cache, {
+    super(id, authorId, projectId, 'Edit', label, display, NodeType.Edit, 1, 1, coordinates, NodeRunType.Manual, NodeCacheType.Cache, {
       content: {
         type: NodePropertyType.String,
         label: 'Content',
@@ -566,7 +567,7 @@ export class EmbedNode extends BaseAsyncNode {
     outputState: IOState[] = [],
     indexSelections: (number | null)[] = [],
   ) {
-    super(id, authorId, projectId, 'Embed', label, display, NodeType.Embed, 1, 1, coordinates, NodeRunType.Cache, {
+    super(id, authorId, projectId, 'Embed', label, display, NodeType.Embed, 1, 1, coordinates, NodeRunType.Manual, NodeCacheType.Cache, {
       documentId: {
         type: NodePropertyType.String,
         label: 'Document ID',
@@ -684,7 +685,7 @@ export class SearchNode extends BaseAsyncNode {
   ) {
     // Actually this is not expensive and perhaps should be a Run node. But that's just because
     // we currently use a pretty low-dimension embedding model.
-    super(id, authorId, projectId, 'Search', label, display, NodeType.Search, 1, 1, coordinates, NodeRunType.Cache, {
+    super(id, authorId, projectId, 'Search', label, display, NodeType.Search, 1, 1, coordinates, NodeRunType.Manual, NodeCacheType.Cache, {
       documentId: {
         type: NodePropertyType.String,
         label: 'Document ID',
@@ -797,7 +798,7 @@ export class JoinNode extends BaseSyncNode {
     separator: string = '\n',
     outputState: IOState[] = [],
   ) {
-    super(id, authorId, projectId, 'Join', label, display, NodeType.Join, 1, 1, coordinates, NodeRunType.Run, {
+    super(id, authorId, projectId, 'Join', label, display, NodeType.Join, 1, 1, coordinates, NodeRunType.Auto, NodeCacheType.NoCache, {
       separator: {
         type: NodePropertyType.String,
         label: 'Separator',
@@ -851,7 +852,7 @@ export class ReplaceNode extends BaseSyncNode {
     outputState: IOState[] = [],
     indexSelections: (number | null)[] = [],
   ) {
-    super(id, authorId, projectId, 'Replace', label, display, NodeType.Replace, 1, 1, coordinates, NodeRunType.Run, {
+    super(id, authorId, projectId, 'Replace', label, display, NodeType.Replace, 1, 1, coordinates, NodeRunType.Auto, NodeCacheType.NoCache, {
       search: {
         type: NodePropertyType.String,
         label: 'Search',
@@ -910,7 +911,7 @@ export class PickNode extends BaseSyncNode {
     index: number = 0,
     outputState: IOState[] = [],
   ) {
-    super(id, authorId, projectId, 'Pick', label, display, NodeType.Pick, 1, 1, coordinates, NodeRunType.Run, {
+    super(id, authorId, projectId, 'Pick', label, display, NodeType.Pick, 1, 1, coordinates, NodeRunType.Auto, NodeCacheType.NoCache, {
       index: {
         type: NodePropertyType.Number,
         label: 'Index',
@@ -960,7 +961,7 @@ export class CacheNode extends BaseSyncNode {
     outputState: IOState[] = [],
     indexSelections: (number | null)[] = [],
   ) {
-    super(id, authorId, projectId, 'Cache', label, display, NodeType.Cache, 1, 1, coordinates, NodeRunType.Cache, {
+    super(id, authorId, projectId, 'Cache', label, display, NodeType.Cache, 1, 1, coordinates, NodeRunType.Manual, NodeCacheType.Cache, {
       updatedAt: {
         type: NodePropertyType.String,
         label: 'Last Updated',
@@ -1008,7 +1009,7 @@ export class CSVNode extends BaseSyncNode {
     lineTerminator: string = '\n',
     outputState: IOState[] = [],
   ) {
-    super(id, authorId, projectId, 'CSV', label, display, NodeType.CSV, 0, 1, coordinates, NodeRunType.Source, {
+    super(id, authorId, projectId, 'CSV', label, display, NodeType.CSV, 0, 1, coordinates, NodeRunType.Auto, NodeCacheType.Cache, {
       file: {
         type: NodePropertyType.File,
         label: 'File',
@@ -1104,7 +1105,7 @@ export class StatsNode extends BaseSyncNode {
     outputState: IOState[] = [],
     indexSelections: (number | null)[] = [],
   ) {
-    super(id, authorId, projectId, 'Stats', label, display, NodeType.Stats, 1, 1, coordinates, NodeRunType.Run,
+    super(id, authorId, projectId, 'Stats', label, display, NodeType.Stats, 1, 1, coordinates, NodeRunType.Auto, NodeCacheType.NoCache,
       {
         wordCounts: {
           type: NodePropertyType.Boolean,
@@ -1195,5 +1196,120 @@ export class StatsNode extends BaseSyncNode {
     }
 
     return [new IOState({ tableValue: statsTable })];
+  }
+}
+
+// The Chat node allows the user to chat with a model
+// It has a parameter for the current prompt/user input
+// Output is whole history of the chat, to which new prompts and responses are added on the completion of each run
+export class ChatNode extends BaseAsyncNode {
+  constructor(
+    id: string,
+    authorId: string,
+    projectId: string,
+    coordinates: Coordinates,
+    label: string = 'chat',
+    display: boolean = false,
+    prompt: string = '',
+    brevity: boolean = false,
+    messageHistory: Record<string, string>[] = [],
+    outputState: IOState[] = [],
+  ) {
+    super(id, authorId, projectId, 'Chat', label, display, NodeType.Chat, 0, 1, coordinates, NodeRunType.Manual, NodeCacheType.Cache, {
+      prompt: {
+        type: NodePropertyType.String,
+        label: 'Prompt',
+        value: prompt,
+        editable: true,
+        displayed: true,
+      },
+      brevity: {
+        type: NodePropertyType.Boolean,
+        label: 'Short Responses',
+        value: brevity,
+        editable: true,
+        displayed: true,
+      },
+      messageHistory: {
+        type: NodePropertyType.ObjectArray,
+        label: 'Message History',
+        value: messageHistory,
+        editable: false,
+        displayed: true,
+      }
+    }, [], outputState);
+  }
+
+  public static override fromObject(object: BaseNode): BaseNode {
+    return new ChatNode(
+      object.nodeId,
+      object.authorId,
+      object.projectId,
+      object.coordinates,
+      object.label,
+      object.display,
+      object.properties.prompt.value as string,
+      object.properties.brevity.value as boolean,
+      object.properties.messageHistory.value as Record<string, string>[],
+      object.outputState.map(IOState.fromObject),
+    );
+  }
+
+  protected override resetOutputState(): void {
+    this.outputState = [IOState.ofType(IOStateType.String)];
+  }
+
+  // Call the LLM with the current prompt and add the response to the history
+  async _run(inputValues: IOState[]): Promise<IOState[]> {
+    const prompt = this.properties.prompt.value as string;
+    if (prompt === '') return this.outputState;
+
+    const message = { role: 'user', name: 'user', content: prompt };
+    const messageHistory = this.properties.messageHistory.value as Record<string, string>[];
+    messageHistory.push(message);
+
+    try {
+      const response = await fetch(`${SERVER_URL}/ai/chat`, {
+        credentials: 'include',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          projectId: this.projectId,
+          nodeId: this.nodeId,
+          messages: messageHistory,
+          brevity: this.properties.brevity.value as boolean,
+        }),
+      });
+
+      const data: LLMResponse = await response.json();
+      if (!this.outputState[0]) {
+        this.outputState[0] = new IOState({ stringValue: '' });
+      }
+      this.properties.prompt.value = '';
+      messageHistory.push({ role: 'assistant', name: 'assistant', content: data.result });
+      // Set to a new object so the OutputView understands that the output state has changed
+      this.outputState[0] = new IOState({ stringValue: this.formatChat(messageHistory) });
+      return this.outputState;
+    } catch (error) {
+      console.error('Error in ChatNode:', error);
+      return this.outputState;
+    }
+  }
+
+  // Expensive, maybe, OK for now
+  private formatChat(messages: Record<string, string>[]): string {
+    let formatted = '';
+    for (const message of messages) {
+      if (message.role === 'user') {
+        formatted += `USER>\n${message.content}\n\n`;
+      } else if (message.role === 'assistant') {
+        formatted += `SYSTEM>\n${message.content}\n\n`;
+      } else {
+        continue;
+      }
+    }
+    return formatted;
   }
 }

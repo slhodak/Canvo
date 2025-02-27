@@ -13,6 +13,7 @@ export enum NodeType {
   Edit = 'edit',
 
   // AI-Enabled
+  Chat = 'chat',
   Prompt = 'prompt',
   Embed = 'embed',
   Search = 'search',
@@ -26,25 +27,26 @@ export enum NodeType {
   Save = 'save',
 }
 
+// Must add the node type here for it to be available in the Add Node Dropdown
 export const NodeGroups = {
   Source: [NodeType.Text, NodeType.File, NodeType.CSV, NodeType.Fetch],
   Basic: [NodeType.Merge, NodeType.Split, NodeType.Join, NodeType.Replace, NodeType.Edit],
-  Intelligent: [NodeType.Prompt, NodeType.Embed, NodeType.Search],
+  Intelligent: [NodeType.Chat, NodeType.Prompt, NodeType.Embed, NodeType.Search],
   Utility: [NodeType.Cache, NodeType.Pick, NodeType.Stats],
   Output: [NodeType.Save],
 }
 
-// A source node is not dependent on other nodes, and will cache its output state
-// A cache node runs an expensive or non-deterministic function, and will cache its output state
-// A run node runs a cheap and deterministic function, and will not cache its output state
-// A None node has no outputs, like a Save node
-// When traversing the DAG, read from Cache and Source nodes, and run Run nodes
-// Cache nodes can only be run manually
+// Whether the node should run automatically, manually, or not at all
 export enum NodeRunType {
-  Source = 'source',
-  Cache = 'cache',
-  Run = 'run',
+  Auto = 'auto',
+  Manual = 'manual',
   None = 'none',
+}
+
+// Whether the node should save its output state or simply pass on its outputs while calculating the DAG
+export enum NodeCacheType {
+  Cache = 'cache',
+  NoCache = 'no_cache',
 }
 
 export enum NodePropertyType {
@@ -52,9 +54,11 @@ export enum NodePropertyType {
   Number = 'number',
   File = 'file',
   Boolean = 'boolean',
+  Object = 'object',
+  ObjectArray = 'objectArray',
 }
 
-type NodePropertyValue = string | number | boolean;
+type NodePropertyValue = string | number | boolean | Record<string, any> | Record<string, any>[];
 
 export interface NodeProperty {
   type: NodePropertyType;
@@ -180,6 +184,14 @@ export class IOState {
     }
     return true;
   }
+
+  public appendString(string: string) {
+    if (this.stringValue === null) {
+      this.stringValue = string;
+    } else {
+      this.stringValue += string;
+    }
+  }
 }
 
 export abstract class BaseNode {
@@ -195,7 +207,8 @@ export abstract class BaseNode {
   public inputTypes: IOStateType[] = [];
   public outputState: IOState[] = [];
   public coordinates: Coordinates;
-  public nodeRunType: NodeRunType;
+  public runType: NodeRunType;
+  public cacheType: NodeCacheType;
   public properties: Record<string, NodeProperty> = {};
   // The indexSelections array is used to select an element from an array input if the node expects a string input
   public indexSelections: (number | null)[] = [];
@@ -211,7 +224,8 @@ export abstract class BaseNode {
     inputs: number,
     outputs: number,
     coordinates: Coordinates,
-    nodeRunType: NodeRunType,
+    runType: NodeRunType,
+    cacheType: NodeCacheType,
     properties: Record<string, NodeProperty> = {},
     inputTypes: IOStateType[] = [],
     outputState: IOState[] = [],
@@ -227,7 +241,8 @@ export abstract class BaseNode {
     this.inputs = inputs;
     this.outputs = outputs;
     this.coordinates = coordinates;
-    this.nodeRunType = nodeRunType;
+    this.runType = runType;
+    this.cacheType = cacheType;
     this.properties = properties;
     this.outputState = outputState;
     this.inputTypes = inputTypes;
@@ -256,17 +271,15 @@ export abstract class BaseNode {
   }
 
   public cacheOrClearIOState(runResult: IOState[]) {
-    switch (this.nodeRunType) {
-      case NodeRunType.Source:
-      case NodeRunType.Cache:
+    switch (this.cacheType) {
+      case NodeCacheType.Cache:
         this.outputState = runResult;
         break;
-      case NodeRunType.Run:
-        // To make a Run node displayable, cache its output state
+      case NodeCacheType.NoCache:
+        // Only save the output state if the node is displayed, while it is displayed
         if (this.display) {
           this.outputState = runResult;
         } else {
-          // When not displaying a Run node, reset its output state
           this.resetOutputState();
         }
         break;

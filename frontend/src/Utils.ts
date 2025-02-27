@@ -1,6 +1,6 @@
 import { VisualNode } from "./NetworkTypes";
 import { BaseNode, NodeType, Coordinates } from "../../shared/types/src/models/node";
-import { TextNode, PromptNode, SaveNode, MergeNode, SplitNode, FileNode, EditNode, EmbedNode, SearchNode, JoinNode, ReplaceNode, FetchNode, PickNode, CacheNode, CSVNode, StatsNode } from "./nodes";
+import { TextNode, PromptNode, SaveNode, MergeNode, SplitNode, FileNode, EditNode, EmbedNode, SearchNode, JoinNode, ReplaceNode, FetchNode, PickNode, CacheNode, CSVNode, StatsNode, ChatNode } from "./nodes";
 
 export const NetworkEditorUtils = {
   NODE_WIDTH: 100,
@@ -27,6 +27,8 @@ export const NodeUtils = {
         return new TextNode(nodeId, authorId, projectId, coordinates);
       case NodeType.Fetch:
         return new FetchNode(nodeId, authorId, projectId, coordinates);
+      case NodeType.Chat:
+        return new ChatNode(nodeId, authorId, projectId, coordinates);
       case NodeType.Prompt:
         return new PromptNode(nodeId, authorId, projectId, coordinates);
       case NodeType.Save:
@@ -66,6 +68,8 @@ export const NodeUtils = {
         return TextNode.fromObject(object);
       case NodeType.Fetch:
         return FetchNode.fromObject(object);
+      case NodeType.Chat:
+        return ChatNode.fromObject(object);
       case NodeType.Prompt:
         return PromptNode.fromObject(object);
       case NodeType.Save:

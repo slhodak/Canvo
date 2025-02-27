@@ -2,7 +2,7 @@ import './Project.css';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { VisualNode, VisualConnection } from './NetworkTypes';
-import { BaseNode, NodeRunType, IOState, IOStateType, BaseAsyncNode, BaseSyncNode } from '../../shared/types/src/models/node';
+import { BaseNode, NodeRunType, IOState, IOStateType, BaseAsyncNode, BaseSyncNode, NodeCacheType } from '../../shared/types/src/models/node';
 import { Connection } from '../../shared/types/src/models/connection';
 import { ConnectionUtils as cu, NodeUtils as nu } from './Utils';
 import NetworkEditor from './NetworkEditor';
@@ -72,7 +72,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
         }
       });
       setNodes(newNodes);
-      if (node.node.nodeRunType === NodeRunType.Run) {
+      if (node.node.runType === NodeRunType.Auto) {
         await runNode(node); // runNode will sync the node after it is run
       } else {
         syncNodeUpdate(node.node);
@@ -236,11 +236,6 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   // If this node is a Run node, run it once you've gathered all the input values
   const _runPriorDAG = useCallback(async (node: VisualNode, shouldSync: boolean = true): Promise<IOState[]> => {
     const inputConnections = connections.filter(conn => conn.connection.toNode === node.node.nodeId);
-    if (inputConnections.length === 0 && node.node.nodeRunType) {
-      console.debug('Node has no input connections');
-      return [];
-    }
-
     const inputValues: IOState[] = [];
     for (const conn of inputConnections) {
       const inputNode = nodes[conn.connection.fromNode];
@@ -257,42 +252,29 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
         continue;
       }
 
-      // Read from Cache and Source nodes, run Run nodes
-      switch (inputNode.node.nodeRunType) {
-        case NodeRunType.Source:
-          inputValues.push(outputState);
-          break;
-        case NodeRunType.Cache:
-          inputValues.push(outputState);
-          break;
-        case NodeRunType.Run: {
-          const priorInputValues = await _runPriorDAG(inputNode, shouldSync);
-          const calculatedIOState = await _runNodeOnInput(priorInputValues, inputNode, shouldSync);
-          inputValues.push(...calculatedIOState);
-          break;
-        }
-        default:
-          break;
+      // Read from Cache nodes, run Auto-run nodes
+      if (inputNode.node.runType === NodeRunType.Auto) {
+        const priorInputValues = await _runPriorDAG(inputNode, shouldSync);
+        const calculatedIOState = await _runNodeOnInput(priorInputValues, inputNode, shouldSync);
+        inputValues.push(...calculatedIOState);
+        continue;
       }
+
+      if (inputNode.node.cacheType === NodeCacheType.Cache) {
+        inputValues.push(outputState);
+        continue;
+      }
+
+      // Have to push something for each input value just in case the run method will fail with an incorrect-length input
+      // But it shouldn't... and there shouldn't even be any nodes that are neither cached nor auto-run
+      inputValues.push(IOState.ofType(IOStateType.Empty));
     }
     return inputValues;
   }, [nodes, connections, _runNodeOnInput]);
 
-  // TODO: I question the wisdom of syncing every prior rerun node in the DAG
   const runNode = useCallback(async (node: VisualNode, shouldSync: boolean = true) => {
-    switch (node.node.nodeRunType) {
-      case NodeRunType.Source:
-        _runNodeOnInput([], node, shouldSync);
-        break;
-      case NodeRunType.Cache:
-      case NodeRunType.Run: {
-        const inputValues = await _runPriorDAG(node, shouldSync);
-        await _runNodeOnInput(inputValues, node, shouldSync);
-        break;
-      }
-      default:
-        break;
-    }
+    const inputValues = await _runPriorDAG(node, shouldSync);
+    await _runNodeOnInput(inputValues, node, shouldSync);
 
     if (node.node.display) {
       updateViewState(node);
@@ -301,7 +283,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
 
   const selectNode = useCallback(async (node: VisualNode) => {
     setSelectedNode(node);
-    if (node.node.nodeRunType === NodeRunType.Run) {
+    if (node.node.runType === NodeRunType.Auto) {
       await runNode(node);
     }
   }, [runNode]);
@@ -360,12 +342,9 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   const updateNode = useCallback(async (node: VisualNode, shouldRun: boolean = true, shouldSync: boolean = true) => {
     setNodes(prevNodes => ({ ...prevNodes, [node.node.nodeId]: node }));
     // Sometimes the node is only having its coordinates updated, so don't run it
-    if (shouldRun) {
-      // The updated nodes above may/will not be available immediately for runNode to find the new data
-      // When source or run nodes are updated, run them immediately
-      if (node.node.nodeRunType === NodeRunType.Run || node.node.nodeRunType === NodeRunType.Source) {
-        await runNode(node, shouldSync);
-      }
+    if (shouldRun && node.node.runType === NodeRunType.Auto) {
+      // Caller who sets shouldRun doesn't know if the node is auto-run or not--it really means 'should run if auto'
+      await runNode(node, shouldSync);
     } else if (shouldSync) {
       // If the node is not being run, sync it if needed, e.g. on coordinate updates
       await syncNodeUpdate(node.node);
