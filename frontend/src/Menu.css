@@ -134,19 +134,9 @@
   background-color: transparent;
 }
 
-.menu-user {
+.menu-user-container {
   border-radius: 2px;
   width: 100%;
-}
-
-.menu-user-info {
-  font-size: 14px;
-  margin: 0px;
-  padding: 0px;
-}
-
-.menu-user-email {
-  font-weight: 600;
 }
 
 .menu-user-tokens {
@@ -241,22 +231,7 @@
   gap: 8px;
 }
 
-.add-token-button {
-  padding: 2px 6px;
-  border: 1px solid var(--font-color-light);
-  border-radius: 4px;
-  background-color: transparent;
-  color: var(--font-color-light);
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.add-token-button:hover {
-  background-color: var(--font-color-light);
-  color: var(--background-dark-2);
-}
-
-.logout-button {
+.settings-button {
   margin-top: 10px;
   padding: 8px 16px;
   background-color: var(--background-dark-1);
@@ -267,6 +242,6 @@
   width: 100%;
 }
 
-.logout-button:hover {
+.settings-button:hover {
   background-color: var(--background-color-darker);
 }

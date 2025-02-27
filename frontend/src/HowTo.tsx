@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import './HowTo.css';
+import './Modal.css';
 
 interface HowToProps {
   isOpen: boolean;
@@ -28,11 +28,11 @@ const HowTo: React.FC<HowToProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="howto-overlay">
-      <div className="howto-content" ref={contentRef}>
-        <div className="howto-content-header">
+    <div className="modal-overlay">
+      <div className="modal-content" ref={contentRef}>
+        <div className="modal-content-header">
           <h2>How To Use Canvo</h2>
-          <button className="howto-close" onClick={onClose}>×</button>
+          <button className="modal-close" onClick={onClose}>×</button>
         </div>
 
         <section>

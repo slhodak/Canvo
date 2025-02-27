@@ -23,3 +23,10 @@
   padding: 0px 2px;
   background-color: var(--background-dark-3);
 }
+
+.app-no-project-notice {
+  color: var(--font-color-light);
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+}

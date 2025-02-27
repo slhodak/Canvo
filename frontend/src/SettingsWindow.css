@@ -1,0 +1,14 @@
+.logout-button {
+  margin-top: 10px;
+  padding: 8px 16px;
+  background-color: var(--background-dark-1);
+  color: var(--font-color-light);
+  border: 1px solid var(--background-dark-3);
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.logout-button:hover {
+  background-color: var(--background-color-darker);
+}

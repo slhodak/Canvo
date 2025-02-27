@@ -4,6 +4,7 @@ import PlusIcon from "./assets/PlusIcon";
 import { SERVER_URL } from "./constants";
 import { ProjectModel } from '../../shared/types/src/models/project';
 import { UserModel } from '../../shared/types/src/models/user';
+import SettingsWindow from './SettingsWindow';
 import HowTo from './HowTo';
 import ProjectListItem from './ProjectListItem';
 
@@ -16,8 +17,9 @@ interface MenuProps {
 }
 
 const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuProps) => {
-  const [tokenBalance, setTokenBalance] = useState(0);
   const [isHowToOpen, setIsHowToOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [tokenBalance, setTokenBalance] = useState(0);
 
   const createProject = async () => {
     try {
@@ -53,22 +55,6 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
       console.error('Error deleting project:', error);
     }
   }
-
-  const handleLogout = async () => {
-    try {
-      // Call our backend logout endpoint
-      await fetch(`${SERVER_URL}/auth/logout`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-
-      // Reload the page to return to login
-      window.location.reload();
-    } catch (error) {
-      console.error('Error logging out:', error);
-    }
-  };
-
   useEffect(() => {
     const fetchTokenBalance = async () => {
       const response = await fetch(`${SERVER_URL}/token/get_balance`, {
@@ -111,15 +97,13 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
             })}
           </div>
         </div>
-        <div className="menu-user">
-          <p className="menu-user-info">User: <span className="menu-user-email">{user.email}</span></p>
-          <div className="menu-user-tokens-container">
-            <p className="menu-user-info">Balance: <span className="menu-user-tokens">{tokenBalance} tokens</span></p>
-          </div>
-          <button className="logout-button" onClick={handleLogout}>Log Out</button>
+        <div className="menu-user-container">
+          <p>Token Balance: <span className="menu-user-tokens">{tokenBalance}</span> </p>
+          <button className="settings-button" onClick={() => setIsSettingsOpen(true)}>Settings</button>
         </div>
       </div>
       <HowTo isOpen={isHowToOpen} onClose={() => setIsHowToOpen(false)} />
+      <SettingsWindow user={user} isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </div>
   )
 }
