@@ -1286,6 +1286,6 @@ export class ChatNode extends BaseAsyncNode {
   }
 
   private formatResponse(prompt: string, response: string): string {
-    return `User:\n${prompt}\n\nLLM:\n${response}\n\n`;
+    return `USER>\n${prompt}\n\nSYSTEM>\n${response}\n\n`;
   }
 }
