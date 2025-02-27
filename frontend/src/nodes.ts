@@ -417,7 +417,7 @@ export class FileNode extends BaseSyncNode {
     filename: string = '',
     outputState: IOState[] = [],
   ) {
-    super(id, authorId, projectId, 'File', label, display, NodeType.File, 0, 1, coordinates, NodeRunType.Auto, NodeCacheType.NoCache, {
+    super(id, authorId, projectId, 'File', label, display, NodeType.File, 0, 1, coordinates, NodeRunType.None, NodeCacheType.Cache, {
       filename: {
         type: NodePropertyType.String,
         label: 'Filename',
@@ -508,7 +508,7 @@ export class EditNode extends BaseSyncNode {
     outputState: IOState[] = [],
     indexSelections: (number | null)[] = [],
   ) {
-    super(id, authorId, projectId, 'Edit', label, display, NodeType.Edit, 1, 1, coordinates, NodeRunType.Auto, NodeCacheType.NoCache, {
+    super(id, authorId, projectId, 'Edit', label, display, NodeType.Edit, 1, 1, coordinates, NodeRunType.Manual, NodeCacheType.Cache, {
       content: {
         type: NodePropertyType.String,
         label: 'Content',

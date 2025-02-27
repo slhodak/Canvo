@@ -36,10 +36,11 @@ export const NodeGroups = {
   Output: [NodeType.Save],
 }
 
-// Whether the node should run automatically or manually
+// Whether the node should run automatically, manually, or not at all
 export enum NodeRunType {
   Auto = 'auto',
   Manual = 'manual',
+  None = 'none',
 }
 
 // Whether the node should save its output state or simply pass on its outputs while calculating the DAG
