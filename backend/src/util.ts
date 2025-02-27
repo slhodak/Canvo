@@ -29,11 +29,11 @@ export const formatIntegerArray = (array: (number | null)[]) => {
 export const validateNode = (node: BaseNode): boolean => {
   const {
     nodeId, projectId, name, label, display, type, inputs, outputs, coordinates,
-    nodeRunType, properties, outputState, inputTypes, indexSelections } = node;
+    runType, cacheType, properties, outputState, inputTypes, indexSelections } = node;
   try {
     checkAnyNullOrUndefined({
       nodeId, projectId, name, label, display, type, inputs, outputs, coordinates,
-      nodeRunType, properties, outputState, inputTypes, indexSelections
+      runType, cacheType, properties, outputState, inputTypes, indexSelections
     });
   } catch (error) {
     console.error(`A required field is missing from the node: ${error}`);

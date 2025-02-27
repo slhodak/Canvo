@@ -143,7 +143,7 @@ export class PromptNode extends BaseAsyncNode {
     outputState: IOState[] = [],
     indexSelections: (number | null)[] = [],
   ) {
-    super(id, authorId, projectId, 'Prompt', label, display, NodeType.Prompt, 1, 1, coordinates, NodeRunType.Auto, NodeCacheType.NoCache, {
+    super(id, authorId, projectId, 'Prompt', label, display, NodeType.Prompt, 1, 1, coordinates, NodeRunType.Manual, NodeCacheType.Cache, {
       prompt: {
         type: NodePropertyType.String,
         label: 'Prompt',
