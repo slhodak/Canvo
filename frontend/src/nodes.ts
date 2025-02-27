@@ -1212,6 +1212,7 @@ export class ChatNode extends BaseAsyncNode {
     display: boolean = false,
     prompt: string = '',
     brevity: boolean = false,
+    messageHistory: Record<string, string>[] = [],
     outputState: IOState[] = [],
   ) {
     super(id, authorId, projectId, 'Chat', label, display, NodeType.Chat, 0, 1, coordinates, NodeRunType.Manual, NodeCacheType.Cache, {
@@ -1228,6 +1229,13 @@ export class ChatNode extends BaseAsyncNode {
         value: brevity,
         editable: true,
         displayed: true,
+      },
+      messageHistory: {
+        type: NodePropertyType.ObjectArray,
+        label: 'Message History',
+        value: messageHistory,
+        editable: false,
+        displayed: true,
       }
     }, [], outputState);
   }
@@ -1242,6 +1250,7 @@ export class ChatNode extends BaseAsyncNode {
       object.display,
       object.properties.prompt.value as string,
       object.properties.brevity.value as boolean,
+      object.properties.messageHistory.value as Record<string, string>[],
       object.outputState.map(IOState.fromObject),
     );
   }
@@ -1255,6 +1264,10 @@ export class ChatNode extends BaseAsyncNode {
     const prompt = this.properties.prompt.value as string;
     if (prompt === '') return this.outputState;
 
+    const message = { role: 'user', name: 'user', content: prompt };
+    const messageHistory = this.properties.messageHistory.value as Record<string, string>[];
+    messageHistory.push(message);
+
     try {
       const response = await fetch(`${SERVER_URL}/ai/chat`, {
         credentials: 'include',
@@ -1265,7 +1278,7 @@ export class ChatNode extends BaseAsyncNode {
         body: JSON.stringify({
           projectId: this.projectId,
           nodeId: this.nodeId,
-          prompt,
+          messages: messageHistory,
           brevity: this.properties.brevity.value as boolean,
         }),
       });
@@ -1275,9 +1288,9 @@ export class ChatNode extends BaseAsyncNode {
         this.outputState[0] = new IOState({ stringValue: '' });
       }
       this.properties.prompt.value = '';
-      this.outputState[0].appendString(this.formatResponse(prompt, data.result));
+      messageHistory.push({ role: 'assistant', name: 'assistant', content: data.result });
       // Set to a new object so the OutputView understands that the output state has changed
-      this.outputState[0] = new IOState({ stringValue: this.outputState[0].stringValue });
+      this.outputState[0] = new IOState({ stringValue: this.formatChat(messageHistory) });
       return this.outputState;
     } catch (error) {
       console.error('Error in ChatNode:', error);
@@ -1285,7 +1298,18 @@ export class ChatNode extends BaseAsyncNode {
     }
   }
 
-  private formatResponse(prompt: string, response: string): string {
-    return `USER>\n${prompt}\n\nSYSTEM>\n${response}\n\n`;
+  // Expensive, maybe, OK for now
+  private formatChat(messages: Record<string, string>[]): string {
+    let formatted = '';
+    for (const message of messages) {
+      if (message.role === 'user') {
+        formatted += `USER>\n${message.content}\n\n`;
+      } else if (message.role === 'assistant') {
+        formatted += `SYSTEM>\n${message.content}\n\n`;
+      } else {
+        continue;
+      }
+    }
+    return formatted;
   }
 }

@@ -120,6 +120,7 @@ const PropertyInputContainer = ({ propertyKey, property, node, updateNode }: Pro
         updateNode={updateNode}
       />;
 
+    // So far, no 'object' properties are editable
     default:
       return null;
   }

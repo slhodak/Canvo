@@ -54,9 +54,11 @@ export enum NodePropertyType {
   Number = 'number',
   File = 'file',
   Boolean = 'boolean',
+  Object = 'object',
+  ObjectArray = 'objectArray',
 }
 
-type NodePropertyValue = string | number | boolean;
+type NodePropertyValue = string | number | boolean | Record<string, any> | Record<string, any>[];
 
 export interface NodeProperty {
   type: NodePropertyType;

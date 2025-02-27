@@ -664,19 +664,20 @@ aiRouter.post('/chat', async (req: Request, res: Response) => {
     return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
   }
 
-  const { projectId, nodeId, prompt, brevity } = req.body;
-  if (!projectId || !nodeId || !prompt || brevity === undefined) {
-    return res.status(400).json({ status: "failed", error: "No projectId or nodeId or prompt or brevity provided" });
+  const { projectId, nodeId, messages, brevity } = req.body;
+  if (!projectId || !nodeId || !messages || brevity === undefined) {
+    return res.status(400).json({ status: "failed", error: "No projectId or nodeId or messages or brevity provided" });
   }
 
   // Check token balance
-  const cost = await calculateChatCost(prompt);
+  const cost = await calculateChatCost(messages);
   const tokenBalance = await db.getUserTokenBalance(user.userId);
   if (tokenBalance === null || tokenBalance < cost) {
     return res.status(403).json({ status: "failed", error: "Insufficient tokens for this prompt", cost: cost, balance: tokenBalance });
   }
 
-  const result = await runSimpleChat(prompt, brevity);
+  // TODO: Validate messages payload
+  const result = await runSimpleChat(messages, brevity);
   await db.deductTokens(user.userId, cost);
   await db.logTokenTransaction(user.userId, cost, TransactionType.Spend);
   return res.json({ status: "success", result });

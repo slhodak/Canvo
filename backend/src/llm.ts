@@ -42,7 +42,7 @@ async function callChatCompletion(messages: { role: string, name: string, conten
 export async function runPrompt(prompt: string, input: string): Promise<string> {
   try {
     const messages = [
-      { role: 'system', name: 'system', content: systemPrompt },
+      { role: 'developer', name: 'developer', content: systemPrompt },
       { role: 'user', name: 'user', content: `Input text: '${input}'\nPrompt: '${prompt}'` }
     ]
     const response = await callChatCompletion(messages);
@@ -55,13 +55,11 @@ export async function runPrompt(prompt: string, input: string): Promise<string> 
   }
 }
 
-export async function runSimpleChat(prompt: string, brevity: boolean): Promise<string> {
-  const messages = [
-    { role: 'user', name: 'user', content: prompt }
-  ]
-  if (brevity) {
-    messages.push({ role: 'system', name: 'system', content: 'Please keep the response reasonably concise.' })
-  }
+export async function runSimpleChat(messages: { role: string, name: string, content: string }[], brevity: boolean): Promise<string> {
+  // Can you insert developer messages into the message history? Even if you can -- don't do it twice
+  // if (brevity) {
+  //   messages.push({ role: 'developer', name: 'developer', content: 'Please keep the response reasonably concise.' })
+  // }
 
   try {
     const response = await callChatCompletion(messages);
