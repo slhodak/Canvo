@@ -308,6 +308,7 @@ subscriptionRouter.post('/update_subscription', async (req: Request, res: Respon
 const apiRouter = Router();
 apiRouter.use('/', authenticate);
 
+// subscriptions: a new user must be created with a free subscription
 apiRouter.get('/get_user', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
   if (!user) {
