@@ -97,8 +97,8 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
             })}
           </div>
         </div>
-        <div className="menu-user-container">
-          <p>Token Balance: <span className="menu-user-tokens">{tokenBalance}</span> </p>
+        <div className="menu-footer-container">
+          <p>Token Balance: <span className="menu-footer-tokens">{tokenBalance}</span> </p>
           <button className="settings-button" onClick={() => setIsSettingsOpen(true)}>Settings</button>
         </div>
       </div>

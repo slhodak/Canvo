@@ -46,7 +46,7 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  padding: 0;
+  padding: 0px;
 }
 
 .help-button:hover {
@@ -134,16 +134,6 @@
   background-color: transparent;
 }
 
-.menu-user-container {
-  border-radius: 2px;
-  width: 100%;
-}
-
-.menu-user-tokens {
-  font-weight: 600;
-  color: var(--font-color-light);
-}
-
 .project-preview-actions {
   display: flex;
   gap: 4px;
@@ -225,16 +215,27 @@
   background-color: #5a6268;
 }
 
-.menu-user-tokens-container {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+/* Menu Footer */
+
+.menu-footer-container {
+  border-radius: 2px;
+  width: 100%;
+}
+
+.menu-footer-container p {
+  margin: 0px;
+  padding: 0px;
+}
+
+.menu-footer-tokens {
+  font-weight: 600;
+  color: var(--font-color-light);
 }
 
 .settings-button {
   margin-top: 10px;
   padding: 8px 16px;
-  background-color: var(--background-dark-1);
+  background-color: var(--background-dark-0);
   color: var(--font-color-light);
   border: 1px solid var(--background-dark-3);
   border-radius: 4px;
