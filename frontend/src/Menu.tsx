@@ -85,7 +85,7 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
           <div className="menu-projects-header">
             <h3>Projects</h3>
             <button className="add-project-button" onClick={createProject}>
-              <PlusIcon />
+              <PlusIcon color="var(--background-dark-4)" />
             </button>
           </div>
           <div className="menu-items-projects">
