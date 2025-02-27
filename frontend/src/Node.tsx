@@ -169,7 +169,7 @@ export const Node = ({ node, isSelected, isDisplaying, connections, wireState, u
               className="node-play-button"
               onClick={(e) => {
                 e.stopPropagation();
-                runNode(node, true);
+                runNode(node);
               }}
               title="Run node"
             >

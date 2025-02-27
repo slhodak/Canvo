@@ -342,11 +342,9 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   const updateNode = useCallback(async (node: VisualNode, shouldRun: boolean = true, shouldSync: boolean = true) => {
     setNodes(prevNodes => ({ ...prevNodes, [node.node.nodeId]: node }));
     // Sometimes the node is only having its coordinates updated, so don't run it
-    if (shouldRun) {
+    if (shouldRun && node.node.runType === NodeRunType.Auto) {
       // Caller who sets shouldRun doesn't know if the node is auto-run or not--it really means 'should run if auto'
-      if (node.node.runType === NodeRunType.Auto) {
-        await runNode(node, shouldSync);
-      }
+      await runNode(node, shouldSync);
     } else if (shouldSync) {
       // If the node is not being run, sync it if needed, e.g. on coordinate updates
       await syncNodeUpdate(node.node);

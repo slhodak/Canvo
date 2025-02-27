@@ -1211,6 +1211,7 @@ export class ChatNode extends BaseAsyncNode {
     label: string = 'chat',
     display: boolean = false,
     prompt: string = '',
+    brevity: boolean = false,
     outputState: IOState[] = [],
   ) {
     super(id, authorId, projectId, 'Chat', label, display, NodeType.Chat, 0, 1, coordinates, NodeRunType.Manual, NodeCacheType.Cache, {
@@ -1221,6 +1222,13 @@ export class ChatNode extends BaseAsyncNode {
         editable: true,
         displayed: true,
       },
+      brevity: {
+        type: NodePropertyType.Boolean,
+        label: 'Short Responses',
+        value: brevity,
+        editable: true,
+        displayed: true,
+      }
     }, [], outputState);
   }
 
@@ -1233,6 +1241,7 @@ export class ChatNode extends BaseAsyncNode {
       object.label,
       object.display,
       object.properties.prompt.value as string,
+      object.properties.brevity.value as boolean,
       object.outputState.map(IOState.fromObject),
     );
   }
@@ -1253,18 +1262,30 @@ export class ChatNode extends BaseAsyncNode {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ projectId: this.projectId, nodeId: this.nodeId, prompt }),
+        body: JSON.stringify({
+          projectId: this.projectId,
+          nodeId: this.nodeId,
+          prompt,
+          brevity: this.properties.brevity.value as boolean,
+        }),
       });
+
       const data: LLMResponse = await response.json();
       if (!this.outputState[0]) {
         this.outputState[0] = new IOState({ stringValue: '' });
       }
       this.properties.prompt.value = '';
-      this.outputState[0].appendString(`${prompt}\n${data.result}\n\n`);
+      this.outputState[0].appendString(this.formatResponse(prompt, data.result));
+      // Set to a new object so the OutputView understands that the output state has changed
+      this.outputState[0] = new IOState({ stringValue: this.outputState[0].stringValue });
       return this.outputState;
     } catch (error) {
       console.error('Error in ChatNode:', error);
       return this.outputState;
     }
+  }
+
+  private formatResponse(prompt: string, response: string): string {
+    return `User:\n${prompt}\n\nLLM:\n${response}\n\n`;
   }
 }

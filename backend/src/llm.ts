@@ -55,11 +55,15 @@ export async function runPrompt(prompt: string, input: string): Promise<string> 
   }
 }
 
-export async function runSimpleChat(prompt: string): Promise<string> {
+export async function runSimpleChat(prompt: string, brevity: boolean): Promise<string> {
   const messages = [
     { role: 'user', name: 'user', content: prompt }
   ]
-  try { 
+  if (brevity) {
+    messages.push({ role: 'system', name: 'system', content: 'Please keep the response reasonably concise.' })
+  }
+
+  try {
     const response = await callChatCompletion(messages);
     return response;
   } catch (error) {
