@@ -29,7 +29,8 @@ CREATE TABLE billing_transactions (
     id SERIAL PRIMARY KEY,
     subscription_id TEXT NOT NULL,
     amount DECIMAL(10, 2) NOT NULL,
-    status VARCHAR(255) NOT NULL,
+    success BOOLEAN NOT NULL,
+    memo TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (subscription_id) REFERENCES subscriptions(subscription_id)
 );
