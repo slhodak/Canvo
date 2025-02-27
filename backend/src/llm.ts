@@ -59,8 +59,15 @@ export async function runSimpleChat(prompt: string): Promise<string> {
   const messages = [
     { role: 'user', name: 'user', content: prompt }
   ]
-  const response = await callChatCompletion(messages);
-  return response;
+  try { 
+    const response = await callChatCompletion(messages);
+    return response;
+  } catch (error) {
+    if (error instanceof Error) {
+      return error.message;
+    }
+    return "An unknown error occurred";
+  }
 }
 
 export async function calculateChatCost(prompt: string): Promise<number> {

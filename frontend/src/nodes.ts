@@ -1212,7 +1212,6 @@ export class ChatNode extends BaseAsyncNode {
     display: boolean = false,
     prompt: string = '',
     outputState: IOState[] = [],
-    indexSelections: (number | null)[] = [],
   ) {
     super(id, authorId, projectId, 'Chat', label, display, NodeType.Chat, 0, 1, coordinates, NodeRunType.Manual, NodeCacheType.Cache, {
       prompt: {
@@ -1222,7 +1221,7 @@ export class ChatNode extends BaseAsyncNode {
         editable: true,
         displayed: true,
       },
-    }, [IOStateType.String], outputState, indexSelections);
+    }, [], outputState);
   }
 
   public static override fromObject(object: BaseNode): BaseNode {
@@ -1235,7 +1234,6 @@ export class ChatNode extends BaseAsyncNode {
       object.display,
       object.properties.prompt.value as string,
       object.outputState.map(IOState.fromObject),
-      object.indexSelections
     );
   }
 
@@ -1245,8 +1243,8 @@ export class ChatNode extends BaseAsyncNode {
 
   // Call the LLM with the current prompt and add the response to the history
   async _run(inputValues: IOState[]): Promise<IOState[]> {
-    const prompt = inputValues[0]?.stringValue;
-    if (!prompt) return this.outputState;
+    const prompt = this.properties.prompt.value as string;
+    if (prompt === '') return this.outputState;
 
     try {
       const response = await fetch(`${SERVER_URL}/ai/chat`, {
@@ -1261,6 +1259,7 @@ export class ChatNode extends BaseAsyncNode {
       if (!this.outputState[0]) {
         this.outputState[0] = new IOState({ stringValue: '' });
       }
+      this.properties.prompt.value = '';
       this.outputState[0].appendString(`${prompt}\n${data.result}\n\n`);
       return this.outputState;
     } catch (error) {
