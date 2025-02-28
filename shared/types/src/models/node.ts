@@ -58,7 +58,7 @@ export enum NodePropertyType {
   ObjectArray = 'objectArray',
 }
 
-type NodePropertyValue = string | number | boolean | Record<string, any> | Record<string, any>[];
+export type NodePropertyValue = string | number | boolean | Record<string, any> | Record<string, any>[];
 
 export interface NodeProperty {
   type: NodePropertyType;
@@ -230,6 +230,7 @@ export abstract class BaseNode {
     inputTypes: IOStateType[] = [],
     outputState: IOState[] = [],
     indexSelections: (number | null)[] = [],
+    runOnInput: boolean = false,
   ) {
     this.nodeId = nodeId;
     this.authorId = authorId;
@@ -265,6 +266,13 @@ export abstract class BaseNode {
   public static fromObject(object: BaseNode): BaseNode {
     throw new Error('Not implemented');
   }
+
+  // A temporary hack because adding a property would require updating the database and every other node
+  public runOnInput(): boolean { return false; }
+
+  public onInputConnection(inputValue: IOState) { }
+
+  public onInputDisconnection(inputIndex: number) { }
 
   public setProperty(key: string, value: NodePropertyValue) {
     this.properties[key].value = value;

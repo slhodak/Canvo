@@ -234,7 +234,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
 
   // For each input connection to this node, get or calculate the input from that connection
   // If this node is a Run node, run it once you've gathered all the input values
-  const _runPriorDAG = useCallback(async (node: VisualNode, shouldSync: boolean = true): Promise<IOState[]> => {
+  const runPriorDAG = useCallback(async (node: VisualNode, shouldSync: boolean = true): Promise<IOState[]> => {
     const inputConnections = connections.filter(conn => conn.connection.toNode === node.node.nodeId);
     const inputValues: IOState[] = [];
     for (const conn of inputConnections) {
@@ -252,16 +252,16 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
         continue;
       }
 
-      // Read from Cache nodes, run Auto-run nodes
-      if (inputNode.node.runType === NodeRunType.Auto) {
-        const priorInputValues = await _runPriorDAG(inputNode, shouldSync);
-        const calculatedIOState = await _runNodeOnInput(priorInputValues, inputNode, shouldSync);
-        inputValues.push(...calculatedIOState);
+      // If node caches its output, do not run it
+      if (inputNode.node.cacheType === NodeCacheType.Cache) {
+        inputValues.push(outputState);
         continue;
       }
 
-      if (inputNode.node.cacheType === NodeCacheType.Cache) {
-        inputValues.push(outputState);
+      if (inputNode.node.runType === NodeRunType.Auto) {
+        const priorInputValues = await runPriorDAG(inputNode, shouldSync);
+        const calculatedIOState = await _runNodeOnInput(priorInputValues, inputNode, shouldSync);
+        inputValues.push(...calculatedIOState);
         continue;
       }
 
@@ -273,13 +273,13 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   }, [nodes, connections, _runNodeOnInput]);
 
   const runNode = useCallback(async (node: VisualNode, shouldSync: boolean = true) => {
-    const inputValues = await _runPriorDAG(node, shouldSync);
+    const inputValues = await runPriorDAG(node, shouldSync);
     await _runNodeOnInput(inputValues, node, shouldSync);
 
     if (node.node.display) {
       updateViewState(node);
     }
-  }, [_runPriorDAG, _runNodeOnInput]);
+  }, [runPriorDAG, _runNodeOnInput]);
 
   const selectNode = useCallback(async (node: VisualNode) => {
     setSelectedNode(node);
@@ -438,6 +438,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
               connections={connections}
               updateConnections={updateConnections}
               runNode={runNode}
+              runPriorDAG={runPriorDAG}
             />
           </div>
           <div className="left-pane-bottom">

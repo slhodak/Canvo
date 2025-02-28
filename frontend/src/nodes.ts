@@ -9,6 +9,7 @@ import {
   IOStateType,
   NodePropertyType,
   NodeCacheType,
+  NodePropertyValue,
 } from '../../shared/types/src/models/node';
 import { LLMResponse } from '../../shared/types/src/models/LLMResponse';
 import { updateNode } from './api';
@@ -508,7 +509,7 @@ export class EditNode extends BaseSyncNode {
     outputState: IOState[] = [],
     indexSelections: (number | null)[] = [],
   ) {
-    super(id, authorId, projectId, 'Edit', label, display, NodeType.Edit, 1, 1, coordinates, NodeRunType.Manual, NodeCacheType.Cache, {
+    super(id, authorId, projectId, 'Edit', label, display, NodeType.Edit, 1, 1, coordinates, NodeRunType.Auto, NodeCacheType.Cache, {
       content: {
         type: NodePropertyType.String,
         label: 'Content',
@@ -537,17 +538,15 @@ export class EditNode extends BaseSyncNode {
     this.outputState = [IOState.ofType(IOStateType.String)];
   }
 
-  _run(inputValues: IOState[]): IOState[] {
-    if (!inputValues[0]) {
-      return [IOState.ofType(IOStateType.String)];
-    }
+  public override runOnInput(): boolean { return true; }
 
-    const content = inputValues[0].stringValue as string;
-    if (!content) {
-      return [IOState.ofType(IOStateType.String)];
-    }
-
+  public override onInputConnection(inputValue: IOState) {
+    const content = inputValue.stringValue as string || '';
     this.properties.content.value = content;
+  }
+
+  _run(inputValues: IOState[]): IOState[] {
+    const content = this.properties.content.value as string || '';
     return [new IOState({ stringValue: content })];
   }
 }

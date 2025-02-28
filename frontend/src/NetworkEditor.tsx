@@ -3,7 +3,7 @@ import './NetworkEditor.css';
 import { VisualNode, VisualConnection, DragState, WireState } from './NetworkTypes';
 import { Node } from './Node';
 import { ConnectionUtils as cu, NetworkEditorUtils as neu } from './Utils';
-import { Coordinates, NodeType, NodeGroups } from '../../shared/types/src/models/node';
+import { Coordinates, NodeType, NodeGroups, IOState, NodeRunType } from '../../shared/types/src/models/node';
 import { Connection } from '../../shared/types/src/models/connection';
 import { NodeUtils as nu } from './Utils';
 import { ProjectModel } from '../../shared/types/src/models/project';
@@ -24,6 +24,7 @@ interface NetworkEditorProps {
   connections: VisualConnection[];
   updateConnections: (connections: VisualConnection[]) => void;
   runNode: (node: VisualNode) => void;
+  runPriorDAG: (node: VisualNode, shouldSync?: boolean) => Promise<IOState[]>;
 }
 
 const NetworkEditor = ({
@@ -41,6 +42,7 @@ const NetworkEditor = ({
   connections,
   updateConnections,
   runNode,
+  runPriorDAG,
 }: NetworkEditorProps) => {
   const [mousePosition, setMousePosition] = useState<Coordinates>({ x: 0, y: 0 });
   const [isHoveringEditor, setIsHoveringEditor] = useState(false);
@@ -303,7 +305,7 @@ const NetworkEditor = ({
   // Memoized Functions
   //////////////////////////////
 
-  const createNewConnection = useCallback((fromNodeId: string, fromOutput: number, toNodeId: string, inputIndex: number) => {
+  const createNewConnection = useCallback(async (fromNodeId: string, fromOutput: number, toNodeId: string, inputIndex: number) => {
     // Don't create a redundant connection
     const existingConnection = connections.find(conn => (
       conn.connection.fromNode === fromNodeId &&
@@ -336,7 +338,12 @@ const NetworkEditor = ({
     newConnections.push(newConnection);
     enableIndexSelection(fromNodeId, fromOutput, toNodeId, inputIndex);
     updateConnections(newConnections);
-  }, [connections, updateConnections, enableIndexSelection, project.projectId, user.userId]);
+    const node = nodes[toNodeId];
+    if (node?.node.runOnInput()) {
+      const priorInputValues = await runPriorDAG(node);
+      node.node.onInputConnection(priorInputValues[inputIndex]);
+    }
+  }, [nodes, connections, updateConnections, enableIndexSelection, project.projectId, user.userId, runPriorDAG]);
 
   //////////////////////////////
   // React Hooks
