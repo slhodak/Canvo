@@ -40,6 +40,6 @@ CREATE TABLE billing_transactions (
 
 -- Create the default free plan
 INSERT INTO plans (plan_id, tier, name, description, price)
-VALUES (uuid_generate_v4(), 0, 'free', 'free for all users', 0);
+VALUES (uuid_generate_v4(), 0, 'Free', 'free for all users', 0);
 
 COMMIT;

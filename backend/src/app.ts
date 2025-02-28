@@ -258,7 +258,7 @@ const subscriptionRouter = Router();
 subscriptionRouter.use('/', authenticate);
 
 // Returns the subscription and the plan
-subscriptionRouter.get('/get_subscription', async (req: Request, res: Response) => {
+subscriptionRouter.get('/get_or_create_subscription', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
   if (!user) {
     return res.status(401).json({ error: "Could not find user email from session token" });
@@ -266,7 +266,12 @@ subscriptionRouter.get('/get_subscription', async (req: Request, res: Response) 
 
   const highestSubscription = await db.getHighestSubscription(user.userId);
   if (highestSubscription) {
-    return res.json({ status: 'success', highestSubscription })
+    const plan = await db.getPlan(highestSubscription.planId);
+    if (!plan) {
+      console.error("Could not find plan for subscription", highestSubscription.subscriptionId);
+      return res.status(500).json({ error: "Could not find plan" });
+    }
+    return res.json({ status: 'success', subscription: highestSubscription, plan })
   }
 
   // If there is no subscription, add a free plan for the user
@@ -277,16 +282,19 @@ subscriptionRouter.get('/get_subscription', async (req: Request, res: Response) 
   }
 
   const subscriptionId = uuidv4();
+  const now = new Date();
+  const endDate = new Date(now);
+  endDate.setMonth(now.getMonth() + 1);
   await db.createSubscription(new SubscriptionModel(
     1, // This value ignored by database
     subscriptionId,
     user.userId,
     freePlan.planId,
-    new Date(),
-    new Date(),
+    now,
+    now,
     SubscriptionStatus.ACTIVE,
-    new Date(),
-    new Date()
+    now,
+    endDate,
   ));
 
   const subscription = await db.getSubscription(subscriptionId);

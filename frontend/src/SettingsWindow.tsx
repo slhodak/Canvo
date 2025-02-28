@@ -36,12 +36,16 @@ const SettingsWindow = ({ user, isOpen, onClose }: SettingsWindowProps) => {
 
   const fetchUserSubscription = async () => {
     try {
-      const response = await fetch(`${SERVER_URL}/sub/get_subscription`, {
+      const response = await fetch(`${SERVER_URL}/sub/get_or_create_subscription`, {
         credentials: 'include',
       });
       const data = await response.json();
-      setSubscription(data.subscription);
-      setPlan(data.plan);
+      if (data.status === 'success') {
+        setSubscription(SubscriptionModel.fromObject(data.subscription));
+        setPlan(PlanModel.fromObject(data.plan));
+      } else {
+        console.error('Error fetching user subscription:', data.error);
+      }
     } catch (error) {
       console.error('Error fetching user subscription:', error);
     }
@@ -79,17 +83,21 @@ const SettingsWindow = ({ user, isOpen, onClose }: SettingsWindowProps) => {
           <button className="modal-close" onClick={onClose}>×</button>
         </div>
 
-        {subscription && plan && (
-          <div className="subscription-info">
-            <h3>Subscription</h3>
-            <p>Plan: {plan.name}</p>
-            <p>Start Date: {subscription.startDate.toLocaleDateString()}</p>
-            <p>End Date: {subscription.endDate.toLocaleDateString()}</p>
-          </div>
-        )}
+        <div className="settings-content">
+          <p>Logged in as: {user.email}</p>
 
-        <p className="settings-window-email">Email: <span className="settings-window-email-value">{user.email}</span></p>
-        <button className="logout-button" onClick={handleLogout}>Log Out</button>
+          {subscription && plan && (
+            <div className="settings-subscription-info">
+              <h3>Subscription</h3>
+              <p>Plan: {plan.name}</p>
+              <p>Start Date: {subscription.startDate.toLocaleDateString()}</p>
+              {/* Only show the end date for paid plans that can expire */}
+              {plan.tier > 0 && <p>End Date: {subscription.endDate.toLocaleDateString()}</p>}
+            </div>
+          )}
+
+          <button className="logout-button" onClick={handleLogout}>Log Out</button>
+        </div>
       </div>
     </div>
   );

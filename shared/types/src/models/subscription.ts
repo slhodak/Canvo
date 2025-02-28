@@ -31,6 +31,20 @@ export class SubscriptionModel {
     public createdAt: Date,
     public updatedAt: Date,
   ) { }
+
+  static fromObject(obj: any): SubscriptionModel {
+    return new SubscriptionModel(
+      obj.id,
+      obj.subscriptionId,
+      obj.userId,
+      obj.planId,
+      new Date(obj.startDate),
+      new Date(obj.endDate),
+      obj.status,
+      new Date(obj.createdAt),
+      new Date(obj.updatedAt),
+    );
+  }
 }
 
 export class PlanModel {
@@ -44,6 +58,19 @@ export class PlanModel {
     public createdAt: Date,
     public updatedAt: Date,
   ) { }
+
+  static fromObject(obj: any): PlanModel {
+    return new PlanModel(
+      obj.id,
+      obj.planId,
+      obj.tier,
+      obj.name,
+      obj.description,
+      obj.price,
+      new Date(obj.createdAt),
+      new Date(obj.updatedAt),
+    );
+  }
 }
 
 export class BillingTransactionModel {

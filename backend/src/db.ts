@@ -53,7 +53,11 @@ export namespace Database {
   ////////////////////////////////////////////////////////////////////////////////
 
   export async function getSubscription(subscriptionId: string): Promise<SubscriptionModel | null> {
-    const subscription = await db.oneOrNone('SELECT id, subscription_id, user_id, plan_id, start_date, end_date, status FROM subscriptions WHERE subscription_id = $1', [subscriptionId]);
+    const subscription = await db.oneOrNone(`
+      SELECT id, subscription_id, user_id, plan_id, start_date, end_date, status
+      FROM subscriptions
+      WHERE subscription_id = $1
+    `, [subscriptionId]);
     return subscription;
   }
 
@@ -62,9 +66,9 @@ export namespace Database {
     const subscriptionsAndPlans = await db.any(`
       SELECT
         s.id, s.subscription_id, s.user_id, s.plan_id, s.start_date, s.end_date, s.status,
-        p.name, p.price, p.tier
+        p.name, p.description, p.price, p.tier
       FROM subscriptions s
-      JOIN plans p ON s.plan_id = p.id
+      JOIN plans p ON s.plan_id = p.plan_id
       WHERE s.user_id = $1
       ORDER BY s.start_date DESC
     `, [userId]);
@@ -78,7 +82,11 @@ export namespace Database {
   }
 
   export async function getPlan(planId: string): Promise<PlanModel | null> {
-    const plan = await db.oneOrNone('SELECT id, plan_id, name, description, price FROM plans WHERE plan_id = $1', [planId]);
+    const plan = await db.oneOrNone(`
+      SELECT id, plan_id, tier, name, description, price
+      FROM plans
+      WHERE plan_id = $1
+    `, [planId]);
     return plan;
   }
 
