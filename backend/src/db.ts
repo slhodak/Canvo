@@ -52,9 +52,29 @@ export namespace Database {
   // Subscriptions
   ////////////////////////////////////////////////////////////////////////////////
 
-  export async function getSubscription(userId: string): Promise<SubscriptionModel | null> {
-    const subscription = await db.oneOrNone('SELECT id, subscription_id, user_id, plan_id, start_date, end_date, status FROM subscriptions WHERE user_id = $1', [userId]);
+  export async function getSubscription(subscriptionId: string): Promise<SubscriptionModel | null> {
+    const subscription = await db.oneOrNone('SELECT id, subscription_id, user_id, plan_id, start_date, end_date, status FROM subscriptions WHERE subscription_id = $1', [subscriptionId]);
     return subscription;
+  }
+
+  export async function getHighestSubscription(userId: string): Promise<SubscriptionModel | null> {
+    // Get the user's subscriptions and their plans
+    const subscriptionsAndPlans = await db.any(`
+      SELECT
+        s.id, s.subscription_id, s.user_id, s.plan_id, s.start_date, s.end_date, s.status,
+        p.name, p.price, p.tier
+      FROM subscriptions s
+      JOIN plans p ON s.plan_id = p.id
+      WHERE s.user_id = $1
+      ORDER BY s.start_date DESC
+    `, [userId]);
+
+    // Get the highest tier subscription
+    const highestSubscription = subscriptionsAndPlans.reduce((max, current) => {
+      return current.tier > max.tier ? current : max;
+    }, subscriptionsAndPlans[0]);
+
+    return highestSubscription;
   }
 
   export async function getPlan(planId: string): Promise<PlanModel | null> {
@@ -74,6 +94,33 @@ export namespace Database {
         id, subscription_id, created_at, amount, success, memo
       ) VALUES ($1, $2, $3, $4, $5, $6)
     `, [billingTransactionId, subscriptionId, new Date(), amount, success, memo]);
+  }
+
+  export async function createSubscription(subscription: SubscriptionModel) {
+    await db.none(`
+      INSERT INTO subscriptions (subscription_id, user_id, plan_id, start_date, end_date, status)
+      VALUES ($1, $2, $3, $4, $5, $6)
+    `, [subscription.subscriptionId, subscription.userId, subscription.planId, subscription.startDate, subscription.endDate, subscription.status]);
+  }
+
+  export async function updateSubscription(subscription: SubscriptionModel) {
+    await db.none(`
+      UPDATE subscriptions SET end_date = $1, status = $2, updated_at = CURRENT_TIMESTAMP
+      WHERE subscription_id = $3
+    `, [subscription.endDate, subscription.status, subscription.subscriptionId]);
+  }
+
+
+  export async function createPlan(plan: PlanModel) {
+    await db.none(`
+      INSERT INTO plans (plan_id, name, description, price)
+      VALUES ($1, $2, $3, $4)
+    `, [plan.planId, plan.name, plan.description, plan.price]);
+  }
+
+  export async function getPlanByTier(tier: number): Promise<PlanModel | null> {
+    const plan = await db.oneOrNone('SELECT id, plan_id, tier, name, description, price FROM plans WHERE tier = $1', [tier]);
+    return plan;
   }
 
   ////////////////////////////////////////////////////////////////////////////////

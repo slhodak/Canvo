@@ -3,6 +3,7 @@ BEGIN;
 CREATE TABLE plans (
     id SERIAL PRIMARY KEY,
     plan_id TEXT NOT NULL,
+    tier INTEGER UNIQUE NOT NULL,
     name TEXT NOT NULL,
     description TEXT NOT NULL,
     price DECIMAL(10, 2) NOT NULL,

@@ -12,6 +12,8 @@ import { validateNode } from './util';
 import { LLMResponse } from '../../shared/types/src/models/LLMResponse';
 import schedule from 'node-schedule';
 import { TransactionType } from '../../shared/types/src/models/tokens';
+import { SubscriptionModel, SubscriptionStatus } from "../../shared/types/src/models/subscription";
+import { v4 as uuidv4 } from 'uuid';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -248,7 +250,6 @@ authRouter.post('/logout', async (req: Request, res: Response) => {
   }
 });
 
-
 ////////////////////////////////////////////////////////////
 // Subscriptions & Billing
 ////////////////////////////////////////////////////////////
@@ -262,9 +263,26 @@ subscriptionRouter.get('/get_subscription', async (req: Request, res: Response) 
     return res.status(401).json({ error: "Could not find user email from session token" });
   }
 
-  const subscription = await db.getSubscription(user.userId);
+  const subscription = await db.getHighestSubscription(user.userId);
+  // If there is no subscription, add a free plan to the user
   if (!subscription) {
-    return res.status(404).json({ error: "Could not find subscription for user" });
+    const freePlan = await db.getPlanByTier(0);
+    if (!freePlan) {
+      console.error("Could not find free plan");
+      return res.status(500).json({ error: "Could not find free plan" });
+    }
+
+    await db.createSubscription(new SubscriptionModel(
+      1, // This value ignored by database
+      uuidv4(),
+      user.userId,
+      freePlan.planId,
+      new Date(),
+      new Date(),
+      SubscriptionStatus.ACTIVE,
+      new Date(),
+      new Date()
+    ));
   }
 
   return res.json({ status: 'success', subscription });
@@ -286,16 +304,8 @@ subscriptionRouter.post('/update_subscription', async (req: Request, res: Respon
     return res.status(401).json({ error: "Could not find user email from session token" });
   }
 
-  const subscription = await db.getSubscription(user.userId);
-  if (!subscription) {
-    return res.status(404).json({ error: "Could not find subscription for user" });
-  }
-
-  const planId = req.body.planId;
-  const plan = await db.getPlan(planId);
-  if (!plan) {
-    return res.status(404).json({ error: "Could not find plan" });
-  }
+  const { subscription } = req.body;
+  await db.updateSubscription(subscription);
 
   return res.json({ status: 'success' });
 });

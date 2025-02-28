@@ -16,13 +16,15 @@ export enum SubscriptionStatus {
 // Let the code decide how many tokens to award per period for each subscription
 // Every user object is created with a subscription,
 // Depending on how they onboarded, it will be either the free plan or the paid plan
+// When a user upgrades their subscription, they are given a new subscription for the upgraded plan,
+// but their old subscription remains active. Free subscriptions are perpetually active.
 
 export class SubscriptionModel {
   constructor(
     public id: number,
     public subscriptionId: string,
-    public userId: number,
-    public planId: number,
+    public userId: string,
+    public planId: string,
     public startDate: Date,
     public endDate: Date,
     public status: SubscriptionStatus,
@@ -35,6 +37,7 @@ export class PlanModel {
   constructor(
     public id: number,
     public planId: string,
+    public tier: number,
     public name: string,
     public description: string,
     public price: number,
