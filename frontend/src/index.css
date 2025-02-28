@@ -36,7 +36,7 @@
   --background-dark-4: #7a7979;
   --background-dark-5: #919191;
   --background-dark-6: #b3b3b3;
-  --input-background-color: rgb(30, 30, 30);
+  --input-background-color: rgb(35, 35, 35);
   --button-background-color: lightblue;
   --container-vertical-spacing: 6px;
 
@@ -45,6 +45,8 @@
 }
 
 textarea {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 1rem;
   color: var(--font-color-light);
   background-color: var(--input-background-color);
   border-style: inset;
