@@ -110,7 +110,6 @@ export namespace Database {
     `, [subscription.endDate, subscription.status, subscription.subscriptionId]);
   }
 
-
   export async function createPlan(plan: PlanModel) {
     await db.none(`
       INSERT INTO plans (plan_id, name, description, price)

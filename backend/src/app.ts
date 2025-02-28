@@ -255,7 +255,7 @@ authRouter.post('/logout', async (req: Request, res: Response) => {
 ////////////////////////////////////////////////////////////
 
 const subscriptionRouter = Router();
-subscriptionRouter.use('/', authenticate);
+subscriptionRouter.use('/sub', authenticate);
 
 subscriptionRouter.get('/get_subscription', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
@@ -263,26 +263,35 @@ subscriptionRouter.get('/get_subscription', async (req: Request, res: Response) 
     return res.status(401).json({ error: "Could not find user email from session token" });
   }
 
-  const subscription = await db.getHighestSubscription(user.userId);
-  // If there is no subscription, add a free plan to the user
-  if (!subscription) {
-    const freePlan = await db.getPlanByTier(0);
-    if (!freePlan) {
-      console.error("Could not find free plan");
-      return res.status(500).json({ error: "Could not find free plan" });
-    }
+  const highestSubscription = await db.getHighestSubscription(user.userId);
+  if (highestSubscription) {
+    return res.json({ status: 'success', highestSubscription })
+  }
 
-    await db.createSubscription(new SubscriptionModel(
-      1, // This value ignored by database
-      uuidv4(),
-      user.userId,
-      freePlan.planId,
-      new Date(),
-      new Date(),
-      SubscriptionStatus.ACTIVE,
-      new Date(),
-      new Date()
-    ));
+  // If there is no subscription, add a free plan for the user
+  const freePlan = await db.getPlanByTier(0);
+  if (!freePlan) {
+    console.error("Could not find free plan");
+    return res.status(500).json({ error: "Could not find free plan" });
+  }
+
+  const subscriptionId = uuidv4();
+  await db.createSubscription(new SubscriptionModel(
+    1, // This value ignored by database
+    subscriptionId,
+    user.userId,
+    freePlan.planId,
+    new Date(),
+    new Date(),
+    SubscriptionStatus.ACTIVE,
+    new Date(),
+    new Date()
+  ));
+
+  const subscription = await db.getSubscription(subscriptionId);
+  if (!subscription) {
+    console.error("Could not find subscription");
+    return res.status(500).json({ error: "Could not find subscription" });
   }
 
   return res.json({ status: 'success', subscription });
@@ -297,6 +306,11 @@ subscriptionRouter.get('/get_plan', async (req: Request, res: Response) => {
 
   return res.json({ status: 'success', plan });
 });
+
+subscriptionRouter.get('/get_plans', async (req: Request, res: Response) => {
+  // Return all plans
+  return res.json({ status: 'success', plans: [] })
+})
 
 subscriptionRouter.post('/update_subscription', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);

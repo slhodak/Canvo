@@ -1,5 +1,7 @@
 BEGIN;
 
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 CREATE TABLE plans (
     id SERIAL PRIMARY KEY,
     plan_id TEXT NOT NULL,
@@ -35,5 +37,8 @@ CREATE TABLE billing_transactions (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (subscription_id) REFERENCES subscriptions(subscription_id)
 );
+
+INSERT INTO plans (plan_id, tier, name, description, price)
+VALUES (uuid_generate_v4(), 0, 'free', 'free for all users', 0)
 
 COMMIT;

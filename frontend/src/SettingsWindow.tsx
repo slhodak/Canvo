@@ -32,6 +32,14 @@ const SettingsWindow = ({ user, isOpen, onClose }: SettingsWindowProps) => {
     }
   };
 
+  const fetchUserSubscription = async () => {
+    const response = await fetch(`${SERVER_URL}/sub/get_subscription`, {
+      credentials: 'include',
+    });
+    const data = await response.json();
+    console.log(data);
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (contentRef.current && !contentRef.current.contains(event.target as Node)) {
