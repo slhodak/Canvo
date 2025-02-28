@@ -63,6 +63,7 @@
   height: 100%;
   width: 100%;
   padding: 0px var(--padding-sides);
+  padding-bottom: 6px;
 }
 
 .menu-projects-container {
