@@ -38,6 +38,7 @@ CREATE TABLE billing_transactions (
     FOREIGN KEY (subscription_id) REFERENCES subscriptions(subscription_id)
 );
 
+-- Create the default free plan
 INSERT INTO plans (plan_id, tier, name, description, price)
 VALUES (uuid_generate_v4(), 0, 'free', 'free for all users', 0)
 

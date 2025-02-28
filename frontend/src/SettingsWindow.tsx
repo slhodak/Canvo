@@ -1,9 +1,9 @@
+import { useRef, useEffect, useState } from 'react';
 import './SettingsWindow.css';
 import './Modal.css';
 import { UserModel } from "../../shared/types/src/models/user";
 import { SERVER_URL } from "./constants";
-import { useRef } from 'react';
-import { useEffect } from 'react';
+import { SubscriptionModel, PlanModel } from "../../shared/types/src/models/subscription";
 
 // A simple component that shows the user's settings
 // - User's email
@@ -17,6 +17,8 @@ interface SettingsWindowProps {
 
 const SettingsWindow = ({ user, isOpen, onClose }: SettingsWindowProps) => {
   const contentRef = useRef<HTMLDivElement>(null);
+  const [subscription, setSubscription] = useState<SubscriptionModel | null>(null);
+  const [plan, setPlan] = useState<PlanModel | null>(null);
 
   const handleLogout = async () => {
     try {
@@ -33,11 +35,16 @@ const SettingsWindow = ({ user, isOpen, onClose }: SettingsWindowProps) => {
   };
 
   const fetchUserSubscription = async () => {
-    const response = await fetch(`${SERVER_URL}/sub/get_subscription`, {
-      credentials: 'include',
-    });
-    const data = await response.json();
-    console.log(data);
+    try {
+      const response = await fetch(`${SERVER_URL}/sub/get_subscription`, {
+        credentials: 'include',
+      });
+      const data = await response.json();
+      setSubscription(data.subscription);
+      setPlan(data.plan);
+    } catch (error) {
+      console.error('Error fetching user subscription:', error);
+    }
   };
 
   useEffect(() => {
@@ -54,6 +61,14 @@ const SettingsWindow = ({ user, isOpen, onClose }: SettingsWindowProps) => {
     };
   }, [isOpen, onClose]);
 
+  useEffect(() => {
+    // Weird that this runs when the modal is closed
+    // It's probably because the model exists but isn't... like... visible
+    if (isOpen) {
+      fetchUserSubscription();
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
@@ -63,6 +78,15 @@ const SettingsWindow = ({ user, isOpen, onClose }: SettingsWindowProps) => {
           <h2>Settings</h2>
           <button className="modal-close" onClick={onClose}>×</button>
         </div>
+
+        {subscription && plan && (
+          <div className="subscription-info">
+            <h3>Subscription</h3>
+            <p>Plan: {plan.name}</p>
+            <p>Start Date: {subscription.startDate.toLocaleDateString()}</p>
+            <p>End Date: {subscription.endDate.toLocaleDateString()}</p>
+          </div>
+        )}
 
         <p className="settings-window-email">Email: <span className="settings-window-email-value">{user.email}</span></p>
         <button className="logout-button" onClick={handleLogout}>Log Out</button>

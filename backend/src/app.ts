@@ -255,8 +255,9 @@ authRouter.post('/logout', async (req: Request, res: Response) => {
 ////////////////////////////////////////////////////////////
 
 const subscriptionRouter = Router();
-subscriptionRouter.use('/sub', authenticate);
+subscriptionRouter.use('/', authenticate);
 
+// Returns the subscription and the plan
 subscriptionRouter.get('/get_subscription', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
   if (!user) {
@@ -293,8 +294,13 @@ subscriptionRouter.get('/get_subscription', async (req: Request, res: Response) 
     console.error("Could not find subscription");
     return res.status(500).json({ error: "Could not find subscription" });
   }
+  const plan = await db.getPlan(subscription.planId);
+  if (!plan) {
+    console.error("Could not find plan");
+    return res.status(500).json({ error: "Could not find plan" });
+  }
 
-  return res.json({ status: 'success', subscription });
+  return res.json({ status: 'success', subscription, plan });
 });
 
 subscriptionRouter.get('/get_plan', async (req: Request, res: Response) => {
@@ -949,6 +955,7 @@ app.use('/auth', authRouter);
 app.use('/api', apiRouter);
 app.use('/ai', aiRouter);
 app.use('/token', tokenRouter);
+app.use('/sub', subscriptionRouter);
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on port ${port}`);
