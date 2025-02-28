@@ -9,7 +9,7 @@ const CHAT_MARGINAL_COST = 0.05; // Additional cost per word in chat
 
 const openai = new OpenAI();
 
-const model = process.env.NODE_ENV === 'production' ? 'gpt-4o' : 'gpt-4o-mini';
+const model = 'gpt-4o';
 
 const systemPrompt = `
   You will be given a prompt, and an input text.
