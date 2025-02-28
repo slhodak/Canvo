@@ -16,6 +16,7 @@ import {
   ALLOWED_ORIGIN, STYTCH_SECRET, STYTCH_PROJECT_ID, sevenDaysInSeconds, SESSION_TOKEN,
   FRONTEND_DOMAIN, AI_SERVICE_URL, SUBSCRIPTION_PLANS, EMBEDDING_COST, SEARCH_COST, PROMPT_COST, port,
 } from "./constants";
+import { SubscriptionModel } from "../../shared/types/src/models/subscription";
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -148,8 +149,14 @@ authRouter.get('/authenticate', async (req: Request, res: Response) => {
 
     const user = await db.getUser(email);
     if (!user) {
-      console.debug("User not found in db, creating...");
-      await db.insertUser(email);
+      console.debug("User not found; creating with a free subscription");
+      const userId = await db.insertUser(email);
+      const freePlan = await db.getPlanByTier(0);
+      if (!freePlan) {
+        console.error("Could not find free plan");
+        return res.status(500).json({ status: 'failed', error: "Could not find create user: free plan missing" });
+      }
+      await db.createSubscription(userId, freePlan.planId);
     }
 
     console.debug("Creating a session for this user");

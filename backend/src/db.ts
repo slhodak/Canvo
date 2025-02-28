@@ -28,14 +28,10 @@ export namespace Database {
   // Users
   ////////////////////////////////////////////////////////////////////////////////
 
-  export async function insertUser(email: string) {
+  export async function insertUser(email: string): Promise<string> {
     const userId = uuidv4();
-    // The database itself can protect against duplicate emails, but we'll check here anyway
-    const user = await db.oneOrNone('SELECT id, user_id, email FROM users WHERE user_id = $1', [userId]);
-    if (user) {
-      return;
-    }
     await db.none('INSERT INTO users (user_id, email) VALUES ($1, $2)', [userId, email]);
+    return userId;
   }
 
   export async function getUser(email: string): Promise<UserModel | null> {
@@ -109,11 +105,11 @@ export namespace Database {
     `, [billingTransactionId, subscriptionId, new Date(), amount, success, memo]);
   }
 
-  export async function createSubscription(subscription: SubscriptionModel) {
+  export async function createSubscription(userId: string, planId: string) {
     await db.none(`
-      INSERT INTO subscriptions (subscription_id, user_id, plan_id, start_date, end_date, status)
-      VALUES ($1, $2, $3, $4, $5, $6)
-    `, [subscription.subscriptionId, subscription.userId, subscription.planId, subscription.startDate, subscription.endDate, subscription.status]);
+      INSERT INTO subscriptions (user_id, plan_id, status)
+      VALUES ($1, $2, $3)
+    `, [userId, planId, 'active']);
   }
 
   export async function updateSubscription(subscription: SubscriptionModel) {
