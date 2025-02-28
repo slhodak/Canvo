@@ -42,9 +42,14 @@ CREATE TABLE billing_transactions (
 INSERT INTO plans (plan_id, tier, name, description, price)
 VALUES (uuid_generate_v4(), 0, 'Free', 'free for all users', 0);
 
--- For every existing user, create a subscription with the free plan
+-- For every existing user without a plan, create a subscription with the free plan
 INSERT INTO subscriptions (subscription_id, user_id, plan_id, start_date, end_date, status)
 SELECT uuid_generate_v4(), user_id, (SELECT plan_id FROM plans WHERE tier = 0), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '1 month', 'active'
-FROM users;
+FROM users
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM subscriptions
+    WHERE subscriptions.user_id = users.user_id
+);
 
 COMMIT;
