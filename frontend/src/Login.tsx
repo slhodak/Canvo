@@ -27,6 +27,10 @@ const LoginOrSignup = () => {
 
   return (
     <div className="login-container">
+      <div className="login-container-header">
+        <h2>Canvo</h2>
+        <p><span className="red">Node-based</span> <span className="blue">AI-powered</span> <span className="yellow">text transformation</span></p>
+      </div>
       <StytchLogin config={config} />
     </div>
   );

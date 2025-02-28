@@ -6,9 +6,32 @@
   height: 100vh;
 }
 
-.login-container > p {
-  font-size: 1.5rem;
-  background-color: rgb(254, 253, 211);
-  width: 100%;
-  text-align: center;
+.login-container-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 5px;
+}
+
+.login-container h2 {
+  font-size: 4rem;
+  margin: 0px;
+}
+
+.login-container p {
+  font-size: 1.2rem;
+  margin: 0px;
+}
+
+.login-container p > .red {
+  color: rgb(134, 222, 93);
+}
+
+.login-container p > .blue {
+  color: rgb(106, 188, 243);
+}
+
+.login-container p > .yellow{
+  color: rgb(255, 228, 73);
 }
