@@ -75,7 +75,7 @@ export namespace Database {
   }
 
   export async function getHighestPlanTier(userId: string): Promise<number | null> {
-    const highestPlan = await db.oneOrNone(`
+    const highestPlanTier = await db.oneOrNone(`
       SELECT p.tier
       FROM plans p
       JOIN subscriptions s ON p.plan_id = s.plan_id
@@ -83,7 +83,7 @@ export namespace Database {
       ORDER BY p.tier ASC
       LIMIT 1
     `, [userId]);
-    return highestPlan;
+    return highestPlanTier?.tier ?? null;
   }
 
   export async function getPlan(planId: string): Promise<PlanModel | null> {

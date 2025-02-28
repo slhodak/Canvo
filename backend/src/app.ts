@@ -867,7 +867,9 @@ tokenRouter.get('/get_balance', async (req: Request, res: Response) => {
 
 const rule = new schedule.RecurrenceRule();
 if (process.env.NODE_ENV === 'production') {
+  rule.hour = [0, 3, 6, 9, 12, 15, 18, 21]; // Every 3 hours
   rule.minute = 0;
+  rule.second = 0;
 } else {
   rule.second = 0;
 }
