@@ -12,59 +12,18 @@ import { validateNode } from './util';
 import { LLMResponse } from '../../shared/types/src/models/LLMResponse';
 import schedule from 'node-schedule';
 import { TransactionType } from '../../shared/types/src/models/tokens';
+import {
+  ALLOWED_ORIGIN, STYTCH_SECRET, STYTCH_PROJECT_ID, sevenDaysInSeconds, SESSION_TOKEN,
+  FRONTEND_DOMAIN, AI_SERVICE_URL, SUBSCRIPTION_PLANS, EMBEDDING_COST, SEARCH_COST, PROMPT_COST, port,
+} from "./constants";
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 const app: Express = express();
-const port = 3000;
-
-const allowedOrigin = process.env.NODE_ENV == 'development' ? 'http://localhost:5173' : 'https://canvo.app';
-const jwtSecret = process.env.JWT_SECRET || '';
-if (jwtSecret.length == 0) {
-  throw new Error('Cannot start server: JWT_SECRET is not set');
-}
-const sevenDaysInSeconds = 60 * 60 * 24 * 7;
-const SESSION_TOKEN = "session_token";
-const FRONTEND_DOMAIN = process.env.APP_DOMAIN;
-if (!FRONTEND_DOMAIN) {
-  throw new Error('Cannot start server: APP_DOMAIN is not set');
-}
-
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL;
-if (!AI_SERVICE_URL) {
-  throw new Error('Cannot start server: AI_SERVICE_URL is not set');
-}
-
-// Index = Tier
-const SUBSCRIPTION_PLANS = [
-  {
-    maxTokens: 100,
-    tokenAutoAddAmount: 30,
-  },
-  {
-    maxTokens: 500,
-    tokenAutoAddAmount: 120,
-  },
-];
-// Token costs for different operations
-const EMBEDDING_COST = 1;  // Cost per document embedded
-const SEARCH_COST = 1;    // Cost per search query
-const PROMPT_COST = 5;   // Cost per prompt run
-
-// Set up Stytch Authentication
-
-const stytchProjectId = process.env.STYTCH_PROJECT_ID;
-if (stytchProjectId === null || stytchProjectId === undefined) {
-  throw new Error('Cannot start server: STYTCH_PROJECT_ID is not set');
-}
-const stytchSecret = process.env.STYTCH_SECRET;
-if (stytchSecret === null || stytchSecret === undefined) {
-  throw new Error('Cannot start server: STYTCH_SECRET is not set');
-}
 
 const stytchClient = new stytch.Client({
-  project_id: stytchProjectId,
-  secret: stytchSecret,
+  project_id: STYTCH_PROJECT_ID,
+  secret: STYTCH_SECRET,
 });
 
 // App Middleware
@@ -72,7 +31,7 @@ const stytchClient = new stytch.Client({
 app.use(cookieParser());
 
 app.use(cors({
-  origin: allowedOrigin,
+  origin: ALLOWED_ORIGIN,
   credentials: true,
   methods: "GET, POST, OPTIONS, PUT, DELETE",
   allowedHeaders: "Content-Type, Authorization"
