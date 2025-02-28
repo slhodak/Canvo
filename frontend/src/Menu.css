@@ -107,6 +107,7 @@
   width: 100%;
   height: 60vh;
   overflow-y: auto;
+  border-bottom: 1px solid var(--background-dark-3);
   scrollbar-width: thin;
   scrollbar-color: var(--background-dark-3) var(--background-dark-2);
   &::-webkit-scrollbar {
