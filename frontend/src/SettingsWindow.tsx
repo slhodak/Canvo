@@ -36,7 +36,7 @@ const SettingsWindow = ({ user, isOpen, onClose }: SettingsWindowProps) => {
 
   const fetchUserSubscription = async () => {
     try {
-      const response = await fetch(`${SERVER_URL}/sub/get_or_create_subscription`, {
+      const response = await fetch(`${SERVER_URL}/sub/get_subscription`, {
         credentials: 'include',
       });
       const data = await response.json();

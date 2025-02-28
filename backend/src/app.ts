@@ -224,7 +224,7 @@ const subscriptionRouter = Router();
 subscriptionRouter.use('/', authenticate);
 
 // Returns the subscription and the plan
-subscriptionRouter.get('/get_or_create_subscription', async (req: Request, res: Response) => {
+subscriptionRouter.get('/get_subscription', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
   if (!user) {
     return res.status(401).json({ status: 'failed', error: "Could not find user email from session token" });
