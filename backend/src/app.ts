@@ -12,8 +12,6 @@ import { validateNode } from './util';
 import { LLMResponse } from '../../shared/types/src/models/LLMResponse';
 import schedule from 'node-schedule';
 import { TransactionType } from '../../shared/types/src/models/tokens';
-import { SubscriptionModel, SubscriptionStatus } from "../../shared/types/src/models/subscription";
-import { v4 as uuidv4 } from 'uuid';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -37,8 +35,17 @@ if (!AI_SERVICE_URL) {
   throw new Error('Cannot start server: AI_SERVICE_URL is not set');
 }
 
-const MAX_TOKENS = 500;
-const TOKEN_AUTO_ADD_AMOUNT = 50;
+// Index = Tier
+const SUBSCRIPTION_PLANS = [
+  {
+    maxTokens: 100,
+    tokenAutoAddAmount: 30,
+  },
+  {
+    maxTokens: 500,
+    tokenAutoAddAmount: 120,
+  },
+];
 // Token costs for different operations
 const EMBEDDING_COST = 1;  // Cost per document embedded
 const SEARCH_COST = 1;    // Cost per search query
@@ -261,54 +268,23 @@ subscriptionRouter.use('/', authenticate);
 subscriptionRouter.get('/get_or_create_subscription', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
   if (!user) {
-    return res.status(401).json({ error: "Could not find user email from session token" });
+    return res.status(401).json({ status: 'failed', error: "Could not find user email from session token" });
   }
 
   const highestSubscription = await db.getHighestSubscription(user.userId);
   if (highestSubscription) {
     const plan = await db.getPlan(highestSubscription.planId);
     if (!plan) {
-      console.error("Could not find plan for subscription", highestSubscription.subscriptionId);
-      return res.status(500).json({ error: "Could not find plan" });
+      return res.status(500).json({ status: 'failed', error: "Could not find plan for subscription" });
     }
-    return res.json({ status: 'success', subscription: highestSubscription, plan })
+    return res.json({
+      status: 'success',
+      subscription: highestSubscription,
+      plan,
+    });
   }
 
-  // If there is no subscription, add a free plan for the user
-  const freePlan = await db.getPlanByTier(0);
-  if (!freePlan) {
-    console.error("Could not find free plan");
-    return res.status(500).json({ error: "Could not find free plan" });
-  }
-
-  const subscriptionId = uuidv4();
-  const now = new Date();
-  const endDate = new Date(now);
-  endDate.setMonth(now.getMonth() + 1);
-  await db.createSubscription(new SubscriptionModel(
-    1, // This value ignored by database
-    subscriptionId,
-    user.userId,
-    freePlan.planId,
-    now,
-    now,
-    SubscriptionStatus.ACTIVE,
-    now,
-    endDate,
-  ));
-
-  const subscription = await db.getSubscription(subscriptionId);
-  if (!subscription) {
-    console.error("Could not find subscription");
-    return res.status(500).json({ error: "Could not find subscription" });
-  }
-  const plan = await db.getPlan(subscription.planId);
-  if (!plan) {
-    console.error("Could not find plan");
-    return res.status(500).json({ error: "Could not find plan" });
-  }
-
-  return res.json({ status: 'success', subscription, plan });
+  return res.status(500).json({ status: 'failed', error: "Could not find subscription for user" });
 });
 
 subscriptionRouter.get('/get_plan', async (req: Request, res: Response) => {
@@ -939,17 +915,29 @@ if (process.env.NODE_ENV === 'production') {
 const job = schedule.scheduleJob(rule, async () => {
   const users = await db.getAllUsers();
   for (const user of users) {
-    const tokenBalance = await db.getUserTokenBalance(user.userId);
-    if (tokenBalance === null) {
-      console.warn(`No token balance found for user ${user.userId}, will initialize with ${TOKEN_AUTO_ADD_AMOUNT} tokens`);
-      await db.addTokens(user.userId, TOKEN_AUTO_ADD_AMOUNT);
-      await db.logTokenTransaction(user.userId, TOKEN_AUTO_ADD_AMOUNT, TransactionType.AutoAdd);
+    const userPlanTier = await db.getHighestPlanTier(user.userId);
+    if (userPlanTier === null) {
+      console.error(`No plan info found for user ${user.userId}, cannot add tokens`);
       continue;
     }
 
-    if (tokenBalance < MAX_TOKENS) {
-      const diff = MAX_TOKENS - tokenBalance;
-      const addAmount = diff > TOKEN_AUTO_ADD_AMOUNT ? TOKEN_AUTO_ADD_AMOUNT : diff;
+    const userPlanRules = SUBSCRIPTION_PLANS[userPlanTier];
+    if (userPlanRules === undefined) {
+      console.error(`No plan rules found for tier ${userPlanTier}, cannot add tokens`);
+      continue;
+    }
+
+    const tokenBalance = await db.getUserTokenBalance(user.userId);
+    if (tokenBalance === null) {
+      console.warn(`No token balance found for user ${user.userId}, will initialize with ${userPlanRules.tokenAutoAddAmount} tokens`);
+      await db.addTokens(user.userId, userPlanRules.tokenAutoAddAmount);
+      await db.logTokenTransaction(user.userId, userPlanRules.tokenAutoAddAmount, TransactionType.AutoAdd);
+      continue;
+    }
+
+    if (tokenBalance < userPlanRules.maxTokens) {
+      const diff = userPlanRules.maxTokens - tokenBalance;
+      const addAmount = diff > userPlanRules.tokenAutoAddAmount ? userPlanRules.tokenAutoAddAmount : diff;
       console.log(`Granting ${addAmount} tokens to user ${user.userId}`);
       await db.addTokens(user.userId, addAmount);
       await db.logTokenTransaction(user.userId, addAmount, TransactionType.AutoAdd);

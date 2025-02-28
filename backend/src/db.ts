@@ -62,28 +62,33 @@ export namespace Database {
   }
 
   export async function getHighestSubscription(userId: string): Promise<SubscriptionModel | null> {
-    // Get the user's subscriptions and their plans
-    const subscriptionsAndPlans = await db.any(`
+    const subscription = await db.oneOrNone(`
       SELECT
-        s.id, s.subscription_id, s.user_id, s.plan_id, s.start_date, s.end_date, s.status,
-        p.name, p.description, p.price, p.tier
+        s.id, s.subscription_id, s.user_id, s.plan_id, s.start_date, s.end_date, s.status
       FROM subscriptions s
       JOIN plans p ON s.plan_id = p.plan_id
       WHERE s.user_id = $1
-      ORDER BY s.start_date DESC
+      ORDER BY p.tier ASC
+      LIMIT 1
     `, [userId]);
+    return subscription;
+  }
 
-    // Get the highest tier subscription
-    const highestSubscription = subscriptionsAndPlans.reduce((max, current) => {
-      return current.tier > max.tier ? current : max;
-    }, subscriptionsAndPlans[0]);
-
-    return highestSubscription;
+  export async function getHighestPlanTier(userId: string): Promise<number | null> {
+    const highestPlan = await db.oneOrNone(`
+      SELECT p.tier
+      FROM plans p
+      JOIN subscriptions s ON p.plan_id = s.plan_id
+      WHERE s.user_id = $1
+      ORDER BY p.tier ASC
+      LIMIT 1
+    `, [userId]);
+    return highestPlan;
   }
 
   export async function getPlan(planId: string): Promise<PlanModel | null> {
     const plan = await db.oneOrNone(`
-      SELECT id, plan_id, tier, name, description, price
+      SELECT id, plan_id, tier, name, description, price, created_at, updated_at
       FROM plans
       WHERE plan_id = $1
     `, [planId]);
