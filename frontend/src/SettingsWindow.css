@@ -1,0 +1,26 @@
+.settings-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-content p {
+  margin: 0px;
+}
+
+.settings-subscription-info {
+  margin-bottom: 12px;
+}
+
+.logout-button {
+  padding: 8px 16px;
+  background-color: var(--background-dark-1);
+  color: var(--font-color-light);
+  border: 1px solid var(--background-dark-3);
+  border-radius: 4px;
+  cursor: pointer;
+  align-self: flex-end;
+}
+
+.logout-button:hover {
+  background-color: var(--background-color-darker);
+}

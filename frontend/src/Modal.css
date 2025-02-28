@@ -1,4 +1,4 @@
-.howto-overlay {
+.modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -11,7 +11,7 @@
   z-index: 1000;
 }
 
-.howto-content {
+.modal-content {
   background: var(--background-dark-2);
   padding: 2rem;
   border-radius: 1px;
@@ -23,23 +23,23 @@
   position: relative;
 }
 
-.howto-content h2 {
+.modal-content h2 {
   margin-top: 0;
   font-size: 1.8rem;
 }
 
-.howto-content-header {
+.modal-content-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
 }
 
-.howto-content-header h2 {
+.modal-content-header h2 {
   margin-bottom: 0px;
 }
 
-.howto-close {
+.modal-close {
   padding: 10px;
   line-height: 0.8rem;
   background: none;
@@ -51,25 +51,25 @@
   transition: background-color 0.2s;
 }
 
-.howto-close:hover {
+.modal-close:hover {
   background-color: var(--background-dark-3);
 }
 
-.howto-content section {
+.modal-content section {
   margin-bottom: 1.5rem;
 }
 
-.howto-content h3 {
+.modal-content h3 {
   margin-bottom: 0.8rem;
   font-size: 1.3rem;
 }
 
-.howto-content ul {
+.modal-content ul {
   margin: 0;
   padding-left: 1.5rem;
 }
 
-.howto-content li {
+.modal-content li {
   margin-bottom: 0.5rem;
   line-height: 1.5;
 }

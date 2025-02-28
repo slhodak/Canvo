@@ -51,11 +51,16 @@
 
 .output-view-text {
   white-space: pre-wrap;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  padding: 2px;
+  line-height: 1.6;
 }
 
 /* String Array */
 
-/* .output-view-string-array {} */
+.output-view-string-array {
+  font-family: Georgia, 'Times New Roman', Times, serif;
+}
 
 .output-view-string-array-items {
   display: flex;

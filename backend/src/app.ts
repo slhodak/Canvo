@@ -12,50 +12,19 @@ import { validateNode } from './util';
 import { LLMResponse } from '../../shared/types/src/models/LLMResponse';
 import schedule from 'node-schedule';
 import { TransactionType } from '../../shared/types/src/models/tokens';
+import {
+  ALLOWED_ORIGIN, STYTCH_SECRET, STYTCH_PROJECT_ID, sevenDaysInSeconds, SESSION_TOKEN,
+  FRONTEND_DOMAIN, AI_SERVICE_URL, SUBSCRIPTION_PLANS, EMBEDDING_COST, SEARCH_COST, PROMPT_COST, port,
+} from "./constants";
+import { SubscriptionModel } from "../../shared/types/src/models/subscription";
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 const app: Express = express();
-const port = 3000;
-
-const allowedOrigin = process.env.NODE_ENV == 'development' ? 'http://localhost:5173' : 'https://canvo.app';
-const jwtSecret = process.env.JWT_SECRET || '';
-if (jwtSecret.length == 0) {
-  throw new Error('Cannot start server: JWT_SECRET is not set');
-}
-const sevenDaysInSeconds = 60 * 60 * 24 * 7;
-const SESSION_TOKEN = "session_token";
-const FRONTEND_DOMAIN = process.env.APP_DOMAIN;
-if (!FRONTEND_DOMAIN) {
-  throw new Error('Cannot start server: APP_DOMAIN is not set');
-}
-
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL;
-if (!AI_SERVICE_URL) {
-  throw new Error('Cannot start server: AI_SERVICE_URL is not set');
-}
-
-const MAX_TOKENS = 500;
-const TOKEN_AUTO_ADD_AMOUNT = 50;
-// Token costs for different operations
-const EMBEDDING_COST = 1;  // Cost per document embedded
-const SEARCH_COST = 1;    // Cost per search query
-const PROMPT_COST = 5;   // Cost per prompt run
-
-// Set up Stytch Authentication
-
-const stytchProjectId = process.env.STYTCH_PROJECT_ID;
-if (stytchProjectId === null || stytchProjectId === undefined) {
-  throw new Error('Cannot start server: STYTCH_PROJECT_ID is not set');
-}
-const stytchSecret = process.env.STYTCH_SECRET;
-if (stytchSecret === null || stytchSecret === undefined) {
-  throw new Error('Cannot start server: STYTCH_SECRET is not set');
-}
 
 const stytchClient = new stytch.Client({
-  project_id: stytchProjectId,
-  secret: stytchSecret,
+  project_id: STYTCH_PROJECT_ID,
+  secret: STYTCH_SECRET,
 });
 
 // App Middleware
@@ -63,7 +32,7 @@ const stytchClient = new stytch.Client({
 app.use(cookieParser());
 
 app.use(cors({
-  origin: allowedOrigin,
+  origin: ALLOWED_ORIGIN,
   credentials: true,
   methods: "GET, POST, OPTIONS, PUT, DELETE",
   allowedHeaders: "Content-Type, Authorization"
@@ -180,8 +149,14 @@ authRouter.get('/authenticate', async (req: Request, res: Response) => {
 
     const user = await db.getUser(email);
     if (!user) {
-      console.debug("User not found in db, creating...");
-      await db.insertUser(email);
+      console.debug("User not found; creating with a free subscription");
+      const userId = await db.insertUser(email);
+      const freePlan = await db.getPlanByTier(0);
+      if (!freePlan) {
+        console.error("Could not find free plan");
+        return res.status(500).json({ status: 'failed', error: "Could not find create user: free plan missing" });
+      }
+      await db.createSubscription(userId, freePlan.planId);
     }
 
     console.debug("Creating a session for this user");
@@ -249,6 +224,63 @@ authRouter.post('/logout', async (req: Request, res: Response) => {
 });
 
 ////////////////////////////////////////////////////////////
+// Subscriptions & Billing
+////////////////////////////////////////////////////////////
+
+const subscriptionRouter = Router();
+subscriptionRouter.use('/', authenticate);
+
+// Returns the subscription and the plan
+subscriptionRouter.get('/get_subscription', async (req: Request, res: Response) => {
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ status: 'failed', error: "Could not find user email from session token" });
+  }
+
+  const highestSubscription = await db.getHighestSubscription(user.userId);
+  if (highestSubscription) {
+    const plan = await db.getPlan(highestSubscription.planId);
+    if (!plan) {
+      return res.status(500).json({ status: 'failed', error: "Could not find plan for subscription" });
+    }
+    return res.json({
+      status: 'success',
+      subscription: highestSubscription,
+      plan,
+    });
+  }
+
+  return res.status(500).json({ status: 'failed', error: "Could not find subscription for user" });
+});
+
+subscriptionRouter.get('/get_plan', async (req: Request, res: Response) => {
+  const planId = req.params.planId;
+  const plan = await db.getPlan(planId);
+  if (!plan) {
+    return res.status(404).json({ error: "Could not find plan" });
+  }
+
+  return res.json({ status: 'success', plan });
+});
+
+subscriptionRouter.get('/get_plans', async (req: Request, res: Response) => {
+  // Return all plans
+  return res.json({ status: 'success', plans: [] })
+})
+
+subscriptionRouter.post('/update_subscription', async (req: Request, res: Response) => {
+  const user = await getUserFromSessionToken(req);
+  if (!user) {
+    return res.status(401).json({ error: "Could not find user email from session token" });
+  }
+
+  const { subscription } = req.body;
+  await db.updateSubscription(subscription);
+
+  return res.json({ status: 'success' });
+});
+
+////////////////////////////////////////////////////////////
 // API Routes
 ////////////////////////////////////////////////////////////
 
@@ -256,6 +288,7 @@ authRouter.post('/logout', async (req: Request, res: Response) => {
 const apiRouter = Router();
 apiRouter.use('/', authenticate);
 
+// subscriptions: a new user must be created with a free subscription
 apiRouter.get('/get_user', async (req: Request, res: Response) => {
   const user = await getUserFromSessionToken(req);
   if (!user) {
@@ -841,24 +874,38 @@ tokenRouter.get('/get_balance', async (req: Request, res: Response) => {
 
 const rule = new schedule.RecurrenceRule();
 if (process.env.NODE_ENV === 'production') {
+  rule.hour = [0, 3, 6, 9, 12, 15, 18, 21]; // Every 3 hours
   rule.minute = 0;
+  rule.second = 0;
 } else {
   rule.second = 0;
 }
 const job = schedule.scheduleJob(rule, async () => {
   const users = await db.getAllUsers();
   for (const user of users) {
-    const tokenBalance = await db.getUserTokenBalance(user.userId);
-    if (tokenBalance === null) {
-      console.warn(`No token balance found for user ${user.userId}, will initialize with ${TOKEN_AUTO_ADD_AMOUNT} tokens`);
-      await db.addTokens(user.userId, TOKEN_AUTO_ADD_AMOUNT);
-      await db.logTokenTransaction(user.userId, TOKEN_AUTO_ADD_AMOUNT, TransactionType.AutoAdd);
+    const userPlanTier = await db.getHighestPlanTier(user.userId);
+    if (userPlanTier === null) {
+      console.error(`No plan info found for user ${user.userId}, cannot add tokens`);
       continue;
     }
 
-    if (tokenBalance < MAX_TOKENS) {
-      const diff = MAX_TOKENS - tokenBalance;
-      const addAmount = diff > TOKEN_AUTO_ADD_AMOUNT ? TOKEN_AUTO_ADD_AMOUNT : diff;
+    const userPlanRules = SUBSCRIPTION_PLANS[userPlanTier];
+    if (userPlanRules === undefined) {
+      console.error(`No plan rules found for tier ${userPlanTier}, cannot add tokens`);
+      continue;
+    }
+
+    const tokenBalance = await db.getUserTokenBalance(user.userId);
+    if (tokenBalance === null) {
+      console.warn(`No token balance found for user ${user.userId}, will initialize with ${userPlanRules.tokenAutoAddAmount} tokens`);
+      await db.addTokens(user.userId, userPlanRules.tokenAutoAddAmount);
+      await db.logTokenTransaction(user.userId, userPlanRules.tokenAutoAddAmount, TransactionType.AutoAdd);
+      continue;
+    }
+
+    if (tokenBalance < userPlanRules.maxTokens) {
+      const diff = userPlanRules.maxTokens - tokenBalance;
+      const addAmount = diff > userPlanRules.tokenAutoAddAmount ? userPlanRules.tokenAutoAddAmount : diff;
       console.log(`Granting ${addAmount} tokens to user ${user.userId}`);
       await db.addTokens(user.userId, addAmount);
       await db.logTokenTransaction(user.userId, addAmount, TransactionType.AutoAdd);
@@ -872,6 +919,7 @@ app.use('/auth', authRouter);
 app.use('/api', apiRouter);
 app.use('/ai', aiRouter);
 app.use('/token', tokenRouter);
+app.use('/sub', subscriptionRouter);
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on port ${port}`);

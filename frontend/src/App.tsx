@@ -75,7 +75,7 @@ const App = ({ user }: AppProps) => {
       <div className="right-section">
         {project
           ? <Project user={user} project={project} handleProjectTitleChange={handleProjectTitleChange} />
-          : <div>No project selected</div>}
+          : <div className="app-no-project-notice">No project selected</div>}
       </div>
     </div>
   );

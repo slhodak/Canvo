@@ -15,11 +15,17 @@
   flex-direction: column;
   justify-content: flex-start;
   align-items: flex-start;
-  padding: 2px;
 }
 
 .right-section {
   width: 85vw;
-  padding: 0px 2px;
+  padding: 0px 2px 0px 4px;
   background-color: var(--background-dark-3);
+}
+
+.app-no-project-notice {
+  color: var(--font-color-light);
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: center;
 }
