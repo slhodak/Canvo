@@ -542,7 +542,7 @@ export class EditNode extends BaseSyncNode {
 
   public override onInputConnection(inputValue: IOState) {
     const content = inputValue.stringValue as string || '';
-    this.properties.content.value = content;
+    this.setProperty('content', content);
   }
 
   _run(inputValues: IOState[]): IOState[] {

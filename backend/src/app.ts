@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 import path from 'path';
 import { Database as db } from './db';
 import { UserModel } from '../../shared/types/src/models/user';
-import { runPrompt, runSimpleChat, calculateChatCost } from './llm';
+import { runPrompt, runSimpleChat } from './llm';
 import stytch from 'stytch';
 import { validateNode } from './util';
 import { LLMResponse } from '../../shared/types/src/models/LLMResponse';
@@ -14,9 +14,8 @@ import schedule from 'node-schedule';
 import { TransactionType } from '../../shared/types/src/models/tokens';
 import {
   ALLOWED_ORIGIN, STYTCH_SECRET, STYTCH_PROJECT_ID, sevenDaysInSeconds, SESSION_TOKEN,
-  FRONTEND_DOMAIN, AI_SERVICE_URL, SUBSCRIPTION_PLANS, EMBEDDING_COST, SEARCH_COST, PROMPT_COST, port,
+  FRONTEND_DOMAIN, AI_SERVICE_URL, SUBSCRIPTION_PLANS, EMBEDDING_COST, CHAT_COST, SEARCH_COST, PROMPT_COST, port,
 } from "./constants";
-import { SubscriptionModel } from "../../shared/types/src/models/subscription";
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -703,16 +702,15 @@ aiRouter.post('/chat', async (req: Request, res: Response) => {
   }
 
   // Check token balance
-  const cost = await calculateChatCost(messages);
   const tokenBalance = await db.getUserTokenBalance(user.userId);
-  if (tokenBalance === null || tokenBalance < cost) {
-    return res.status(403).json({ status: "failed", error: "Insufficient tokens for this prompt", cost: cost, balance: tokenBalance });
+  if (tokenBalance === null || tokenBalance < CHAT_COST) {
+    return res.status(403).json({ status: "failed", error: "Insufficient tokens for this prompt", cost: CHAT_COST, balance: tokenBalance });
   }
 
   // TODO: Validate messages payload
   const result = await runSimpleChat(messages, brevity);
-  await db.deductTokens(user.userId, cost);
-  await db.logTokenTransaction(user.userId, cost, TransactionType.Spend);
+  await db.deductTokens(user.userId, CHAT_COST);
+  await db.logTokenTransaction(user.userId, CHAT_COST, TransactionType.Spend);
   return res.json({ status: "success", result });
 });
 
