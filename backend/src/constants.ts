@@ -41,8 +41,8 @@ export const SUBSCRIPTION_PLANS = [
 // Token costs for different operations
 export const EMBEDDING_COST = 1;  // Cost per document embedded
 export const SEARCH_COST = 1;    // Cost per search query
-export const PROMPT_COST = 5;   // Cost per prompt run
-export const CHAT_COST = 5;   // Cost per chat message
+export const PROMPT_COST = 3;   // Cost per prompt run
+export const CHAT_COST = 3;   // Cost per chat message
 
 // Stytch Authentication
 export const STYTCH_PROJECT_ID = ((): string => {
