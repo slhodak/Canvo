@@ -1,6 +1,6 @@
+import './Login.css';
 import { StytchLogin } from '@stytch/react';
 import { Products, OAuthProviders } from '@stytch/vanilla-js';
-import './Login.css';
 import { SERVER_URL } from './constants';
 
 const LoginOrSignup = () => {

@@ -1,10 +1,11 @@
-import './App.css'
-import Menu from './Menu';
-import { useState, useEffect } from 'react';
-import { ProjectModel } from '../../shared/types/src/models/project';
-import { SERVER_URL } from './constants';
+import { useState, useEffect, lazy, Suspense } from 'react';
+import './App.css';
 import Project from './Project';
+import { ProjectModel } from '../../shared/types/src/models/project';
 import { UserModel } from '../../shared/types/src/models/user';
+import { SERVER_URL } from './constants';
+
+const Menu = lazy(() => import('./Menu'));
 
 interface AppProps {
   user: UserModel;
@@ -70,7 +71,9 @@ const App = ({ user }: AppProps) => {
   return (
     <div className="app-container">
       <div className="left-section">
-        <Menu user={user} project={project} setProject={setProject} projects={projects} fetchAllProjects={fetchAllProjects} />
+        <Suspense fallback={<div>Loading Menu...</div>}>
+          <Menu user={user} project={project} setProject={setProject} projects={projects} fetchAllProjects={fetchAllProjects} />
+        </Suspense>
       </div>
       <div className="right-section">
         {project
