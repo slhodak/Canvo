@@ -98,18 +98,26 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       });
       const data = await response.json();
       if (data.status === 'success') {
-        const visualNodes: Record<string, VisualNode> = {};
-        data.nodes.forEach(async (nodeJson: BaseNode) => {
-          // Convert json to a real node instance so we can use its instance methods
+        // Convert all nodes in parallel and wait for all to complete
+        const nodePromises = data.nodes.map(async (nodeJson: BaseNode) => {
           const node = await nu.fromObject(nodeJson);
-          if (!node) return;
-
-          visualNodes[node.nodeId] = {
+          if (!node) return null;
+          return {
             id: node.nodeId,
             node: node,
             x: node.coordinates.x,
             y: node.coordinates.y,
           };
+        });
+
+        const loadedNodes = await Promise.all(nodePromises);
+        const visualNodes: Record<string, VisualNode> = {};
+
+        // Filter out any null nodes and build the visual nodes object
+        loadedNodes.forEach(node => {
+          if (node) {
+            visualNodes[node.id] = node;
+          }
         });
 
         setNodes(visualNodes);
