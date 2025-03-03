@@ -431,11 +431,13 @@ const NetworkEditor = ({
             const start = neu.getPortPosition(fromNode, false, conn.connection.fromOutput);
             const end = neu.getPortPosition(toNode, true, conn.connection.toInput);
 
+            const distance = Math.sqrt(Math.pow(start.x - end.x, 2) + Math.pow(start.y - end.y, 2));
+            const curveDistance = Math.min(80, distance * 0.5);
             // No need to adjust the path coordinates since they're now inside the transformed group
             return (
               <path
                 key={`${conn.connection.fromNode}-${conn.connection.toNode}-${conn.connection.fromOutput}-${conn.connection.toInput}`}
-                d={`M ${start.x} ${start.y} C ${start.x} ${start.y + 50}, ${end.x} ${end.y - 50}, ${end.x} ${end.y}`}
+                d={`M ${start.x} ${start.y} C ${start.x} ${start.y + curveDistance}, ${end.x} ${end.y - curveDistance}, ${end.x} ${end.y}`}
                 className="network-editor-wire"
               />
             );
