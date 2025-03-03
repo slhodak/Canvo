@@ -1,6 +1,6 @@
-import { Suspense, useEffect, useState, lazy } from "react";
+import { useEffect, useState } from "react";
 import App from "./App";
-const LoginOrSignup = lazy(() => import('./Login'));
+import LoginOrSignup from "./Login";
 import { UserModel } from "../../shared/types/src/models/user";
 import { SERVER_URL } from "./constants";
 
@@ -59,8 +59,6 @@ export default function Home() {
   } else if (loginState === LoginState.LOGGED_IN && user) {
     return <App user={user} />;
   } else {
-    return <Suspense fallback={<div>Loading Login...</div>}>
-      <LoginOrSignup />
-    </Suspense>;
+    return <LoginOrSignup />;
   }
 };
