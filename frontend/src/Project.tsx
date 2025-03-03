@@ -99,9 +99,9 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       const data = await response.json();
       if (data.status === 'success') {
         const visualNodes: Record<string, VisualNode> = {};
-        data.nodes.forEach((nodeJson: BaseNode) => {
+        data.nodes.forEach(async (nodeJson: BaseNode) => {
           // Convert json to a real node instance so we can use its instance methods
-          const node = nu.fromObject(nodeJson);
+          const node = await nu.fromObject(nodeJson);
           if (!node) return;
 
           visualNodes[node.nodeId] = {
