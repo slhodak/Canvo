@@ -35,7 +35,7 @@ const StytchSetup = lazy(async () => {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div></div>}>
       <StytchSetup>
         <Home />
       </StytchSetup>
