@@ -1,30 +1,44 @@
-import { StrictMode } from 'react'
+import { StrictMode, Suspense, lazy } from 'react'
 import { createRoot } from 'react-dom/client'
-import { StytchProvider } from '@stytch/react';
-import { StytchUIClient } from '@stytch/vanilla-js';
 import { STYTCH_PUBLIC_TOKEN, APP_DOMAIN } from './constants';
 import './index.css'
 import Home from './Home';
 
-const stytchOptions = {
-  cookieOptions: {
-    opaqueTokenCookieName: "stytch_session",
-    jwtCookieName: "stytch_session_jwt",
-    path: "/",
-    availableToSubdomains: true,
-    domain: APP_DOMAIN,
-  }
-}
+// Lazy load both the provider and client initialization
+const StytchSetup = lazy(async () => {
+  const { StytchProvider } = await import('@stytch/react');
+  const { StytchUIClient } = await import('@stytch/vanilla-js');
 
-const stytchClient = new StytchUIClient(
-  STYTCH_PUBLIC_TOKEN,
-  stytchOptions
-);
+  const stytchOptions = {
+    cookieOptions: {
+      opaqueTokenCookieName: "stytch_session",
+      jwtCookieName: "stytch_session_jwt",
+      path: "/",
+      availableToSubdomains: true,
+      domain: APP_DOMAIN,
+    }
+  }
+
+  const stytchClient = new StytchUIClient(
+    STYTCH_PUBLIC_TOKEN,
+    stytchOptions
+  );
+
+  return {
+    default: ({ children }: { children: React.ReactNode }) => (
+      <StytchProvider stytch={stytchClient}>
+        {children}
+      </StytchProvider>
+    )
+  };
+});
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <StytchProvider stytch={stytchClient}>
-      <Home />
-    </StytchProvider>
+    <Suspense fallback={<div></div>}>
+      <StytchSetup>
+        <Home />
+      </StytchSetup>
+    </Suspense>
   </StrictMode>,
 )

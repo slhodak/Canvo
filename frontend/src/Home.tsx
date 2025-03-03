@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { SERVER_URL } from "./constants";
 import App from "./App";
 import LoginOrSignup from "./Login";
 import { UserModel } from "../../shared/types/src/models/user";
+import { SERVER_URL } from "./constants";
 
 enum LoginState {
   INITIAL = "initial",

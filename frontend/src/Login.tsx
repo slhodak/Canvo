@@ -1,9 +1,12 @@
-import { StytchLogin } from '@stytch/react';
-import { Products, OAuthProviders } from '@stytch/vanilla-js';
 import './Login.css';
+import { Suspense, lazy } from 'react';
 import { SERVER_URL } from './constants';
 
-const LoginOrSignup = () => {
+// Lazy load the Stytch components
+const StytchLoginComponent = lazy(async () => {
+  const { StytchLogin } = await import('@stytch/react');
+  const { Products, OAuthProviders } = await import('@stytch/vanilla-js');
+
   const config = {
     products: [
       Products.emailMagicLinks,
@@ -32,13 +35,21 @@ const LoginOrSignup = () => {
     fontFamily: '"Helvetica New", Helvetica, sans-serif',
   };
 
+  return {
+    default: () => <StytchLogin config={config} styles={styles} />
+  };
+});
+
+const LoginOrSignup = () => {
   return (
     <div className="login-container">
       <div className="login-container-header">
         <h2>Canvo</h2>
         <p><span className="red">Node-based</span> <span className="blue">AI-powered</span> <span className="yellow">text transformation</span></p>
       </div>
-      <StytchLogin config={config} styles={styles} />
+      <Suspense fallback={<div>Loading login...</div>}>
+        <StytchLoginComponent />
+      </Suspense>
     </div>
   );
 };

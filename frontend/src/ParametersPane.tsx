@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import './ParametersPane.css';
 import { VisualNode } from './NetworkTypes';
 import { NodeProperty, NodePropertyType } from '../../shared/types/src/models/node';
-import { FileNode } from './nodes';
+import { FileNode } from './Nodes/source';
 
 ////////////////////////////////////////////////////////////
 // ParametersPane

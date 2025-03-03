@@ -1,16 +1,22 @@
-import './Project.css';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { ProjectModel } from '../../shared/types/src/models/project';
-import { VisualNode, VisualConnection } from './NetworkTypes';
-import { BaseNode, NodeRunType, IOState, IOStateType, BaseAsyncNode, BaseSyncNode, NodeCacheType } from '../../shared/types/src/models/node';
-import { Connection } from '../../shared/types/src/models/connection';
-import { ConnectionUtils as cu, NodeUtils as nu } from './Utils';
-import NetworkEditor from './NetworkEditor';
-import ParametersPane from './ParametersPane';
+
+// UI
+import './Project.css';
 import OutputView from "./OutputView";
-import { SERVER_URL } from './constants';
+import ParametersPane from "./ParametersPane";
+import NetworkEditor from "./NetworkEditor";
+
+// Models
+import { BaseNode, NodeRunType, IOState, IOStateType, BaseAsyncNode, BaseSyncNode, NodeCacheType } from '../../shared/types/src/models/node';
+import { ProjectModel } from '../../shared/types/src/models/project';
+import { Connection } from '../../shared/types/src/models/connection';
 import { UserModel } from '../../shared/types/src/models/user';
+import { VisualNode, VisualConnection } from './NetworkTypes';
+
+// Utils & Constants
+import { ConnectionUtils as cu, NodeUtils as nu } from './Utils';
 import { updateNode as syncNodeUpdate } from './api';
+import { SERVER_URL } from './constants';
 
 interface ProjectProps {
   user: UserModel;
@@ -98,18 +104,26 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       });
       const data = await response.json();
       if (data.status === 'success') {
-        const visualNodes: Record<string, VisualNode> = {};
-        data.nodes.forEach((nodeJson: BaseNode) => {
-          // Convert json to a real node instance so we can use its instance methods
-          const node = nu.fromObject(nodeJson);
-          if (!node) return;
-
-          visualNodes[node.nodeId] = {
+        // Convert all nodes in parallel and wait for all to complete
+        const nodePromises = data.nodes.map(async (nodeJson: BaseNode) => {
+          const node = await nu.fromObject(nodeJson);
+          if (!node) return null;
+          return {
             id: node.nodeId,
             node: node,
             x: node.coordinates.x,
             y: node.coordinates.y,
           };
+        });
+
+        const loadedNodes = await Promise.all(nodePromises);
+        const visualNodes: Record<string, VisualNode> = {};
+
+        // Filter out any null nodes and build the visual nodes object
+        loadedNodes.forEach(node => {
+          if (node) {
+            visualNodes[node.id] = node;
+          }
         });
 
         setNodes(visualNodes);
@@ -441,6 +455,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
               runPriorDAG={runPriorDAG}
             />
           </div>
+
           <div className="left-pane-bottom">
             <ParametersPane node={selectedNode} updateNode={updateNode} />
           </div>

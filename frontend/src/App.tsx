@@ -1,10 +1,10 @@
-import './App.css'
-import Menu from './Menu';
 import { useState, useEffect } from 'react';
-import { ProjectModel } from '../../shared/types/src/models/project';
-import { SERVER_URL } from './constants';
+import './App.css';
+import Menu from './Menu';
 import Project from './Project';
+import { ProjectModel } from '../../shared/types/src/models/project';
 import { UserModel } from '../../shared/types/src/models/user';
+import { SERVER_URL } from './constants';
 
 interface AppProps {
   user: UserModel;
@@ -82,51 +82,3 @@ const App = ({ user }: AppProps) => {
 }
 
 export default App;
-
-
-// TODO: The frontend is responsible for handling cascading,
-// and it only sends requests to the backend to handle prompt querying
-// Use this cascading logic but adapt it to be run by the frontend
-// ... or actually don't because I think the frontend already does descendent node running
-// In any case I wasn't ready to delete this code yet
-
-// const errors: string[] = [];
-// let outputs: number = 0;
-// // Transformation cascading: running a transformation will run all of its (unlocked) child transformations
-// // This is done iteratively insted of recursively in order to collect errors and the total count of outputs
-// try {
-//   const queue = [node];
-//   while (queue.length > 0) {
-//     const node = queue.shift();
-//     if (!node) {
-//       break;
-//     }
-
-//     const block = await db.getBlock(transformation.input_block_id, user._id);
-//     if (!block) {
-//       errors.push(`Block not found for transformation: ${transformation.input_block_id}`);
-//       continue;
-//     }
-
-//     if (block.locked || transformation.locked) {
-//       continue;
-//     }
-
-//     // Run the transformation and store the results
-//     const transformationResult: TransformationResult = await runTransformation(transformation, user._id);
-//     outputs += transformationResult.outputs;
-//     errors.push(...transformationResult.errors);
-//     queue.push(...transformationResult.childTransformations);
-//   }
-
-//   await db.updateGroupUpdatedAt(groupId);
-
-//   return res.json({ status: "success", outputs, errors });
-
-// } catch (error) {
-//   if (error instanceof Error) {
-//     return res.status(500).json({ status: "failed", error: error.message });
-//   } else {
-//     return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
-//   }
-// }

@@ -3,7 +3,7 @@ import './NetworkEditor.css';
 import { VisualNode, VisualConnection, DragState, WireState } from './NetworkTypes';
 import { Node } from './Node';
 import { ConnectionUtils as cu, NetworkEditorUtils as neu } from './Utils';
-import { Coordinates, NodeType, NodeGroups, IOState, NodeRunType } from '../../shared/types/src/models/node';
+import { Coordinates, NodeType, NodeGroups, IOState } from '../../shared/types/src/models/node';
 import { Connection } from '../../shared/types/src/models/connection';
 import { NodeUtils as nu } from './Utils';
 import { ProjectModel } from '../../shared/types/src/models/project';
@@ -76,9 +76,9 @@ const NetworkEditor = ({
   // Regular Functions
   //////////////////////////////
 
-  const createNewNode = (type: NodeType, position: Coordinates) => {
+  const createNewNode = async (type: NodeType, position: Coordinates) => {
     const nodeId = crypto.randomUUID();
-    const newNode = nu.newNode(type, user.userId, project.projectId, position);
+    const newNode = await nu.newNode(type, user.userId, project.projectId, position);
     if (!newNode) {
       console.error('Could not create new node');
       return;
