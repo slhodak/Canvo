@@ -5,7 +5,7 @@ import { UserModel, SessionModel } from 'wc-shared';
 import { ProjectModel } from 'wc-shared';
 import { BaseNode } from 'wc-shared';
 import { Connection } from 'wc-shared';
-import { camelizeColumns, formatIntegerArray } from './util';
+import { camelizeColumns, formatIntegerArray } from './util.js';
 import { TransactionType } from 'wc-shared';
 import { SubscriptionModel, PlanModel, BillingTransactionModel } from 'wc-shared';
 

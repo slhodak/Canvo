@@ -48,14 +48,16 @@ fi
 
 # If the ai-service directory exists, save its db_version.txt file
 if [[ -f ~/canvo/ai-service/db/db_version.txt ]]; then
-    mv db/db_version.txt ~/ai-service-db-version.txt
+    mv ~/canvo/ai-service/db/db_version.txt ~/ai-service-db-version.txt
 else
     echo "No AI service db_version.txt file found to backup"
 fi;
 
-# Clear the canvo directory
-rm -r ~/canvo
-mkdir ~/canvo
+# Erase and remake the folder structure
+rm -r ~/canvo/backend
+rm -r ~/canvo/ai-service
+rm -r ~/canvo/frontend
+rm -r ~/canvo/shared
 
 echo "Unpacking the bundle..."
 # Unpack
@@ -68,12 +70,14 @@ mv ~/backend-db-version.txt ~/canvo/backend/db/db_version.txt
 mv ~/ai-service-db-version.txt ~/canvo/ai-service/db/db_version.txt
 
 ########################################################
-### Build the backend & start
+### Build the Yarn Workspace
 ########################################################
 
-echo "Building & starting the backend..."
-cd ~/canvo/backend/
+cd ~/canvo
 yarn
+
+echo "Starting the backend..."
+cd ~/canvo/backend/
 yarn start
 
 ########################################################

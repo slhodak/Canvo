@@ -1,7 +1,7 @@
 import humps from 'humps';
 import { BaseNode, IOState } from "wc-shared";
 import { v4 as uuidv4 } from 'uuid';
-import { Database as db } from './db';
+import { Database as db } from './db.js';
 
 // Check if a value is null or undefined
 export function isNullOrUndefined(value: any): boolean {

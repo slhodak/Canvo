@@ -1,5 +1,7 @@
+package.json
+
 backend/dist/
-backend/ecosystem.config.js
+backend/ecosystem.config.cjs
 backend/package.json
 backend/yarn.lock
 backend/.env.production
@@ -15,7 +17,7 @@ ai-service/ai-service/database.py
 ai-service/README.md
 
 frontend/dist/
+frontend/package.json
 
-shared/src/models/node.ts
-shared/src/models/project.ts
-shared/src/models/user.ts
+shared/dist/
+shared/package.json
