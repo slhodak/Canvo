@@ -2,9 +2,9 @@ import { NetworkEditorUtils as neu } from './Utils';
 import { VisualNode, VisualConnection, WireState } from './NetworkTypes';
 import PlayButton from './assets/PlayButton';
 import './Node.css';
-import { NodeRunType } from '../../shared/types/src/models/node';
+import { NodeRunType } from 'wc-shared';
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { updateNode } from './api';
+import { updateNode } from 'wc-shared';
 
 interface NodeProps {
   node: VisualNode;

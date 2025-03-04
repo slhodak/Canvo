@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import './App.css';
 import Menu from './Menu';
 import Project from './Project';
-import { ProjectModel } from '../../shared/types/src/models/project';
-import { UserModel } from '../../shared/types/src/models/user';
-import { SERVER_URL } from './constants';
+import { ProjectModel } from 'wc-shared';
+import { UserModel } from 'wc-shared';
+import { getAllProjects, updateProjectTitle } from 'wc-shared';
 
 interface AppProps {
   user: UserModel;
@@ -15,11 +15,8 @@ const App = ({ user }: AppProps) => {
   const [projects, setProjects] = useState<ProjectModel[]>([]);
 
   const fetchAllProjects = async () => {
-    const response = await fetch(`${SERVER_URL}/api/get_all_projects`, {
-      credentials: 'include',
-    });
-    const data = await response.json();
-    setProjects(data.projects);
+    const projects = await getAllProjects();
+    setProjects(projects);
   }
 
   // Update the project title on the server and in the projects list
@@ -27,32 +24,16 @@ const App = ({ user }: AppProps) => {
     if (!project) return false;
 
     const newTitle = event.target.value;
-    try {
-      const response = await fetch(`${SERVER_URL}/api/update_project_title`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ projectId: project.projectId, title: newTitle }),
-      });
-      const data = await response.json();
-      if (data.status === 'success') {
-        // Update the project in the projects list
-        setProjects(prev => prev.map(p =>
-          p.projectId === project.projectId
-            ? { ...p, title: newTitle }
-            : p
-        ));
-        return true;
-      } else {
-        console.error('Error updating project title:', data.error);
-        return false;
-      }
-    } catch (error) {
-      console.error('Error updating project title:', error);
-      return false;
+    const success = await updateProjectTitle(project.projectId, newTitle);
+    if (success) {
+      // Update the project in the projects list
+      setProjects(prev => prev.map(p =>
+        p.projectId === project.projectId
+          ? { ...p, title: newTitle }
+          : p
+      ));
     }
+    return success;
   }
 
   //////////////////////////////

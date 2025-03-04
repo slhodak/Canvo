@@ -53,15 +53,9 @@ else
     echo "No AI service db_version.txt file found to backup"
 fi;
 
-# Erase everything and remake the folder structure
-rm -r ~/canvo/shared
-rm -r ~/canvo/backend
-rm -r ~/canvo/frontend
-rm -r ~/canvo/ai-service
-mkdir -p ~/canvo/shared/types/src/models
-mkdir ~/canvo/backend
-mkdir ~/canvo/frontend
-mkdir ~/canvo/ai-service
+# Clear the canvo directory
+rm -r ~/canvo
+mkdir ~/canvo
 
 echo "Unpacking the bundle..."
 # Unpack

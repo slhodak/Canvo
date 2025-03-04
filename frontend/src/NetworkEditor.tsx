@@ -3,11 +3,11 @@ import './NetworkEditor.css';
 import { VisualNode, VisualConnection, DragState, WireState } from './NetworkTypes';
 import { Node } from './Node';
 import { ConnectionUtils as cu, NetworkEditorUtils as neu } from './Utils';
-import { Coordinates, NodeType, NodeGroups, IOState } from '../../shared/types/src/models/node';
-import { Connection } from '../../shared/types/src/models/connection';
+import { Coordinates, NodeType, NodeGroups, IOState } from 'wc-shared';
+import { Connection } from 'wc-shared';
 import { NodeUtils as nu } from './Utils';
-import { ProjectModel } from '../../shared/types/src/models/project';
-import { UserModel } from '../../shared/types/src/models/user';
+import { ProjectModel } from 'wc-shared';
+import { UserModel } from 'wc-shared';
 
 interface NetworkEditorProps {
   user: UserModel;

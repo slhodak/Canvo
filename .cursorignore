@@ -9,3 +9,6 @@ package.json
 yarn.lock
 vite.config.ts
 tsconfig.*
+
+# Shared
+shared/src/index.ts

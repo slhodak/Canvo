@@ -1,5 +1,5 @@
 import './OutputView.css';
-import { IOState, IOStateType } from '../../shared/types/src/models/node';
+import { IOState, IOStateType } from 'wc-shared';
 import { useState, useEffect } from 'react';
 import TableView from './TableView';
 

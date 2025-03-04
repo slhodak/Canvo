@@ -8,10 +8,10 @@ import {
   IOStateType,
   NodePropertyType,
   NodeCacheType,
-} from '../../../shared/types/src/models/node';
-import { LLMResponse } from "../../../shared/types/src/models/LLMResponse";
-import { SERVER_URL } from "../constants";
-import { updateNode } from '../api';
+} from '../models/node';
+import { LLMResponse } from '../api/LLMResponse';
+import { SERVER_URL } from '../api/constants';
+import { updateNode } from '../api/api';
 
 export class PromptNode extends BaseAsyncNode {
   constructor(

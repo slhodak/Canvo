@@ -1,5 +1,5 @@
-import { BaseNode } from '../../shared/types/src/models/node';
-import { Connection } from '../../shared/types/src/models/connection';
+import { BaseNode } from 'wc-shared';
+import { Connection } from 'wc-shared';
 
 export interface VisualNode {
   id: string;

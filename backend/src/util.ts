@@ -1,5 +1,7 @@
 import humps from 'humps';
-import { BaseNode, IOState } from "../../shared/types/src/models/node";
+import { BaseNode, IOState } from "wc-shared";
+import { v4 as uuidv4 } from 'uuid';
+import { Database as db } from './db';
 
 // Check if a value is null or undefined
 export function isNullOrUndefined(value: any): boolean {
@@ -55,4 +57,11 @@ export const camelizeColumns = (data: any) => {
       }
     }
   }
+}
+
+export const createDefaultProject = async (userId: string) => {
+  const projectId = uuidv4();
+  const project = await db.createProject(projectId, userId);
+  // Create CSV Node
+  return project;
 }

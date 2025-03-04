@@ -9,11 +9,11 @@ import {
   NodeRunType,
   NodeCacheType,
   BaseNode,
-} from "../../../shared/types/src/models/node";
-import { updateNode } from "../api";
+} from "../models/node";
+import { updateNode } from "../api/api";
 import mammoth from 'mammoth';
-import { FileUtils as fu } from "../Utils";
-import { SERVER_URL } from "../constants";
+import { FileUtils as fu } from "./utils";
+import { SERVER_URL } from "../api/constants";
 
 export class FileNode extends BaseSyncNode {
   constructor(

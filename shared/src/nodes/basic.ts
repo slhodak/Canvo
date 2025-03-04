@@ -8,7 +8,7 @@ import {
   NodeRunType,
   NodeCacheType,
   BaseNode,
-} from "../../../shared/types/src/models/node";
+} from "../models/node";
 
 export class SplitNode extends BaseSyncNode {
   constructor(

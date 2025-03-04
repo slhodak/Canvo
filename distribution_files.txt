@@ -16,6 +16,6 @@ ai-service/README.md
 
 frontend/dist/
 
-shared/types/src/models/node.ts
-shared/types/src/models/project.ts
-shared/types/src/models/user.ts
+shared/src/models/node.ts
+shared/src/models/project.ts
+shared/src/models/user.ts
