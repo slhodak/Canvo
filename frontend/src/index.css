@@ -28,14 +28,15 @@
   /* Variables */
   --font-color-light: rgb(232, 232, 232);
   --font-color-dark: rgb(20, 20, 20);
-  --background-dark-0: #303030;
-  --background-dark-1: #353535;
-  --background-dark-2: #3f3f3f;
-  --background-dark-3: #606060;
-  --background-dark-4: #7a7979;
-  --background-dark-5: #919191;
-  --background-dark-6: #b3b3b3;
-  --input-background-color: rgb(35, 35, 35);
+  --background-dark-0: #2c2c2a;
+  --background-dark-1: #333330;
+  --background-dark-2: #3e3e3a;
+  --background-dark-3: #666662;
+  --background-dark-4: #7f7f7a;
+  --background-dark-5: #979791;
+  --background-dark-6: #b6b6b1;
+  --outline-color: #5e5e5e;
+  --input-background-color: rgb(37, 37, 35);
   --button-background-color: lightblue;
   --container-vertical-spacing: 6px;
 
