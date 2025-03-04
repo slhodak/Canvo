@@ -2,21 +2,20 @@
   width: 100%;
   height: 100%;
   background-color: var(--background-dark-2);
-  padding: 4px;
   display: flex;
   flex-direction: column;
 }
 
 .network-editor-header h3 {
   margin: 0px;
-  padding: 0px;
+  padding: 0px 4px;
   flex-shrink: 0;
 }
 
 .network-editor-canvas {
   height: 100%;
   width: 100%;
-  background-color: darkgray;
+  background-color: var(--background-dark-6);
   user-select: none;
 }
 
@@ -37,7 +36,7 @@
 .app-dropdown {
   position: absolute;
   background-color: var(--background-dark-2);
-  border: 1px solid var(--background-dark-3);
+  border: 1px solid var(--outline-color);
   border-radius: 0px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   z-index: 1000;
@@ -57,7 +56,7 @@
   width: calc(100% - 4px);
   margin: 0px 2px;
   padding: 2px;
-  border: 1px solid #585858;
+  border: 1px solid var(--outline-color);
   outline: none;
 }
 

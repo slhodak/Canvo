@@ -1,7 +1,7 @@
 /* Menu Container */
 
 .menu-container {
-  background-color: var(--background-dark-2);
+  background-color: var(--background-dark-0);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -20,7 +20,7 @@
   justify-content: space-between;
   padding: 8px calc(var(--padding-sides) + 1px) 16px var(--padding-sides);
   width: 100%;
-  background-color: var(--background-dark-2);
+  border-bottom: 1px solid var(--background-dark-3);
 }
 
 .menu-header-container h2 {
@@ -56,22 +56,13 @@
 
 /* Projects Section */
 
-.menu-body-container {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: space-between;
-  height: 100%;
-  width: 100%;
-  padding: 0px var(--padding-sides);
-  padding-bottom: 6px;
-}
-
 .menu-projects-container {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   width: 100%;
+  height: 50vh;
+  border-bottom: 1px solid var(--background-dark-3);
 }
 
 .menu-projects-header {
@@ -79,7 +70,9 @@
   flex-direction: row;
   align-items: center;
   gap: 20px;
-  padding: 16px 0px;
+  padding: 16px 8px;
+  background-color: var(--background-dark-2);
+  width: 100%;
 }
 
 .menu-projects-header h3 {
@@ -88,7 +81,7 @@
 
 .add-project-button {
   padding: 5px;
-  border: 1px solid var(--background-dark-3);
+  border: 1px solid var(--outline-color);
   border-radius: 6px;
   height: 30px;
   width: 30px;
@@ -103,11 +96,9 @@
 .menu-items-projects {
   display: flex;
   flex-direction: column;
-  gap: 6px;
   width: 100%;
-  height: 60vh;
+  /* height: 50vh; */
   overflow-y: auto;
-  border-bottom: 1px solid var(--background-dark-3);
   scrollbar-width: thin;
   scrollbar-color: var(--background-dark-3) var(--background-dark-2);
 
@@ -121,7 +112,6 @@
 }
 
 .project-preview-container {
-  border: 1px solid rgb(155, 155, 155);
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -129,9 +119,9 @@
   width: 100%;
   padding: 6px;
   cursor: pointer;
-  border-radius: 2px;
   min-height: 36px;
   flex-shrink: 0;
+  border-bottom: 1px solid var(--background-dark-3);
 }
 
 .highlighted-project-preview {
@@ -185,7 +175,7 @@
 .delete-confirm-popover {
   position: fixed;
   background-color: var(--background-dark-2);
-  border: 1px solid var(--background-dark-3);
+  border: 1px solid var(--outline-color);
   border-radius: 2px;
   padding: 8px;
   box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
@@ -234,7 +224,8 @@
 /* Menu Footer */
 
 .menu-footer-container {
-  border-radius: 2px;
+  margin-top: auto;
+  padding: 10px 4px;
   width: 100%;
 }
 
@@ -253,7 +244,7 @@
   padding: 8px 16px;
   background-color: var(--background-dark-0);
   color: var(--font-color-light);
-  border: 1px solid var(--background-dark-3);
+  border: 1px solid var(--outline-color);
   border-radius: 4px;
   cursor: pointer;
   width: 100%;

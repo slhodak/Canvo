@@ -1,6 +1,5 @@
 * {
   box-sizing: border-box;
-  border-radius: 1px;
 
   &::-webkit-scrollbar {
     width: 12px;
@@ -29,19 +28,20 @@
   /* Variables */
   --font-color-light: rgb(232, 232, 232);
   --font-color-dark: rgb(20, 20, 20);
-  --background-dark-0: #303030;
-  --background-dark-1: #353535;
-  --background-dark-2: #3f3f3f;
-  --background-dark-3: #606060;
-  --background-dark-4: #7a7979;
-  --background-dark-5: #919191;
-  --background-dark-6: #b3b3b3;
-  --input-background-color: rgb(35, 35, 35);
+  --background-dark-0: #2a2c2c;
+  --background-dark-1: #303333;
+  --background-dark-2: #3a3e3e;
+  --background-dark-3: #626666;
+  --background-dark-4: #7a7f7f;
+  --background-dark-5: #919696;
+  --background-dark-6: #b1b6b6;
+  --outline-color: #5e5e5e;
+  --input-background-color: rgb(35, 37, 37);
   --button-background-color: lightblue;
   --container-vertical-spacing: 6px;
 
   color: var(--font-color-light);
-  background-color: var(--background-dark-1);
+  background-color: var(--background-dark-0);
 }
 
 textarea {

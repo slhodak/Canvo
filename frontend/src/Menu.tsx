@@ -80,27 +80,25 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
           ?
         </button>
       </div>
-      <div className="menu-body-container">
-        <div className="menu-projects-container">
-          <div className="menu-projects-header">
-            <h3>Projects</h3>
-            <button className="add-project-button" onClick={createProject}>
-              <PlusIcon color="var(--background-dark-4)" />
-            </button>
-          </div>
-          <div className="menu-items-projects">
-            {projects.map((_project) => {
-              const highlighted = _project.projectId === project?.projectId;
-              return (
-                <ProjectListItem key={_project.projectId} highlighted={highlighted} project={_project} deleteProject={deleteProject} setProject={setProject} />
-              )
-            })}
-          </div>
+      <div className="menu-projects-container">
+        <div className="menu-projects-header">
+          <h3>Projects</h3>
+          <button className="add-project-button" onClick={createProject}>
+            <PlusIcon color="var(--background-dark-4)" />
+          </button>
         </div>
-        <div className="menu-footer-container">
-          <p>Token Balance: <span className="menu-footer-tokens">{tokenBalance}</span> </p>
-          <button className="settings-button" onClick={() => setIsSettingsOpen(true)}>Settings</button>
+        <div className="menu-items-projects">
+          {projects.map((_project) => {
+            const highlighted = _project.projectId === project?.projectId;
+            return (
+              <ProjectListItem key={_project.projectId} highlighted={highlighted} project={_project} deleteProject={deleteProject} setProject={setProject} />
+            )
+          })}
         </div>
+      </div>
+      <div className="menu-footer-container">
+        <p>Token Balance: <span className="menu-footer-tokens">{tokenBalance}</span> </p>
+        <button className="settings-button" onClick={() => setIsSettingsOpen(true)}>Settings</button>
       </div>
       <HowTo isOpen={isHowToOpen} onClose={() => setIsHowToOpen(false)} />
       <SettingsWindow user={user} isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
