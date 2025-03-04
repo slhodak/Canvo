@@ -121,7 +121,7 @@
   cursor: pointer;
   min-height: 36px;
   flex-shrink: 0;
-  border-top: 1px solid var(--background-dark-3);
+  border-bottom: 1px solid var(--background-dark-3);
 }
 
 .highlighted-project-preview {
