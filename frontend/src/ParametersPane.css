@@ -2,7 +2,6 @@
   width: 100%;
   height: 100%;
   background-color: var(--background-dark-2);
-  padding: 4px;
   display: flex;
   flex-direction: column;
   --property-label-width: 100px;
@@ -10,7 +9,7 @@
 
 .parameters-pane-header h3 {
   margin: 0px;
-  padding: 0px;
+  padding: 0px 4px;
 }
 
 .parameters-pane-node-id {

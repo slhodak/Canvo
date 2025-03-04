@@ -1,6 +1,5 @@
 * {
   box-sizing: border-box;
-  border-radius: 1px;
 
   &::-webkit-scrollbar {
     width: 12px;
