@@ -1,7 +1,7 @@
 /* Menu Container */
 
 .menu-container {
-  background-color: var(--background-dark-2);
+  background-color: var(--background-dark-0);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -20,7 +20,7 @@
   justify-content: space-between;
   padding: 8px calc(var(--padding-sides) + 1px) 16px var(--padding-sides);
   width: 100%;
-  background-color: var(--background-dark-2);
+  border-bottom: 1px solid var(--background-dark-3);
 }
 
 .menu-header-container h2 {

@@ -41,7 +41,7 @@
   --container-vertical-spacing: 6px;
 
   color: var(--font-color-light);
-  background-color: var(--background-dark-1);
+  background-color: var(--background-dark-0);
 }
 
 textarea {
