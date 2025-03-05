@@ -2,14 +2,14 @@
   "compilerOptions": {
     "incremental": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-    "target": "ES2020",
     "useDefineForClassFields": true,
+    "target": "ES2021",
     "lib": [
       "ES2021",
       "DOM",
       "DOM.Iterable"
     ],
-    "module": "ESNext",
+    "module": "commonjs",
     "skipLibCheck": true,
     /* Bundler mode */
     "moduleResolution": "bundler",

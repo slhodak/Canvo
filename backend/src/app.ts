@@ -4,18 +4,18 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import path from 'path';
-import { Database as db } from './db.js';
+import { Database as db } from './db';
 import { UserModel } from 'wc-shared';
-import { runPrompt, runSimpleChat } from './llm.js';
+import { runPrompt, runSimpleChat } from './llm';
 import stytch from 'stytch';
-import { createDefaultProject, validateNode } from './util.js';
+import { createDefaultProject, validateNode } from './util';
 import { LLMResponse } from 'wc-shared';
 import schedule from 'node-schedule';
 import { TransactionType } from 'wc-shared';
 import {
   ALLOWED_ORIGIN, STYTCH_SECRET, STYTCH_PROJECT_ID, sevenDaysInSeconds, SESSION_TOKEN,
   FRONTEND_DOMAIN, AI_SERVICE_URL, SUBSCRIPTION_PLANS, EMBEDDING_COST, CHAT_COST, SEARCH_COST, PROMPT_COST, port,
-} from "./constants.js";
+} from "./constants";
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
