@@ -1,5 +1,5 @@
 -- Create table to store user token balances
-CREATE TABLE user_token_balance (
+CREATE TABLE IF NOT EXISTS user_token_balance (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id TEXT NOT NULL,
     token_balance INTEGER NOT NULL DEFAULT 0,
@@ -9,7 +9,7 @@ CREATE TABLE user_token_balance (
 );
 
 -- Create table to log token transactions
-CREATE TABLE token_transactions (
+CREATE TABLE IF NOT EXISTS token_transactions (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 
     user_id TEXT NOT NULL,

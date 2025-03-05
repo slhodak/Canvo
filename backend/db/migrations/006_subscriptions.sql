@@ -2,7 +2,7 @@ BEGIN;
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TABLE plans (
+CREATE TABLE IF NOT EXISTS plans (
     id SERIAL PRIMARY KEY,
     plan_id TEXT UNIQUE NOT NULL,
     tier INTEGER UNIQUE NOT NULL,
@@ -13,7 +13,7 @@ CREATE TABLE plans (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE subscriptions (
+CREATE TABLE IF NOT EXISTS subscriptions (
     id SERIAL PRIMARY KEY,
     subscription_id TEXT UNIQUE NOT NULL DEFAULT uuid_generate_v4(),
     user_id TEXT NOT NULL,
@@ -28,7 +28,7 @@ CREATE TABLE subscriptions (
     FOREIGN KEY (plan_id) REFERENCES plans(plan_id)
 );
 
-CREATE TABLE billing_transactions (
+CREATE TABLE IF NOT EXISTS billing_transactions (
     id SERIAL PRIMARY KEY,
     subscription_id TEXT NOT NULL,
     amount DECIMAL(10, 2) NOT NULL,
@@ -40,7 +40,10 @@ CREATE TABLE billing_transactions (
 
 -- Create the default free plan
 INSERT INTO plans (plan_id, tier, name, description, price)
-VALUES (uuid_generate_v4(), 0, 'Free', 'free for all users', 0);
+SELECT uuid_generate_v4(), 0, 'Free', 'free for all users', 0
+WHERE NOT EXISTS (
+    SELECT 1 FROM plans WHERE plans.tier = 0
+);
 
 -- For every existing user without a plan, create a subscription with the free plan
 INSERT INTO subscriptions (subscription_id, user_id, plan_id, start_date, end_date, status)

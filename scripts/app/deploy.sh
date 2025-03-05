@@ -5,8 +5,31 @@
 set -e
 set -o pipefail
 
+SERVER=$1
+
+# Check that SERVER is one of "blue" or "green"
+if [ "$SERVER" != "blue" ] && [ "$SERVER" != "green" ]; then
+    echo "Usage: $0 <blue|green>"
+    exit 1
+fi
+
+# Set the server address based on the server name
+if [ "$SERVER" == "blue" ]; then
+    SERVER_ADDRESS="ec2-user@ec2-54-219-18-194.us-west-1.compute.amazonaws.com"
+else
+    SERVER_ADDRESS="ec2-user@ec2-54-215-161-176.us-west-1.compute.amazonaws.com"
+fi
+
 PEM_PATH="~/Documents/Canvo/canvo.pem"
-SERVER_ADDRESS="ec2-user@ec2-54-219-18-194.us-west-1.compute.amazonaws.com"
+
+echo "Will attempt to deploy to $SERVER server at $SERVER_ADDRESS"
+
+# Do a health check with ssh
+ssh -o ConnectTimeout=5 -i "$PEM_PATH" "$SERVER_ADDRESS" exit
+if [ $? -ne 0 ]; then
+    echo "Server is not available, will not deploy"
+    exit 1
+fi
 
 # Copy the bundled program to the server
 scp -i "$PEM_PATH" bundle.tar.gz "$SERVER_ADDRESS":~/canvo/bundle.tar.gz
