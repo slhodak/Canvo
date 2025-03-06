@@ -10,6 +10,7 @@ DB_USER=$3
 DB_DIR=$4
 DB_PORT=${5:-"5432"}
 
+
 if [[ -z "$ENVIRONMENT" ]]; then
   echo "Please provide the environment as the first argument (dev or prod)"
   exit 1
@@ -34,7 +35,8 @@ fi
 read -s -p "Please enter the database password for $DB_USER to run migrations:" DB_PASSWORD
 export PGPASSWORD=$DB_PASSWORD # Hide the password from the command history
 
-export PGHOST="localhost" # Will get an error if you specify only PGPORT
+# Set the database host to the db server
+export PGHOST="172.31.3.22"
 export PGPORT=$DB_PORT
 
 ################################################################################

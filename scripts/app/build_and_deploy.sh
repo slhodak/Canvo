@@ -12,4 +12,4 @@ if [ "$SERVER" != "blue" ] && [ "$SERVER" != "green" ]; then
 fi
 
 ./scripts/app/build.sh
-./scripts/app/deploy.sh $SERVER
+./scripts/app/deploy_app.sh $SERVER
