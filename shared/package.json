@@ -3,11 +3,23 @@
   "license": "UNLICENSED",
   "private": true,
   "version": "1.0.0",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "types": "./dist/types/index.d.ts"
+    }
+  },
+  "type": "commonjs",
+  "sideEffects": false,
   "scripts": {
-    "build-dev": "ENV=development tsc",
-    "build": "ENV=production tsc"
+    "clean:cjs": "rm -rf ./dist/cjs && rm -rf ./dist/types",
+    "clean:esm": "rm -rf ./dist/esm && rm -rf ./dist/types",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:esm": "tsc -p tsconfig.esm.json"
   },
   "dependencies": {
     "cross-env": "5.0.5",
