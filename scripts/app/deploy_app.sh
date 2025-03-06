@@ -38,12 +38,11 @@ scp -i "$PEM_PATH" bundle.tar.gz "$SERVER_ADDRESS":~/canvo/bundle.tar.gz
 scp -i "$PEM_PATH" scripts/app/unpackage.sh "$SERVER_ADDRESS":~/unpackage.sh
 scp -i "$PEM_PATH" scripts/app/compare_files.sh "$SERVER_ADDRESS":~/compare_files.sh
 scp -i "$PEM_PATH" scripts/app/poetry_install.sh "$SERVER_ADDRESS":~/poetry_install.sh
+scp -i "$PEM_PATH" scripts/app/provision_app_server.sh "$SERVER_ADDRESS":~/provision_app_server.sh
 
 # Copy necessary system scripts to the server
-scp -i "$PEM_PATH" scripts/system/provision_server.sh "$SERVER_ADDRESS":~/provision_server.sh
-scp -i "$PEM_PATH" scripts/system/certbot.sh "$SERVER_ADDRESS":~/certbot.sh
-scp -i "$PEM_PATH" scripts/system/install_system_dependencies.sh "$SERVER_ADDRESS":~/install_system_dependencies.sh
-scp -i "$PEM_PATH" scripts/system/configure_nginx.sh "$SERVER_ADDRESS":~/configure_nginx.sh
+scp -i "$PEM_PATH" scripts/app/install_app_dependencies.sh "$SERVER_ADDRESS":~/install_app_dependencies.sh
+scp -i "$PEM_PATH" scripts/app/configure_nginx.sh "$SERVER_ADDRESS":~/configure_nginx.sh
 
 # Copy the server-config files to the server
 scp -i "$PEM_PATH" server-config/canvo-ai.service "$SERVER_ADDRESS":~/canvo-ai.service

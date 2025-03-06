@@ -2,7 +2,7 @@
 
 # These will be flattened into the root directory after they're copied to the server
 ./install_app_dependencies.sh
-../system/configure_nginx.sh
+./configure_nginx.sh
 
 # Install the canvo-ai service
 sudo cp canvo-ai.service /etc/systemd/system/canvo-ai.service

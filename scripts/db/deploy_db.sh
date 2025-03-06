@@ -24,10 +24,3 @@ scp -i "$PEM_PATH" scripts/db/provision_db_server.sh "$DB_SERVER_ADDRESS":~/prov
 scp -i "$PEM_PATH" scripts/db/reset_db.sh "$DB_SERVER_ADDRESS":~/reset_db.sh
 scp -i "$PEM_PATH" scripts/db/run_migrations.sh "$DB_SERVER_ADDRESS":~/run_migrations.sh
 scp -i "$PEM_PATH" scripts/db/start_pgdocker.sh "$DB_SERVER_ADDRESS":~/start_pgdocker.sh
-
-# Copy necessary system scripts to the server
-scp -i "$PEM_PATH" scripts/system/configure_nginx.sh "$DB_SERVER_ADDRESS":~/configure_nginx.sh
-
-# Copy the server-config files to the server
-scp -i "$PEM_PATH" server-config/nginx/nginx.conf "$DB_SERVER_ADDRESS":~/nginx.conf
-scp -i "$PEM_PATH" server-config/nginx/reverse-proxy.conf "$DB_SERVER_ADDRESS":~/reverse-proxy.conf
