@@ -49,5 +49,5 @@ scp -i "$PEM_PATH" scripts/app/configure_nginx.sh "$SERVER_ADDRESS":~/configure_
 # Copy the server-config files to the server
 scp -i "$PEM_PATH" server-config/canvo-ai.service "$SERVER_ADDRESS":~/canvo-ai.service
 scp -i "$PEM_PATH" server-config/nginx/nginx.conf "$SERVER_ADDRESS":~/nginx.conf
-scp -i "$PEM_PATH" server-config/nginx/reverse-proxy.conf "$SERVER_ADDRESS":~/reverse-proxy.conf
+scp -i "$PEM_PATH" server-config/nginx/reverse-proxy-http.conf "$SERVER_ADDRESS":~/reverse-proxy-http.conf
 scp -i "$PEM_PATH" server-config/nginx/maintenance.html "$SERVER_ADDRESS":~/maintenance.html
