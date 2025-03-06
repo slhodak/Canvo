@@ -8,7 +8,7 @@ import {
   NodeCacheType,
   BaseNode,
   NodePropertyType,
-} from "../models/node";
+} from "wc-shared";
 
 export class SaveNode extends BaseAsyncNode {
   constructor(
