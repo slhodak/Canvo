@@ -7,15 +7,23 @@ import ParametersPane from "./ParametersPane";
 import NetworkEditor from "./NetworkEditor";
 
 // Models
-import { BaseNode, NodeRunType, IOState, IOStateType, BaseAsyncNode, BaseSyncNode, NodeCacheType } from '../../shared/types/src/models/node';
-import { ProjectModel } from '../../shared/types/src/models/project';
-import { Connection } from '../../shared/types/src/models/connection';
-import { UserModel } from '../../shared/types/src/models/user';
+import {
+  BaseNode,
+  NodeRunType,
+  IOState,
+  IOStateType,
+  BaseAsyncNode,
+  BaseSyncNode,
+  NodeCacheType,
+  ProjectModel,
+  Connection,
+  UserModel,
+} from 'wc-shared';
 import { VisualNode, VisualConnection } from './NetworkTypes';
 
 // Utils & Constants
 import { ConnectionUtils as cu, NodeUtils as nu } from './Utils';
-import { updateNode as syncNodeUpdate } from './api';
+import { updateNode as syncNodeUpdate } from 'wc-shared';
 import { SERVER_URL } from './constants';
 
 interface ProjectProps {

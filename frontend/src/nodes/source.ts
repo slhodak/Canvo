@@ -9,10 +9,10 @@ import {
   NodeRunType,
   NodeCacheType,
   BaseNode,
-} from "../../../shared/types/src/models/node";
-import { updateNode } from "../api";
+  updateNode,
+} from "wc-shared";
 import mammoth from 'mammoth';
-import { FileUtils as fu } from "../Utils";
+import { FileUtils as fu } from "./utils";
 import { SERVER_URL } from "../constants";
 
 export class FileNode extends BaseSyncNode {
@@ -147,7 +147,7 @@ export class TextNode extends BaseSyncNode {
   public override setProperty(key: string, value: string | number) {
     this.properties[key].value = value;
     this.outputState = [new IOState({ stringValue: value as string })];
-    updateNode(this);
+    updateNode(this, SERVER_URL);
   }
 
   // Every node accepts an array of input values, but sometimes that array is empty

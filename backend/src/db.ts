@@ -1,13 +1,13 @@
 import pgPromise from 'pg-promise';
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
-import { UserModel, SessionModel } from '../../shared/types/src/models/user';
-import { ProjectModel } from '../../shared/types/src/models/project';
-import { BaseNode } from '../../shared/types/src/models/node';
-import { Connection } from '../../shared/types/src/models/connection';
+import { UserModel, SessionModel } from 'wc-shared';
+import { ProjectModel } from 'wc-shared';
+import { BaseNode } from 'wc-shared';
+import { Connection } from 'wc-shared';
 import { camelizeColumns, formatIntegerArray } from './util';
-import { TransactionType } from '../../shared/types/src/models/tokens';
-import { SubscriptionModel, PlanModel, BillingTransactionModel } from '../../shared/types/src/models/subscription';
+import { TransactionType } from 'wc-shared';
+import { SubscriptionModel, PlanModel, BillingTransactionModel } from 'wc-shared';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 

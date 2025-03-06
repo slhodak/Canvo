@@ -8,7 +8,7 @@ import {
   NodeRunType,
   NodeCacheType,
   BaseNode,
-} from "../../../shared/types/src/models/node";
+} from "wc-shared";
 
 export class SplitNode extends BaseSyncNode {
   constructor(

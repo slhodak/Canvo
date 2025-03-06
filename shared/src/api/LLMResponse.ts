@@ -3,4 +3,3 @@ export type LLMResponse = {
   result: string;
   error?: string;
 }
-

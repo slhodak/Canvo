@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import App from "./App";
 import LoginOrSignup from "./Login";
-import { UserModel } from "../../shared/types/src/models/user";
+import { UserModel } from "wc-shared";
+import { checkAuthentication, getUser } from "wc-shared";
 import { SERVER_URL } from "./constants";
 
 enum LoginState {
@@ -18,12 +19,9 @@ export default function Home() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch(`${SERVER_URL}/api/get_user`, {
-          credentials: 'include',
-        });
-        const data = await response.json();
-        if (data.status === 'success') {
-          setUser(data.user);
+        const user = await getUser(SERVER_URL);
+        if (user) {
+          setUser(user);
           setLoginState(LoginState.LOGGED_IN);
         } else {
           setLoginState(LoginState.LOGGED_OUT);
@@ -34,15 +32,12 @@ export default function Home() {
       }
     }
 
-    const checkAuthentication = async () => {
+    const checkAuth = async () => {
       try {
-        const response = await fetch(`${SERVER_URL}/auth/check`, {
-          credentials: 'include',
-        });
-        const data = await response.json();
-        if (data.status === 'success') {
+        const success = await checkAuthentication(SERVER_URL);
+        if (success) {
           fetchUser();
-        } else if (data.status === 'failed') {
+        } else {
           setLoginState(LoginState.LOGGED_OUT);
         }
       } catch (error) {
@@ -51,7 +46,7 @@ export default function Home() {
       }
     };
 
-    checkAuthentication();
+    checkAuth();
   }, []);
 
   if (loginState === LoginState.INITIAL) {

@@ -8,10 +8,10 @@ import {
   IOStateType,
   NodePropertyType,
   NodeCacheType,
-} from '../../../shared/types/src/models/node';
-import { LLMResponse } from "../../../shared/types/src/models/LLMResponse";
-import { SERVER_URL } from "../constants";
-import { updateNode } from '../api';
+  LLMResponse,
+  updateNode,
+} from 'wc-shared';
+import { SERVER_URL } from '../constants';
 
 export class PromptNode extends BaseAsyncNode {
   constructor(
@@ -195,7 +195,7 @@ export class EmbedNode extends BaseAsyncNode {
 
       // Pass on the document ID to the next node
       const outputState = [new IOState({ stringValue: this.properties.documentId.value as string })];
-      updateNode(this);
+      updateNode(this, SERVER_URL);
       return outputState;
     } catch (error: unknown) {
       console.error('Error in EmbedNode:', error);
@@ -313,7 +313,7 @@ export class SearchNode extends BaseAsyncNode {
 
       const result = await aiResponse.json();
       this.properties.status.value = `Found ${result.search_results.length} results`;
-      updateNode(this);
+      updateNode(this, SERVER_URL);
 
       // Output the results as a string array
       return [new IOState({ stringArrayValue: result.search_results })];

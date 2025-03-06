@@ -1,9 +1,8 @@
 import { useRef, useEffect, useState } from 'react';
 import './SettingsWindow.css';
 import './Modal.css';
-import { UserModel } from "../../shared/types/src/models/user";
+import { UserModel, SubscriptionModel, PlanModel } from "wc-shared";
 import { SERVER_URL } from "./constants";
-import { SubscriptionModel, PlanModel } from "../../shared/types/src/models/subscription";
 
 // A simple component that shows the user's settings
 // - User's email

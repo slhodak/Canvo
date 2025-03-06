@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import './Menu.css';
 import PlusIcon from "./assets/PlusIcon";
-import { SERVER_URL } from "./constants";
-import { ProjectModel } from '../../shared/types/src/models/project';
-import { UserModel } from '../../shared/types/src/models/user';
 import SettingsWindow from './SettingsWindow';
 import HowTo from './HowTo';
 import ProjectListItem from './ProjectListItem';
+import { SERVER_URL } from "./constants";
+import { ProjectModel, UserModel } from "wc-shared";
 
 interface MenuProps {
   user: UserModel;

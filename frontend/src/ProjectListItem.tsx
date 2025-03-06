@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ProjectModel } from '../../shared/types/src/models/project';
+import { ProjectModel } from 'wc-shared';
 import TrashIcon from './assets/TrashIcon';
 
 interface ProjectListItemProps {

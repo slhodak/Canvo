@@ -12,10 +12,12 @@
   "dependencies": {
     "@stytch/react": "^19.2.0",
     "@stytch/vanilla-js": "^5.13.0",
+    "cross-env": "5.0.5",
     "mammoth": "^1.9.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "textarea-caret": "^3.1.0"
+    "textarea-caret": "^3.1.0",
+    "wc-shared": "workspace:*"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
@@ -32,5 +34,5 @@
     "typescript-eslint": "^8.18.2",
     "vite": "^6.0.5"
   },
-  "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610"
+  "packageManager": "yarn@4.2.2"
 }
