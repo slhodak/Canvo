@@ -3,6 +3,7 @@ import App from "./App";
 import LoginOrSignup from "./Login";
 import { UserModel } from "wc-shared";
 import { checkAuthentication, getUser } from "wc-shared";
+import { SERVER_URL } from "./constants";
 
 enum LoginState {
   INITIAL = "initial",
@@ -18,7 +19,7 @@ export default function Home() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const user = await getUser();
+        const user = await getUser(SERVER_URL);
         if (user) {
           setUser(user);
           setLoginState(LoginState.LOGGED_IN);
@@ -33,7 +34,7 @@ export default function Home() {
 
     const checkAuth = async () => {
       try {
-        const success = await checkAuthentication();
+        const success = await checkAuthentication(SERVER_URL);
         if (success) {
           fetchUser();
         } else {

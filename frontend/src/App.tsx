@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import './App.css';
 import Menu from './Menu';
 import Project from './Project';
-import { ProjectModel } from 'wc-shared';
-import { UserModel } from 'wc-shared';
+import { ProjectModel, UserModel } from 'wc-shared';
 import { getAllProjects, updateProjectTitle } from 'wc-shared';
+import { SERVER_URL } from './constants';
 
 interface AppProps {
   user: UserModel;
@@ -15,7 +15,7 @@ const App = ({ user }: AppProps) => {
   const [projects, setProjects] = useState<ProjectModel[]>([]);
 
   const fetchAllProjects = async () => {
-    const projects = await getAllProjects();
+    const projects = await getAllProjects(SERVER_URL);
     setProjects(projects);
   }
 
@@ -24,7 +24,7 @@ const App = ({ user }: AppProps) => {
     if (!project) return false;
 
     const newTitle = event.target.value;
-    const success = await updateProjectTitle(project.projectId, newTitle);
+    const success = await updateProjectTitle(project.projectId, newTitle, SERVER_URL);
     if (success) {
       // Update the project in the projects list
       setProjects(prev => prev.map(p =>

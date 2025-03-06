@@ -147,7 +147,7 @@ export class TextNode extends BaseSyncNode {
   public override setProperty(key: string, value: string | number) {
     this.properties[key].value = value;
     this.outputState = [new IOState({ stringValue: value as string })];
-    updateNode(this);
+    updateNode(this, SERVER_URL);
   }
 
   // Every node accepts an array of input values, but sometimes that array is empty

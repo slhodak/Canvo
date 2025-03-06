@@ -14,7 +14,8 @@ import schedule from 'node-schedule';
 import { TransactionType } from 'wc-shared';
 import {
   ALLOWED_ORIGIN, STYTCH_SECRET, STYTCH_PROJECT_ID, sevenDaysInSeconds, SESSION_TOKEN,
-  FRONTEND_DOMAIN, AI_SERVICE_URL, SUBSCRIPTION_PLANS, EMBEDDING_COST, CHAT_COST, SEARCH_COST, PROMPT_COST, port,
+  FRONTEND_DOMAIN, AI_SERVICE_URL, SUBSCRIPTION_PLANS, EMBEDDING_COST, CHAT_COST, SEARCH_COST,
+  PROMPT_COST, port
 } from "./constants";
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
@@ -189,7 +190,6 @@ authRouter.get('/authenticate', async (req: Request, res: Response) => {
 authRouter.get('/check', async (req: Request, res: Response) => {
   const sessionToken = req.cookies?.session_token;
   if (sessionToken === undefined) {
-    // This prevents the frontend from showing a 'failed' message if there was no session token to check
     return res.json({ status: 'failed' });
   }
 
