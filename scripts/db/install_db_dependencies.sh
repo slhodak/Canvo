@@ -3,10 +3,15 @@
 # Run with sudo
 
 # For an AL2023 Server
+# Install Docker
+echo "Installing Docker..."
+dnf install docker -y
+systemctl start docker
+systemctl enable docker
 
 # PostgreSQL
 echo "Installing PostgreSQL..."
-dnf install postgresql16 postgresql16-server -y
+dnf install postgresql16 postgresql16-server -y postgresql16-contrib
 postgresql-setup --initdb
 systemctl start postgresql
 systemctl enable postgresql
