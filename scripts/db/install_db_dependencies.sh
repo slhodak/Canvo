@@ -8,6 +8,8 @@ echo "Installing Docker..."
 dnf install docker -y
 systemctl start docker
 systemctl enable docker
+docker pull pgvector/pgvector
+docker start pgvector
 
 # PostgreSQL
 echo "Installing PostgreSQL..."
