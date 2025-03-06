@@ -23,6 +23,7 @@ import { VisualNode, VisualConnection } from './NetworkTypes';
 
 // Utils & Constants
 import { ConnectionUtils as cu, NodeUtils as nu } from './Utils';
+// Don't love this function rename, it's a bit confusing when debugging
 import { updateNode as syncNodeUpdate } from 'wc-shared';
 import { SERVER_URL } from './constants';
 
@@ -82,19 +83,19 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       Object.values(newNodes).forEach(n => {
         if (n.node.display && n.node.nodeId !== node.node.nodeId) {
           n.node.display = false;
-          syncNodeUpdate(n.node);
+          syncNodeUpdate(n.node, SERVER_URL);
         }
       });
       setNodes(newNodes);
       if (node.node.runType === NodeRunType.Auto) {
         await runNode(node); // runNode will sync the node after it is run
       } else {
-        syncNodeUpdate(node.node);
+        syncNodeUpdate(node.node, SERVER_URL);
       }
       updateViewState(node);
     } else {
       setViewState(IOState.ofType(IOStateType.String));
-      syncNodeUpdate(node.node);
+      syncNodeUpdate(node.node, SERVER_URL);
     }
   }
 
@@ -248,7 +249,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     }
 
     if (shouldSync) {
-      await syncNodeUpdate(node.node);
+      await syncNodeUpdate(node.node, SERVER_URL);
     }
 
     return outputValues;
@@ -369,7 +370,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       await runNode(node, shouldSync);
     } else if (shouldSync) {
       // If the node is not being run, sync it if needed, e.g. on coordinate updates
-      await syncNodeUpdate(node.node);
+      await syncNodeUpdate(node.node, SERVER_URL);
     }
   }, [runNode]);
 
