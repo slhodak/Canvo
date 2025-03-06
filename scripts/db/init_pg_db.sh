@@ -9,7 +9,7 @@ ENVIRONMENT=$1
 DB_NAME=$2
 DB_USER=$3
 DB_PORT=${4:-"5432"}
-# Optional parameters, will be supplied by parent scripts like reset_db.sh
+# Optional parameters, may be supplied by parent scripts like reset_db.sh
 DB_ADMIN_USER=$5
 DB_ADMIN_PASSWORD=$6
 

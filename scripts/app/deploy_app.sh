@@ -39,6 +39,8 @@ scp -i "$PEM_PATH" scripts/app/unpackage.sh "$SERVER_ADDRESS":~/unpackage.sh
 scp -i "$PEM_PATH" scripts/app/compare_files.sh "$SERVER_ADDRESS":~/compare_files.sh
 scp -i "$PEM_PATH" scripts/app/poetry_install.sh "$SERVER_ADDRESS":~/poetry_install.sh
 scp -i "$PEM_PATH" scripts/app/provision_app_server.sh "$SERVER_ADDRESS":~/provision_app_server.sh
+# The app runs the migrations against the db server
+scp -i "$PEM_PATH" scripts/app/run_migrations.sh "$SERVER_ADDRESS":~/run_migrations.sh
 
 # Copy necessary system scripts to the server
 scp -i "$PEM_PATH" scripts/app/install_app_dependencies.sh "$SERVER_ADDRESS":~/install_app_dependencies.sh
@@ -48,3 +50,4 @@ scp -i "$PEM_PATH" scripts/app/configure_nginx.sh "$SERVER_ADDRESS":~/configure_
 scp -i "$PEM_PATH" server-config/canvo-ai.service "$SERVER_ADDRESS":~/canvo-ai.service
 scp -i "$PEM_PATH" server-config/nginx/nginx.conf "$SERVER_ADDRESS":~/nginx.conf
 scp -i "$PEM_PATH" server-config/nginx/reverse-proxy.conf "$SERVER_ADDRESS":~/reverse-proxy.conf
+scp -i "$PEM_PATH" server-config/nginx/maintenance.html "$SERVER_ADDRESS":~/maintenance.html

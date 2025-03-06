@@ -21,6 +21,4 @@ fi
 scp -i "$PEM_PATH" scripts/db/init_pg_db.sh "$DB_SERVER_ADDRESS":~/init_pg_db.sh
 scp -i "$PEM_PATH" scripts/db/install_db_dependencies.sh "$DB_SERVER_ADDRESS":~/install_db_dependencies.sh
 scp -i "$PEM_PATH" scripts/db/provision_db_server.sh "$DB_SERVER_ADDRESS":~/provision_db_server.sh
-scp -i "$PEM_PATH" scripts/db/reset_db.sh "$DB_SERVER_ADDRESS":~/reset_db.sh
-scp -i "$PEM_PATH" scripts/db/run_migrations.sh "$DB_SERVER_ADDRESS":~/run_migrations.sh
 scp -i "$PEM_PATH" scripts/db/start_pgdocker.sh "$DB_SERVER_ADDRESS":~/start_pgdocker.sh
