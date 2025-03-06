@@ -2,12 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import './NetworkEditor.css';
 import { VisualNode, VisualConnection, DragState, WireState } from './NetworkTypes';
 import { Node } from './Node';
-import { ConnectionUtils as cu, NetworkEditorUtils as neu } from './Utils';
-import { Coordinates, NodeType, NodeGroups, IOState } from 'wc-shared';
-import { Connection } from 'wc-shared';
-import { NodeUtils as nu } from './Utils';
-import { ProjectModel } from 'wc-shared';
-import { UserModel } from 'wc-shared';
+import { NodeUtils as nu, ConnectionUtils as cu, NetworkEditorUtils as neu } from './Utils';
+import { Coordinates, NodeType, NodeGroups, IOState, Connection, ProjectModel, UserModel } from 'wc-shared';
 
 interface NetworkEditorProps {
   user: UserModel;

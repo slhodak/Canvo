@@ -836,12 +836,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@stytch/core@npm:2.42.1":
-  version: 2.42.1
-  resolution: "@stytch/core@npm:2.42.1"
+"@stytch/core@npm:2.42.2":
+  version: 2.42.2
+  resolution: "@stytch/core@npm:2.42.2"
   dependencies:
     uuid: "npm:8.3.2"
-  checksum: 10c0/39809c9b9914546bc79c7fe576b53320b3efdbbc4611e0c1446f5dd171fdae20305ce705d54d750d98212a2e8d8d1be2f1b8761b091846fb0c93a25e9957521e
+  checksum: 10c0/f0fcf333dc8ca087902641194059de3e92d474ce206b409240fcd77e12cec27d6e6effe04c5cc461a0d3fb282f68664400857817b58d3767fdaae11d7081cb58
   languageName: node
   linkType: hard
 
@@ -857,13 +857,13 @@ __metadata:
   linkType: hard
 
 "@stytch/vanilla-js@npm:^5.13.0":
-  version: 5.18.0
-  resolution: "@stytch/vanilla-js@npm:5.18.0"
+  version: 5.18.1
+  resolution: "@stytch/vanilla-js@npm:5.18.1"
   dependencies:
-    "@stytch/core": "npm:2.42.1"
+    "@stytch/core": "npm:2.42.2"
     "@types/google-one-tap": "npm:^1.2.0"
     type-fest: "npm:4.15.0"
-  checksum: 10c0/0c9461e5de7dc558d957a354d9f830efa049b6ce535cd1b702d3358ae09b32d7dcec92f40b89d7a050b91271494b3513d02b089a66d59f6c397dfc9fbdb1269f
+  checksum: 10c0/2591639024446541563326f380ab289822b164fb444062fb156be309189aa955875fc02f00d71cd8baea3d65805b3016c86f884221977da6dc4c99cb5720aa96
   languageName: node
   linkType: hard
 
@@ -1347,11 +1347,11 @@ __metadata:
   linkType: hard
 
 "acorn@npm:^8.11.0, acorn@npm:^8.14.0, acorn@npm:^8.4.1":
-  version: 8.14.0
-  resolution: "acorn@npm:8.14.0"
+  version: 8.14.1
+  resolution: "acorn@npm:8.14.1"
   bin:
     acorn: bin/acorn
-  checksum: 10c0/6d4ee461a7734b2f48836ee0fbb752903606e576cc100eb49340295129ca0b452f3ba91ddd4424a1d4406a98adfb2ebb6bd0ff4c49d7a0930c10e462719bbfd7
+  checksum: 10c0/dbd36c1ed1d2fa3550140000371fcf721578095b18777b85a79df231ca093b08edc6858d75d6e48c73e431c174dcf9214edbd7e6fa5911b93bd8abfa54e47123
   languageName: node
   linkType: hard
 
@@ -1543,7 +1543,7 @@ __metadata:
     ts-node: "npm:^10.9.2"
     typescript: "npm:^5.7.2"
     uuid: "npm:^11.0.4"
-    wc-shared: "npm:1.0.0"
+    wc-shared: "workspace:*"
   languageName: unknown
   linkType: soft
 
@@ -3999,8 +3999,8 @@ __metadata:
   linkType: hard
 
 "openai@npm:^4.77.3":
-  version: 4.86.1
-  resolution: "openai@npm:4.86.1"
+  version: 4.86.2
+  resolution: "openai@npm:4.86.2"
   dependencies:
     "@types/node": "npm:^18.11.18"
     "@types/node-fetch": "npm:^2.6.4"
@@ -4019,7 +4019,7 @@ __metadata:
       optional: true
   bin:
     openai: bin/cli
-  checksum: 10c0/68e7d2ebd3cfae41e00dc05b3a2f5f9901e4e97de527408bdaa3fe30b93e4e63e68afb61f14f9606737b394136dd61ce09e21a64fa074a1b16be41377b4b1e52
+  checksum: 10c0/5cce259ba87e03d80cd24617152200e93b1bf1e3d92b7f69b3afae01d39f7fe19a40b9736d1846618774da0757506433361ebec5db8faae7bed2903c86ce8a2e
   languageName: node
   linkType: hard
 
@@ -5664,11 +5664,11 @@ __metadata:
     typescript: "npm:~5.6.2"
     typescript-eslint: "npm:^8.18.2"
     vite: "npm:^6.0.5"
-    wc-shared: "npm:1.0.0"
+    wc-shared: "workspace:*"
   languageName: unknown
   linkType: soft
 
-"wc-shared@npm:1.0.0, wc-shared@workspace:shared":
+"wc-shared@workspace:*, wc-shared@workspace:shared":
   version: 0.0.0-use.local
   resolution: "wc-shared@workspace:shared"
   dependencies:

@@ -1,7 +1,7 @@
-import './OutputView.css';
-import { IOState, IOStateType } from 'wc-shared';
 import { useState, useEffect } from 'react';
+import './OutputView.css';
 import TableView from './TableView';
+import { IOState, IOStateType } from 'wc-shared';
 
 export interface OutputViewProps {
   outputState: IOState;
