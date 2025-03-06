@@ -1,6 +1,6 @@
 import './Login.css';
 import { Suspense, lazy } from 'react';
-import { SERVER_URL } from 'wc-shared';
+import { SERVER_URL } from './constants';
 
 // Lazy load the Stytch components
 const StytchLoginComponent = lazy(async () => {

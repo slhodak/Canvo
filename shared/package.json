@@ -18,17 +18,16 @@
   "scripts": {
     "clean:cjs": "rm -rf ./dist/cjs && rm -rf ./dist/types",
     "clean:esm": "rm -rf ./dist/esm && rm -rf ./dist/types",
+    "clean": "yarn clean:cjs && yarn clean:esm",
     "build:cjs": "tsc -p tsconfig.cjs.json",
-    "build:esm": "tsc -p tsconfig.esm.json"
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build": "yarn clean && yarn build:cjs && yarn build:esm"
   },
   "dependencies": {
-    "cross-env": "5.0.5",
-    "dotenv": "^16.4.7"
+    "cross-env": "5.0.5"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.4",
-    "typescript": "^5.0.0",
-    "vite": "^6.2.0"
+    "typescript": "^5.0.0"
   },
   "packageManager": "yarn@4.2.2"
 }

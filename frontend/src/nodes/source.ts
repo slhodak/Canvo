@@ -9,11 +9,11 @@ import {
   NodeRunType,
   NodeCacheType,
   BaseNode,
-} from "../models/node";
-import { updateNode } from "../api/api";
+  updateNode,
+} from "wc-shared";
 import mammoth from 'mammoth';
 import { FileUtils as fu } from "./utils";
-import { SERVER_URL } from "../api/constants";
+import { SERVER_URL } from "../constants";
 
 export class FileNode extends BaseSyncNode {
   constructor(

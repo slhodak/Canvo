@@ -1,11 +1,10 @@
 import { BaseNode } from '../models/node';
 import { ProjectModel } from '../models/project';
 import { UserModel } from '../models/user';
-import { SERVER_URL } from './constants';
 
-export async function updateNode(node: BaseNode): Promise<boolean> {
+export async function updateNode(node: BaseNode, url: string): Promise<boolean> {
   try {
-    const response = await fetch(`${SERVER_URL}/api/update_node`, {
+    const response = await fetch(`${url}/api/update_node`, {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -29,9 +28,9 @@ export async function updateNode(node: BaseNode): Promise<boolean> {
   }
 }
 
-export async function updateProjectTitle(projectId: string, title: string): Promise<boolean> {
+export async function updateProjectTitle(projectId: string, title: string, url: string): Promise<boolean> {
   try {
-    const response = await fetch(`${SERVER_URL}/api/update_project_title`, {
+    const response = await fetch(`${url}/api/update_project_title`, {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -52,24 +51,24 @@ export async function updateProjectTitle(projectId: string, title: string): Prom
   }
 };
 
-export async function getAllProjects(): Promise<ProjectModel[]> {
-  const response = await fetch(`${SERVER_URL}/api/get_all_projects`, {
+export async function getAllProjects(url: string): Promise<ProjectModel[]> {
+  const response = await fetch(`${url}/api/get_all_projects`, {
     credentials: 'include',
   });
   const data = await response.json();
   return data.projects;
 };
 
-export async function checkAuthentication(): Promise<boolean> {
-  const response = await fetch(`${SERVER_URL}/auth/check`, {
+export async function checkAuthentication(url: string): Promise<boolean> {
+  const response = await fetch(`${url}/auth/check`, {
     credentials: 'include',
   });
   const data = await response.json();
   return data.status === 'success';
 };
 
-export async function getUser(): Promise<UserModel | null> {
-  const response = await fetch(`${SERVER_URL}/api/get_user`, {
+export async function getUser(url: string): Promise<UserModel | null> {
+  const response = await fetch(`${url}/api/get_user`, {
     credentials: 'include',
   });
   const data = await response.json();

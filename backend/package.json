@@ -12,13 +12,12 @@
     "build": "yarn clean && tsc --build"
   },
   "dependencies": {
-    "cross-env": "5.0.5",
-    "wc-shared": "1.0.0",
     "@types/humps": "^2.0.6",
     "@types/node": "^22.10.5",
     "@types/node-schedule": "^2.1.7",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "cross-env": "5.0.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "helmet": "^8.0.0",
@@ -30,7 +29,8 @@
     "pm2": "^5.4.3",
     "stytch": "^12.3.1",
     "typescript": "^5.7.2",
-    "uuid": "^11.0.4"
+    "uuid": "^11.0.4",
+    "wc-shared": "1.0.0"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.8",
