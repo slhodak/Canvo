@@ -180,7 +180,7 @@ export class EditNode extends BaseSyncNode {
         this.indexSelections[inputIndex] = 0;
         this.setProperty('content', value);
       }
-    } else {
+    } else if (inputValue.type === IOStateType.String) {
       this.setProperty('content', inputValue.stringValue as string || '');
     }
   }
