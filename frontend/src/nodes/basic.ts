@@ -18,7 +18,7 @@ export class SplitNode extends BaseSyncNode {
     coordinates: Coordinates,
     label: string = 'split',
     display: boolean = false,
-    separator: string = ' ',
+    separator: string = '\n',
     outputState: IOState[] = [],
     indexSelections: (number | null)[] = [],
   ) {
