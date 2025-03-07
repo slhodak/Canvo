@@ -161,39 +161,45 @@
   background-color: transparent;
 }
 
-.project-preview-actions {
-  display: flex;
-  gap: 4px;
+.action-confirm-project-name {
+  font-weight: 600;
+  font-style: italic;
 }
 
-.project-preview-confirm-button,
-.project-preview-cancel-button {
-  padding: 4px 8px;
+.action-confirm-actions {
+  display: flex;
+  gap: 4px;
+  justify-content: space-between;
+}
+
+.action-confirm-button,
+.action-cancel-button {
+  padding: 3px 8px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
 }
 
-.project-preview-confirm-button {
+.action-confirm-button {
   background-color: #dc3545;
   color: white;
 }
 
-.project-preview-confirm-button:hover {
+.action-confirm-button:hover {
   background-color: #c82333;
 }
 
-.project-preview-cancel-button {
+.action-cancel-button {
   background-color: #6c757d;
   color: white;
 }
 
-.project-preview-cancel-button:hover {
+.action-cancel-button:hover {
   background-color: #5a6268;
 }
 
-.delete-confirm-popover {
+.action-confirm-popover {
   position: fixed;
   background-color: var(--background-dark-2);
   border: 1px solid var(--outline-color);
@@ -203,43 +209,10 @@
   z-index: 1000;
 }
 
-.delete-confirm-popover p {
+.action-confirm-popover p {
   color: var(--font-color-light);
   margin: 0 0 8px 0;
   font-size: 14px;
-}
-
-.delete-confirm-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.project-preview-confirm-button,
-.project-preview-cancel-button {
-  padding: 4px 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-}
-
-.project-preview-confirm-button {
-  background-color: #dc3545;
-  color: white;
-}
-
-.project-preview-confirm-button:hover {
-  background-color: #c82333;
-}
-
-.project-preview-cancel-button {
-  background-color: #6c757d;
-  color: white;
-}
-
-.project-preview-cancel-button:hover {
-  background-color: #5a6268;
 }
 
 /* Menu Footer */

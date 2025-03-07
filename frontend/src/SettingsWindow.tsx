@@ -18,6 +18,9 @@ const SettingsWindow = ({ user, isOpen, onClose }: SettingsWindowProps) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const [subscription, setSubscription] = useState<SubscriptionModel | null>(null);
   const [plan, setPlan] = useState<PlanModel | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteButtonRect, setDeleteButtonRect] = useState<DOMRect | null>(null);
+  const deleteConfirmPopoverRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = async () => {
     try {
@@ -90,6 +93,22 @@ const SettingsWindow = ({ user, isOpen, onClose }: SettingsWindowProps) => {
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (deleteConfirmPopoverRef.current && !deleteConfirmPopoverRef.current.contains(event.target as Node)) {
+        setShowDeleteConfirm(false);
+      }
+    };
+
+    if (showDeleteConfirm) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDeleteConfirm]);
+
   if (!isOpen) return null;
 
   return (
@@ -114,7 +133,52 @@ const SettingsWindow = ({ user, isOpen, onClose }: SettingsWindowProps) => {
           )}
 
           <button className="logout-button" onClick={handleLogout}>Log Out</button>
-          <button className="delete-user-button" onClick={handleDeleteUser}>Delete Account</button>
+          <button
+            className="delete-user-button"
+            onClick={(e) => {
+              e.stopPropagation();
+              const rect = e.currentTarget.getBoundingClientRect();
+              setDeleteButtonRect(rect);
+              setShowDeleteConfirm(true);
+            }}
+          >
+            Delete Account
+          </button>
+
+          {showDeleteConfirm && deleteButtonRect && (
+            <div
+              ref={deleteConfirmPopoverRef}
+              className="action-confirm-popover"
+              style={{
+                top: `${deleteButtonRect.bottom + 5}px`,
+                left: `${deleteButtonRect.left - 100}px`,
+              }}
+            >
+              <p>Are you sure you want to delete your account?</p>
+              <p>This action is irreversible.</p>
+              <div className="action-confirm-actions">
+                <button
+                  className="action-confirm-button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteUser();
+                    setShowDeleteConfirm(false);
+                  }}
+                >
+                  Yes, Delete
+                </button>
+                <button
+                  className="action-cancel-button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowDeleteConfirm(false);
+                  }}
+                >
+                  No, Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

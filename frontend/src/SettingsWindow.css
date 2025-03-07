@@ -39,3 +39,23 @@
 .delete-user-button:hover {
   background-color: var(--background-color-darker);
 }
+
+.delete-confirm-popover {
+  position: fixed;
+  background-color: var(--background-dark-1);
+  border: 1px solid var(--outline-color);
+  border-radius: 4px;
+  padding: 12px;
+  z-index: 1000;
+}
+
+.delete-confirm-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.project-preview-cancel-button {
+  color: var(--font-color-light);
+}

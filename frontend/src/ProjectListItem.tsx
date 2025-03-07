@@ -52,16 +52,16 @@ const ProjectListItem = ({ highlighted, project, deleteProject, setProject }: Pr
       {showDeleteConfirm && deleteButtonRect && (
         <div
           ref={popoverRef}
-          className="delete-confirm-popover"
+          className="action-confirm-popover"
           style={{
             top: `${deleteButtonRect.bottom + 5}px`,
             left: `${deleteButtonRect.left - 100}px`,
           }}
         >
-          <p>Delete this project?</p>
-          <div className="delete-confirm-actions">
+          <p>Delete the project <span className="action-confirm-project-name">{project.title}</span>?</p>
+          <div className="action-confirm-actions">
             <button
-              className="project-preview-confirm-button"
+              className="action-confirm-button"
               onClick={(e) => {
                 e.stopPropagation();
                 deleteProject(project.projectId);
@@ -71,7 +71,7 @@ const ProjectListItem = ({ highlighted, project, deleteProject, setProject }: Pr
               Delete
             </button>
             <button
-              className="project-preview-cancel-button"
+              className="action-cancel-button"
               onClick={(e) => {
                 e.stopPropagation();
                 setShowDeleteConfirm(false);
