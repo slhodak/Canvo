@@ -230,7 +230,6 @@ export abstract class BaseNode {
     inputTypes: IOStateType[] = [],
     outputState: IOState[] = [],
     indexSelections: (number | null)[] = [],
-    runOnInput: boolean = false,
   ) {
     this.nodeId = nodeId;
     this.authorId = authorId;
@@ -270,7 +269,7 @@ export abstract class BaseNode {
   // A temporary hack because adding a property would require updating the database and every other node
   public runOnInput(): boolean { return false; }
 
-  public onInputConnection(inputValue: IOState) { }
+  public onInputConnection(inputValue: IOState[], inputIndex: number) { }
 
   public onInputDisconnection(inputIndex: number) { }
 

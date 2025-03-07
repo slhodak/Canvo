@@ -135,7 +135,7 @@ export class EditNode extends BaseSyncNode {
     outputState: IOState[] = [],
     indexSelections: (number | null)[] = [],
   ) {
-    super(id, authorId, projectId, 'Edit', label, display, NodeType.Edit, 1, 1, coordinates, NodeRunType.Auto, NodeCacheType.Cache, {
+    super(id, authorId, projectId, 'Edit', label, display, NodeType.Edit, 1, 1, coordinates, NodeRunType.None, NodeCacheType.Cache, {
       content: {
         type: NodePropertyType.String,
         label: 'Content',
@@ -166,9 +166,23 @@ export class EditNode extends BaseSyncNode {
 
   public override runOnInput(): boolean { return true; }
 
-  public override onInputConnection(inputValue: IOState) {
-    const content = inputValue.stringValue as string || '';
-    this.setProperty('content', content);
+  public override onInputConnection(inputValues: IOState[], inputIndex: number) {
+    // If the input value is an array, try to get the specified index to read from it
+    const inputValue = inputValues[inputIndex] as IOState;
+    if (inputValue.type === IOStateType.StringArray) {
+      const index = this.indexSelections[inputIndex] as number;
+      if (index !== null) {
+        const value = inputValue.stringArrayValue?.[index] as string || '';
+        this.setProperty('content', value);
+      } else {
+        console.debug(`No array index selected for array at input ${inputIndex}, will default to 0`);
+        const value = inputValue.stringArrayValue?.[0] as string || '';
+        this.indexSelections[inputIndex] = 0;
+        this.setProperty('content', value);
+      }
+    } else {
+      this.setProperty('content', inputValue.stringValue as string || '');
+    }
   }
 
   _run(inputValues: IOState[]): IOState[] {

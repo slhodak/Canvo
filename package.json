@@ -5,5 +5,8 @@
     "frontend",
     "shared"
   ],
+  "scripts": {
+    "build:shared": "cd shared && yarn build"
+  },
   "packageManager": "yarn@4.2.2"
 }

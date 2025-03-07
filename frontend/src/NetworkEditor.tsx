@@ -337,7 +337,7 @@ const NetworkEditor = ({
     const node = nodes[toNodeId];
     if (node?.node.runOnInput()) {
       const priorInputValues = await runPriorDAG(node);
-      node.node.onInputConnection(priorInputValues[inputIndex]);
+      node.node.onInputConnection(priorInputValues, inputIndex);
     }
   }, [nodes, connections, updateConnections, enableIndexSelection, project.projectId, user.userId, runPriorDAG]);
 
