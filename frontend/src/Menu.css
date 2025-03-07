@@ -32,6 +32,27 @@
   line-height: 1.0;
 }
 
+.menu-header-buttons-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-button {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  height: 1.5rem;
+  padding: 0px;
+  fill: var(--background-dark-3);
+  transition: all 0.2s ease;
+}
+
+.settings-button:hover {
+  fill: var(--font-color-light);
+}
+
 .help-button {
   width: 24px;
   height: 24px;
@@ -237,19 +258,4 @@
 .menu-footer-tokens {
   font-weight: 600;
   color: var(--font-color-light);
-}
-
-.settings-button {
-  margin-top: 10px;
-  padding: 8px 16px;
-  background-color: var(--background-dark-0);
-  color: var(--font-color-light);
-  border: 1px solid var(--outline-color);
-  border-radius: 4px;
-  cursor: pointer;
-  width: 100%;
-}
-
-.settings-button:hover {
-  background-color: var(--background-color-darker);
 }

@@ -6,6 +6,7 @@ import HowTo from './HowTo';
 import ProjectListItem from './ProjectListItem';
 import { SERVER_URL } from "./constants";
 import { ProjectModel, UserModel } from "wc-shared";
+import GearIcon from "./assets/GearIcon";
 
 interface MenuProps {
   user: UserModel;
@@ -71,13 +72,18 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
     <div className="menu-container">
       <div className="menu-header-container">
         <h2 className="app-title-header">Canvo</h2>
-        <button
-          className="help-button"
-          onClick={() => setIsHowToOpen(true)}
-          title="Show Help"
-        >
-          ?
-        </button>
+        <div className="menu-header-buttons-container">
+          <button className="settings-button" onClick={() => setIsSettingsOpen(true)}>
+            <GearIcon />
+          </button>
+          <button
+            className="help-button"
+            onClick={() => setIsHowToOpen(true)}
+            title="Show Help"
+          >
+            ?
+          </button>
+        </div>
       </div>
       <div className="menu-projects-container">
         <div className="menu-projects-header">
@@ -97,7 +103,6 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
       </div>
       <div className="menu-footer-container">
         <p>Token Balance: <span className="menu-footer-tokens">{tokenBalance}</span> </p>
-        <button className="settings-button" onClick={() => setIsSettingsOpen(true)}>Settings</button>
       </div>
       <HowTo isOpen={isHowToOpen} onClose={() => setIsHowToOpen(false)} />
       <SettingsWindow user={user} isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
