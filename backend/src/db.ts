@@ -116,11 +116,10 @@ export namespace Database {
   }
 
   export async function createSubscription(userId: string, planId: string) {
-    const subscriptionId = uuidv4();
     await db.none(`
-      INSERT INTO subscriptions (subscription_id, user_id, plan_id, status)
-      VALUES ($1, $2, $3, $4)
-    `, [subscriptionId, userId, planId, 'active']);
+      INSERT INTO subscriptions (user_id, plan_id, status)
+      VALUES ($1, $2, $3)
+    `, [userId, planId, 'active']);
   }
 
   export async function updateSubscription(subscription: SubscriptionModel) {
