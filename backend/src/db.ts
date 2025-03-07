@@ -44,6 +44,14 @@ export namespace Database {
     return users;
   }
 
+  export async function deleteUser(userId: string) {
+    // Delete everything but billing_transactions
+    await db.none('DELETE FROM users WHERE user_id = $1', [userId]);
+    // Most tables will CASCADE delete, but a few tables need to be deleted explicitly
+    await db.none('DELETE FROM subscriptions WHERE user_id = $1', [userId]);
+    await db.none('DELETE FROM token_transactions WHERE user_id = $1', [userId]);
+  }
+
   ////////////////////////////////////////////////////////////////////////////////
   // Subscriptions
   ////////////////////////////////////////////////////////////////////////////////
