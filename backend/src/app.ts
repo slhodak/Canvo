@@ -301,14 +301,21 @@ apiRouter.get('/get_user', async (req: Request, res: Response) => {
 });
 
 apiRouter.delete('/delete_user', async (req: Request, res: Response) => {
-  const user = await getUserFromSessionToken(req);
-  if (!user) {
-    return res.status(401).json({ error: "Could not find user email from session token" });
+  try {
+    const user = await getUserFromSessionToken(req);
+    if (!user) {
+      return res.status(401).json({ status: 'failed', error: "Could not find user email from session token" });
+    }
+
+    await db.deleteUser(user.userId);
+
+    return res.json({ status: 'success' });
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ status: 'failed', error: error.message });
+    }
+    return res.status(500).json({ status: 'failed', error: "An unknown error occurred" });
   }
-
-  await db.deleteUser(user.userId);
-
-  return res.json({ status: 'success' });
 })
 
 ////////////////////////////////////////////////////////////

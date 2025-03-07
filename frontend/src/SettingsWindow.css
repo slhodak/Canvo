@@ -3,6 +3,16 @@
   flex-direction: column;
 }
 
+.settings-content button {
+  padding: 8px 12px;
+  background-color: var(--background-dark-1);
+  border: 1px solid var(--outline-color);
+  border-radius: 4px;
+  cursor: pointer;
+  align-self: flex-end;
+  line-height: 1rem;
+}
+
 .settings-content p {
   margin: 0px;
 }
@@ -12,15 +22,20 @@
 }
 
 .logout-button {
-  padding: 8px 16px;
-  background-color: var(--background-dark-1);
   color: var(--font-color-light);
-  border: 1px solid var(--outline-color);
-  border-radius: 4px;
-  cursor: pointer;
-  align-self: flex-end;
 }
 
 .logout-button:hover {
+  background-color: var(--background-color-darker);
+}
+
+.delete-user-button {
+  --delete-user-red: rgb(255, 68, 68);
+  color: var(--delete-user-red);
+  border: 1px solid var(--delete-user-red);
+  margin-top: 40px;
+}
+
+.delete-user-button:hover {
   background-color: var(--background-color-darker);
 }

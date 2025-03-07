@@ -33,6 +33,24 @@ const SettingsWindow = ({ user, isOpen, onClose }: SettingsWindowProps) => {
     }
   };
 
+  const handleDeleteUser = async () => {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/delete_user`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        // Reload the page to return to login
+        window.location.reload();
+      } else {
+        console.error('Error deleting user:', data.error);
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+    }
+  };
+
   const fetchUserSubscription = async () => {
     try {
       const response = await fetch(`${SERVER_URL}/sub/get_subscription`, {
@@ -96,6 +114,7 @@ const SettingsWindow = ({ user, isOpen, onClose }: SettingsWindowProps) => {
           )}
 
           <button className="logout-button" onClick={handleLogout}>Log Out</button>
+          <button className="delete-user-button" onClick={handleDeleteUser}>Delete Account</button>
         </div>
       </div>
     </div>
