@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
+
 export const port = 3000;
 
 export const ALLOWED_ORIGIN = process.env.NODE_ENV == 'development' ? 'http://localhost:5173' : 'https://canvo.app';

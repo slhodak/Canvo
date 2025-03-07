@@ -1,7 +1,7 @@
 import humps from 'humps';
-import { BaseNode, IOState } from "wc-shared";
-import { v4 as uuidv4 } from 'uuid';
+import { BaseNode, IOState, UserModel, TransactionType } from "wc-shared";
 import { Database as db } from './db';
+import { SUBSCRIPTION_PLANS } from './constants';
 
 // Check if a value is null or undefined
 export function isNullOrUndefined(value: any): boolean {
@@ -60,8 +60,37 @@ export const camelizeColumns = (data: any) => {
 }
 
 export const createDefaultProject = async (userId: string) => {
-  const projectId = uuidv4();
-  const project = await db.createProject(projectId, userId);
+  const project = await db.createProject(userId, 'Default');
   // Create CSV Node
   return project;
+}
+
+export const addUserTokens = async (user: UserModel) => {
+  const userPlanTier = await db.getHighestPlanTier(user.userId);
+  if (userPlanTier === null) {
+    console.error(`No plan info found for user ${user.userId}, cannot add tokens`);
+    return;
+  }
+
+  const userPlanRules = SUBSCRIPTION_PLANS[userPlanTier];
+  if (userPlanRules === undefined) {
+    console.error(`No plan rules found for tier ${userPlanTier}, cannot add tokens`);
+    return;
+  }
+
+  const tokenBalance = await db.getUserTokenBalance(user.userId);
+  if (tokenBalance === null) {
+    console.warn(`No token balance found for user ${user.userId}, will initialize with ${userPlanRules.tokenAutoAddAmount * 3} tokens`);
+    await db.addTokens(user.userId, userPlanRules.tokenAutoAddAmount * 3);
+    await db.logTokenTransaction(user.userId, userPlanRules.tokenAutoAddAmount * 3, TransactionType.AutoAdd);
+    return;
+  }
+
+  if (tokenBalance < userPlanRules.maxTokens) {
+    const diff = userPlanRules.maxTokens - tokenBalance;
+    const addAmount = diff > userPlanRules.tokenAutoAddAmount ? userPlanRules.tokenAutoAddAmount : diff;
+    console.log(`Granting ${addAmount} tokens to user ${user.userId}`);
+    await db.addTokens(user.userId, addAmount);
+    await db.logTokenTransaction(user.userId, addAmount, TransactionType.AutoAdd);
+  }
 }

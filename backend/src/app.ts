@@ -8,13 +8,13 @@ import { Database as db } from './db';
 import { UserModel } from 'wc-shared';
 import { runPrompt, runSimpleChat } from './llm';
 import stytch from 'stytch';
-import { createDefaultProject, validateNode } from './util';
+import { addUserTokens, createDefaultProject, validateNode } from './util';
 import { LLMResponse } from 'wc-shared';
 import schedule from 'node-schedule';
 import { TransactionType } from 'wc-shared';
 import {
   ALLOWED_ORIGIN, STYTCH_SECRET, STYTCH_PROJECT_ID, sevenDaysInSeconds, SESSION_TOKEN,
-  FRONTEND_DOMAIN, AI_SERVICE_URL, SUBSCRIPTION_PLANS, EMBEDDING_COST, CHAT_COST, SEARCH_COST,
+  FRONTEND_DOMAIN, AI_SERVICE_URL, EMBEDDING_COST, CHAT_COST, SEARCH_COST,
   PROMPT_COST, port
 } from "./constants";
 
@@ -152,12 +152,19 @@ authRouter.get('/authenticate', async (req: Request, res: Response) => {
     if (!user) {
       console.debug("User not found; creating with a free subscription");
       const userId = await db.insertUser(email);
+      const user = await db.getUser(email);
+      if (!user) {
+        console.error("Could not find user after creating");
+        return res.status(500).json({ status: 'failed', error: "Could not find or create user: free plan missing" });
+      }
       const freePlan = await db.getPlanByTier(0);
       if (!freePlan) {
         console.error("Could not find free plan");
         return res.status(500).json({ status: 'failed', error: "Could not find or create user: free plan missing" });
       }
+      console.debug(`Creating subscription and adding 100 bonus tokens to user ${userId}`);
       await db.createSubscription(userId, freePlan.planId);
+      await addUserTokens(user);
       // Create default project
       await createDefaultProject(userId);
     }
@@ -902,33 +909,7 @@ if (process.env.NODE_ENV === 'production') {
 const job = schedule.scheduleJob(rule, async () => {
   const users = await db.getAllUsers();
   for (const user of users) {
-    const userPlanTier = await db.getHighestPlanTier(user.userId);
-    if (userPlanTier === null) {
-      console.error(`No plan info found for user ${user.userId}, cannot add tokens`);
-      continue;
-    }
-
-    const userPlanRules = SUBSCRIPTION_PLANS[userPlanTier];
-    if (userPlanRules === undefined) {
-      console.error(`No plan rules found for tier ${userPlanTier}, cannot add tokens`);
-      continue;
-    }
-
-    const tokenBalance = await db.getUserTokenBalance(user.userId);
-    if (tokenBalance === null) {
-      console.warn(`No token balance found for user ${user.userId}, will initialize with ${userPlanRules.tokenAutoAddAmount} tokens`);
-      await db.addTokens(user.userId, userPlanRules.tokenAutoAddAmount);
-      await db.logTokenTransaction(user.userId, userPlanRules.tokenAutoAddAmount, TransactionType.AutoAdd);
-      continue;
-    }
-
-    if (tokenBalance < userPlanRules.maxTokens) {
-      const diff = userPlanRules.maxTokens - tokenBalance;
-      const addAmount = diff > userPlanRules.tokenAutoAddAmount ? userPlanRules.tokenAutoAddAmount : diff;
-      console.log(`Granting ${addAmount} tokens to user ${user.userId}`);
-      await db.addTokens(user.userId, addAmount);
-      await db.logTokenTransaction(user.userId, addAmount, TransactionType.AutoAdd);
-    }
+    await addUserTokens(user);
   }
 });
 

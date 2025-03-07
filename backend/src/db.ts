@@ -47,7 +47,7 @@ export namespace Database {
   export async function deleteUser(userId: string) {
     await db.tx(async t => {
       await t.none('DELETE FROM subscriptions WHERE user_id = $1', [userId]);
-      await t.none('DELETE FROM token_transactions WHERE user_id = $1', [userId]); 
+      await t.none('DELETE FROM token_transactions WHERE user_id = $1', [userId]);
       // Delete everything but billing_transactions
       await t.none('DELETE FROM users WHERE user_id = $1', [userId]);
       // Most tables will CASCADE delete, but a few tables need to be deleted explicitly
@@ -116,10 +116,11 @@ export namespace Database {
   }
 
   export async function createSubscription(userId: string, planId: string) {
+    const subscriptionId = uuidv4();
     await db.none(`
-      INSERT INTO subscriptions (user_id, plan_id, status)
-      VALUES ($1, $2, $3)
-    `, [userId, planId, 'active']);
+      INSERT INTO subscriptions (subscription_id, user_id, plan_id, status)
+      VALUES ($1, $2, $3, $4)
+    `, [subscriptionId, userId, planId, 'active']);
   }
 
   export async function updateSubscription(subscription: SubscriptionModel) {
