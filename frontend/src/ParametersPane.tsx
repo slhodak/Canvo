@@ -135,7 +135,7 @@ interface PropertyInputProps {
   label: string;
   editable: boolean;
   node: VisualNode;
-  updateNode: (updatedNode: VisualNode, shouldSync?: boolean) => void;
+  updateNode: (updatedNode: VisualNode, parameterChanged?: boolean, shouldSync?: boolean) => void;
 }
 
 ////////////////////////////////////////////////////////////
