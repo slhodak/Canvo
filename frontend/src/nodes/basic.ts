@@ -169,20 +169,23 @@ export class EditNode extends BaseSyncNode {
   public override onInputConnection(inputValues: IOState[], inputIndex: number) {
     // If the input value is an array, try to get the specified index to read from it
     const inputValue = inputValues[inputIndex] as IOState;
+    let content = '';
     if (inputValue.type === IOStateType.StringArray) {
       const index = this.indexSelections[inputIndex] as number;
       if (index !== null) {
-        const value = inputValue.stringArrayValue?.[index] as string || '';
-        this.setProperty('content', value);
+        content = inputValue.stringArrayValue?.[index] as string || '';
+        this.setProperty('content', content);
       } else {
         console.debug(`No array index selected for array at input ${inputIndex}, will default to 0`);
-        const value = inputValue.stringArrayValue?.[0] as string || '';
+        content = inputValue.stringArrayValue?.[0] as string || '';
         this.indexSelections[inputIndex] = 0;
-        this.setProperty('content', value);
+        this.setProperty('content', content);
       }
     } else if (inputValue.type === IOStateType.String) {
-      this.setProperty('content', inputValue.stringValue as string || '');
+      content = inputValue.stringValue as string || '';
+      this.setProperty('content', content);
     }
+    this.outputState = [new IOState({ stringValue: content })];
   }
 
   _run(inputValues: IOState[]): IOState[] {
@@ -190,7 +193,6 @@ export class EditNode extends BaseSyncNode {
     return [new IOState({ stringValue: content })];
   }
 }
-
 
 export class JoinNode extends BaseSyncNode {
   constructor(

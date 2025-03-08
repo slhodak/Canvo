@@ -338,8 +338,9 @@ const NetworkEditor = ({
     if (node?.node.runOnInput()) {
       const priorInputValues = await runPriorDAG(node);
       node.node.onInputConnection(priorInputValues, inputIndex);
+      updateNode(node)
     }
-  }, [nodes, connections, updateConnections, enableIndexSelection, project.projectId, user.userId, runPriorDAG]);
+  }, [nodes, connections, updateNode, updateConnections, enableIndexSelection, project.projectId, user.userId, runPriorDAG]);
 
   //////////////////////////////
   // React Hooks
