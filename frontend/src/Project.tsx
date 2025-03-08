@@ -298,16 +298,15 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   const runNode = useCallback(async (node: VisualNode, shouldSync: boolean = true) => {
     const inputValues = await runPriorDAG(node, shouldSync);
     await _runNodeOnInput(inputValues, node, shouldSync);
-
-    if (node.node.display) {
-      updateViewState(node);
-    }
   }, [runPriorDAG, _runNodeOnInput]);
 
   const selectNode = useCallback(async (node: VisualNode) => {
     setSelectedNode(node);
     if (node.node.runType === NodeRunType.Auto) {
       await runNode(node);
+      if (node.node.display) {
+        updateViewState(node)
+      }
     }
   }, [runNode]);
 
@@ -362,15 +361,17 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     await syncNodeAdd(node.node);
   }, [syncNodeAdd]);
 
-  const updateNode = useCallback(async (node: VisualNode, shouldRun: boolean = true, shouldSync: boolean = true) => {
+  const updateNode = useCallback(async (node: VisualNode, propertyChanged: boolean = true, shouldSync: boolean = true) => {
     setNodes(prevNodes => ({ ...prevNodes, [node.node.nodeId]: node }));
-    // Sometimes the node is only having its coordinates updated, so don't run it
-    if (shouldRun && node.node.runType === NodeRunType.Auto) {
-      // Caller who sets shouldRun doesn't know if the node is auto-run or not--it really means 'should run if auto'
+    if (propertyChanged && node.node.runType === NodeRunType.Auto) {
       await runNode(node, shouldSync);
     } else if (shouldSync) {
       // If the node is not being run, sync it if needed, e.g. on coordinate updates
       await syncNodeUpdate(node.node, SERVER_URL);
+    }
+
+    if (propertyChanged && node.node.display) {
+      updateViewState(node);
     }
   }, [runNode]);
 

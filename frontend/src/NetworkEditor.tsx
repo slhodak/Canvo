@@ -15,7 +15,7 @@ interface NetworkEditorProps {
   enableIndexSelection: (fromNodeId: string, fromOutput: number, toNodeId: string, inputIndex: number) => void;
   disableIndexSelection: (connectionId: string) => void;
   addNode: (node: VisualNode) => void;
-  updateNode: (node: VisualNode, shouldRun?: boolean, shouldSync?: boolean) => Promise<void>;
+  updateNode: (node: VisualNode, propertyChanged?: boolean, shouldSync?: boolean) => Promise<void>;
   deleteNode: (node: VisualNode) => void;
   connections: VisualConnection[];
   updateConnections: (connections: VisualConnection[]) => void;

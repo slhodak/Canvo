@@ -10,7 +10,7 @@ import { FileNode } from './nodes/source';
 
 interface ParametersPaneProps {
   node: VisualNode | null;
-  updateNode: (updatedNode: VisualNode, shouldSync?: boolean) => void;
+  updateNode: (updatedNode: VisualNode, propertyChanged?: boolean, shouldSync?: boolean) => void;
 }
 
 const ParametersPane = ({ node, updateNode }: ParametersPaneProps) => {

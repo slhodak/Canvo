@@ -167,7 +167,7 @@ export class FetchNode extends BaseAsyncNode {
     url: string = '',
     outputState: IOState[] = [],
   ) {
-    super(id, authorId, projectId, 'Fetch', label, display, NodeType.Fetch, 0, 1, coordinates, NodeRunType.Auto, NodeCacheType.Cache, {
+    super(id, authorId, projectId, 'Fetch', label, display, NodeType.Fetch, 0, 1, coordinates, NodeRunType.Manual, NodeCacheType.Cache, {
       url: {
         type: NodePropertyType.String,
         label: 'URL',
@@ -234,7 +234,7 @@ export class CSVNode extends BaseSyncNode {
     lineTerminator: string = '\n',
     outputState: IOState[] = [],
   ) {
-    super(id, authorId, projectId, 'CSV', label, display, NodeType.CSV, 0, 1, coordinates, NodeRunType.Auto, NodeCacheType.Cache, {
+    super(id, authorId, projectId, 'CSV', label, display, NodeType.CSV, 0, 1, coordinates, NodeRunType.None, NodeCacheType.Cache, {
       file: {
         type: NodePropertyType.File,
         label: 'File',
