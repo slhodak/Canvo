@@ -8,6 +8,8 @@ import {
   NodeRunType,
   NodeCacheType,
   BaseNode,
+  NodePropertyValue,
+  NodeProperty,
 } from "wc-shared";
 
 export class SplitNode extends BaseSyncNode {
@@ -165,6 +167,16 @@ export class EditNode extends BaseSyncNode {
   }
 
   public override runOnInput(): boolean { return true; }
+
+  public override setProperty(key: string, value: NodePropertyValue) {
+    if (key === 'content') {
+      const content = value as string || '';
+      this.properties[key].value = content;
+      this.outputState = [new IOState({ stringValue: content })];
+    } else {
+      super.setProperty(key, value);
+    }
+  }
 
   public override onInputConnection(inputValues: IOState[], inputIndex: number) {
     // If the input value is an array, try to get the specified index to read from it
