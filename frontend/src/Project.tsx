@@ -383,6 +383,9 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     }
     deleteConnections(node);
     setNodes(newNodes);
+    if (node.node.display) {
+      setViewState(IOState.ofType(IOStateType.String));
+    }
     await syncNodeDelete(node);
   }, [nodes, selectedNode, syncNodeDelete, deleteConnections]);
 
