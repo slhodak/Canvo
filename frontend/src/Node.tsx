@@ -26,22 +26,18 @@ export const Node = ({ node, isSelected, isDisplaying, connections, wireState, u
   const labelInputRef = useRef<SVGForeignObjectElement>(null);
 
   const handlePortClick = (e: React.MouseEvent, isInputPort: boolean, connectionId: string | null = null, nodeId: string, inputIndex: number) => {
-    if (connectionId) {
+    if (!isInputPort) {
       // Immediately start a new connection if the clicked port is an output port
-      if (isInputPort) {
+      startDrawingWire(nodeId, inputIndex, e.clientX, e.clientY);
+    } else {
+      if (connectionId) {
         if (wireState.isDrawing) {
           endDrawingWire(nodeId, inputIndex);
         } else {
           disconnectWire(connectionId);
         }
       } else {
-        startDrawingWire(nodeId, inputIndex, e.clientX, e.clientY);
-      }
-    } else {
-      if (isInputPort) {
         endDrawingWire(nodeId, inputIndex);
-      } else {
-        startDrawingWire(nodeId, inputIndex, e.clientX, e.clientY);
       }
     }
   }
