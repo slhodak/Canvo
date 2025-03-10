@@ -771,6 +771,7 @@ aiRouter.post('/run_prompt', async (req: Request, res: Response) => {
 
   const result = await runPrompt(prompt, input);
   await db.deductTokens(user.userId, PROMPT_COST);
+  broadcastBalanceUpdate(user.userId, tokenBalance - PROMPT_COST);
   await db.logTokenTransaction(user.userId, PROMPT_COST, TransactionType.Spend);
   return res.json({ status: "success", result });
 });
@@ -804,6 +805,7 @@ aiRouter.post('/embed', async (req: Request, res: Response) => {
 
     // Deduct tokens after successful operation
     await db.deductTokens(user.userId, EMBEDDING_COST);
+    broadcastBalanceUpdate(user.userId, tokenBalance - EMBEDDING_COST);
     await db.logTokenTransaction(user.userId, EMBEDDING_COST, TransactionType.Spend);
 
     return res.json(result);
@@ -844,6 +846,7 @@ aiRouter.post('/search', async (req: Request, res: Response) => {
 
     // Deduct tokens after successful operation
     await db.deductTokens(user.userId, SEARCH_COST);
+    broadcastBalanceUpdate(user.userId, tokenBalance - SEARCH_COST);
     await db.logTokenTransaction(user.userId, SEARCH_COST, TransactionType.Spend);
 
     return res.json(result);
