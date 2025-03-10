@@ -166,6 +166,10 @@ authRouter.get('/authenticate', async (req: Request, res: Response) => {
       console.debug(`Creating subscription and adding 100 bonus tokens to user ${userId}`);
       await db.createSubscription(userId, freePlan.planId);
       await addUserTokens(user);
+      const tokenBalance = await db.getUserTokenBalance(user.userId);
+      if (tokenBalance !== null) {
+        broadcastBalanceUpdate(user.userId, tokenBalance);
+      }
       // Create default project
       await createDefaultProject(userId);
     }
@@ -927,6 +931,10 @@ const job = schedule.scheduleJob(rule, async () => {
   const users = await db.getAllUsers();
   for (const user of users) {
     await addUserTokens(user);
+    const tokenBalance = await db.getUserTokenBalance(user.userId);
+    if (tokenBalance !== null) {
+      broadcastBalanceUpdate(user.userId, tokenBalance);
+    }
   }
 });
 
