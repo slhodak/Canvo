@@ -85,7 +85,7 @@ yarn
 
 echo "Starting the backend..."
 cd ~/canvo/backend/
-sudo yarn start # requires sudo because this is a systemd service
+sudo systemctl start canvo-server
 
 ########################################################
 ### Build the ai-service

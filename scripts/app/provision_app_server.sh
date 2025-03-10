@@ -1,6 +1,12 @@
 #!/bin/bash
 
-# These will be flattened into the root directory after they're copied to the server
+# Exit if this script was not run with sudo
+if [ "$EUID" -ne 0 ]; then
+    echo "Please run this script with sudo"
+    exit 1
+fi
+
+# These script locations are flattened into the root directory when they're copied to the server
 ./install_app_dependencies.sh
 ./configure_nginx.sh
 
