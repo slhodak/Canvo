@@ -9,7 +9,7 @@ import {
   NodeRunType,
   NodeCacheType,
   BaseNode,
-  updateNode,
+  syncNodeUpdate,
 } from "wc-shared";
 import mammoth from 'mammoth';
 import { FileUtils as fu } from "./utils";
@@ -147,7 +147,7 @@ export class TextNode extends BaseSyncNode {
   public override setProperty(key: string, value: string | number) {
     this.properties[key].value = value;
     this.outputState = [new IOState({ stringValue: value as string })];
-    updateNode(this, SERVER_URL);
+    syncNodeUpdate(this, SERVER_URL);
   }
 
   // Every node accepts an array of input values, but sometimes that array is empty
