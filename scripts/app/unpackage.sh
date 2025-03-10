@@ -11,7 +11,7 @@ if [ ! -f /etc/systemd/system/canvo-ai.service ]; then
     exit 1
 fi
 
-if [ ! -f ~/canvo/bundle.tar.gz ]; then
+if [ ! -f ~/bundle.tar.gz ]; then
     echo "bundle.tar.gz must be present to run redeploy"
     exit 1
 fi
@@ -20,47 +20,54 @@ fi
 ### Redeployment
 ########################################################
 
-echo "Erasing existing directories and backing up certain files..."
 
-# If the backend directory doesn't exist, check if the app is running
-if [ ! -d ~/canvo/backend ]; then
-    echo "No canvo/backend directory. If no app is running, press y to continue."
-    read -p "Continue? (y/n): " RESPONSE
-    if [ "$RESPONSE" != "y" ]; then
-        exit 1
-    fi
+# If the canvo directory doesn't exist, create it, otherwise prepare it to be replaced
+if [ ! -d ~/canvo ]; then
+    echo "Canvo directory not found, creating it..."
+    mkdir ~/canvo
 else
-    # If the backend directory exists
-    # Stop the app
-    echo "Stopping the backend..."
-    cd ~/canvo/backend
-    yarn stop
-
-    # Save the db_version.txt file
-    if [[ -f ~/canvo/backend/db/db_version.txt ]]; then
-        mv db/db_version.txt ~/backend-db-version.txt
+    echo "Erasing existing directories and backing up certain files..."
+    # If the backend directory doesn't exist, check if the app is running
+    if [ ! -d ~/canvo/backend ]; then
+        echo "No canvo/backend directory. If no app is running, press y to continue."
+        read -p "Continue? (y/n): " RESPONSE
+        if [ "$RESPONSE" != "y" ]; then
+            exit 1
+        fi
     else
-        echo "No backend db_version.txt file found to backup"
+        # If the backend directory exists
+        # Stop the app
+        echo "Stopping the backend..."
+        cd ~/canvo/backend
+        sudo systemctl stop canvo-server
+
+        # Save the db_version.txt file
+        if [[ -f ~/canvo/backend/db/db_version.txt ]]; then
+            mv db/db_version.txt ~/backend-db-version.txt
+        else
+            echo "No backend db_version.txt file found to backup"
+        fi;
+
+        cd $HOME
+    fi
+
+    # If the ai-service directory exists, save its db_version.txt file
+    if [[ -f ~/canvo/ai-service/db/db_version.txt ]]; then
+        mv ~/canvo/ai-service/db/db_version.txt ~/ai-service-db-version.txt
+    else
+        echo "No AI service db_version.txt file found to backup"
     fi;
 
-    cd $HOME
+    # Erase and remake the folder structure
+    rm -r ~/canvo/backend
+    rm -r ~/canvo/ai-service
+    rm -r ~/canvo/frontend
+    rm -r ~/canvo/shared
 fi
-
-# If the ai-service directory exists, save its db_version.txt file
-if [[ -f ~/canvo/ai-service/db/db_version.txt ]]; then
-    mv ~/canvo/ai-service/db/db_version.txt ~/ai-service-db-version.txt
-else
-    echo "No AI service db_version.txt file found to backup"
-fi;
-
-# Erase and remake the folder structure
-rm -r ~/canvo/backend
-rm -r ~/canvo/ai-service
-rm -r ~/canvo/frontend
-rm -r ~/canvo/shared
 
 echo "Unpacking the bundle..."
 # Unpack
+mv ~/bundle.tar.gz ~/canvo/bundle.tar.gz
 cd ~/canvo
 tar --warning=no-unknown-keyword -xzf bundle.tar.gz
 
@@ -78,7 +85,7 @@ yarn
 
 echo "Starting the backend..."
 cd ~/canvo/backend/
-yarn start
+sudo yarn start # requires sudo because this is a systemd service
 
 ########################################################
 ### Build the ai-service

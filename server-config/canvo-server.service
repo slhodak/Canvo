@@ -7,14 +7,12 @@ Type=simple
 User=ec2-user
 Group=ec2-user
 WorkingDirectory=/home/ec2-user/canvo/backend
-ExecStart=/usr/bin/node /home/ec2-user/canvo/backend/dist/app.js
+ExecStart=yarn start
 Restart=on-failure
 RestartSec=10
-StandardOutput=syslog
-StandardError=syslog
 SyslogIdentifier=canvo-server
-Environment=NODE_ENV=production
-Environment=FRONTEND_PATH=/home/ec2-user/canvo/frontend/dist
+StandardOutput=append:/var/log/canvo-server/out.log
+StandardError=append:/var/log/canvo-server/err.log
 
 [Install]
 WantedBy=multi-user.target

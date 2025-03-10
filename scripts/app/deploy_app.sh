@@ -32,7 +32,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Copy the bundled program to the server
-scp -i "$PEM_PATH" bundle.tar.gz "$SERVER_ADDRESS":~/canvo/bundle.tar.gz
+scp -i "$PEM_PATH" bundle.tar.gz "$SERVER_ADDRESS":~/bundle.tar.gz
 
 # Copy necessary app scripts to the server
 scp -i "$PEM_PATH" scripts/app/unpackage.sh "$SERVER_ADDRESS":~/unpackage.sh

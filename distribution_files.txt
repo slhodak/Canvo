@@ -2,7 +2,6 @@ package.json
 yarn.lock
 
 backend/dist/
-backend/ecosystem.config.js
 backend/package.json
 backend/.env.production
 backend/db/migrations/
