@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import './App.css';
 import Menu from './Menu';
 import Project from './Project';
-import { ProjectModel, UserModel } from 'wc-shared';
-import { getAllProjects, updateProjectTitle } from 'wc-shared';
+import { ProjectModel, UserModel, getAllProjects, updateProjectTitle } from 'wc-shared';
 import { SERVER_URL } from './constants';
 
 interface AppProps {

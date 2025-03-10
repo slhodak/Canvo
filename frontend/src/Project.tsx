@@ -24,7 +24,7 @@ import { VisualNode, VisualConnection } from './NetworkTypes';
 // Utils & Constants
 import { ConnectionUtils as cu, NodeUtils as nu } from './Utils';
 // Don't love this function rename, it's a bit confusing when debugging
-import { updateNode as syncNodeUpdate } from 'wc-shared';
+import { syncNodeUpdate } from 'wc-shared';
 import { SERVER_URL } from './constants';
 
 interface ProjectProps {

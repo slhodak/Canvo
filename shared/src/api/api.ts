@@ -2,7 +2,7 @@ import { BaseNode } from '../models/node';
 import { ProjectModel } from '../models/project';
 import { UserModel } from '../models/user';
 
-export async function updateNode(node: BaseNode, url: string): Promise<boolean> {
+export async function syncNodeUpdate(node: BaseNode, url: string): Promise<boolean> {
   try {
     const response = await fetch(`${url}/api/update_node`, {
       method: 'POST',

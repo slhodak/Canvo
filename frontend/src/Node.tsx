@@ -3,7 +3,8 @@ import './Node.css';
 import { NetworkEditorUtils as neu } from './Utils';
 import { VisualNode, VisualConnection, WireState } from './NetworkTypes';
 import PlayButton from './assets/PlayButton';
-import { NodeRunType, updateNode } from 'wc-shared';
+import { NodeRunType, syncNodeUpdate } from 'wc-shared';
+import { SERVER_URL } from './constants';
 
 interface NodeProps {
   node: VisualNode;
@@ -50,7 +51,7 @@ export const Node = ({ node, isSelected, isDisplaying, connections, wireState, u
     setIsEditingLabel(false);
     if (nodeLabel !== node.node.label) {
       node.node.label = nodeLabel;
-      updateNode(node.node);
+      syncNodeUpdate(node.node, SERVER_URL);
     }
   }, [node, nodeLabel]);
 
