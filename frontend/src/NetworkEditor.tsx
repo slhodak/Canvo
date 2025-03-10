@@ -302,13 +302,13 @@ const NetworkEditor = ({
   //////////////////////////////
 
   const createNewConnection = useCallback(async (fromNodeId: string, fromOutput: number, toNodeId: string, inputIndex: number) => {
-    // Don't create a redundant connection
-    const existingConnection = connections.find(conn => (
+    // Don't create a redundant connection (same from and to)
+    const exactExistingConnection = connections.find(conn => (
       conn.connection.fromNode === fromNodeId &&
       conn.connection.toNode === toNodeId &&
       conn.connection.toInput === inputIndex
     ));
-    if (existingConnection) {
+    if (exactExistingConnection) {
       return;
     }
 

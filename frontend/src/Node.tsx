@@ -25,7 +25,7 @@ export const Node = ({ node, isSelected, isDisplaying, connections, wireState, u
   const [nodeLabel, setNodeLabel] = useState('');
   const labelInputRef = useRef<SVGForeignObjectElement>(null);
 
-  const handleConnectionClick = (e: React.MouseEvent, isInputPort: boolean, connectionId: string | null = null, nodeId: string, inputIndex: number) => {
+  const handlePortClick = (e: React.MouseEvent, isInputPort: boolean, connectionId: string | null = null, nodeId: string, inputIndex: number) => {
     if (connectionId) {
       // Immediately start a new connection if the clicked port is an output port
       if (isInputPort) {
@@ -194,7 +194,7 @@ export const Node = ({ node, isSelected, isDisplaying, connections, wireState, u
               r={neu.PORT_RADIUS}
               onMouseDown={(e) => {
                 e.stopPropagation();
-                handleConnectionClick(e, true, connection?.connection.connectionId, node.node.nodeId, i)
+                handlePortClick(e, true, connection?.connection.connectionId, node.node.nodeId, i)
               }}
               className={`node-input-port ${connection && "connected"} ${wireState.isDrawing && "drawing"}`}
             />
@@ -217,7 +217,7 @@ export const Node = ({ node, isSelected, isDisplaying, connections, wireState, u
             r={neu.PORT_RADIUS}
             onMouseDown={(e) => {
               e.stopPropagation();
-              handleConnectionClick(e, false, connection?.connection.connectionId, node.node.nodeId, i)
+              handlePortClick(e, false, connection?.connection.connectionId, node.node.nodeId, i)
             }}
             className="node-output-port"
           />
