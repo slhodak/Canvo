@@ -65,14 +65,15 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   }, [project.title]);
 
   // Notice that this only displays the first output state
-  const updateViewState = (node: VisualNode) => {
+  const updateViewState = useCallback((node: VisualNode) => {
+    console.debug(`Updating view state for node ${node.node.nodeId}`);
     const outputState = node.node.outputState[0];
     if (outputState === null || outputState === undefined || outputState.isEmpty()) {
       setViewState(IOState.ofType(IOStateType.String));
     } else {
       setViewState(outputState);
     }
-  }
+  }, []);
 
   const updateDisplayedNode = async (node: VisualNode) => {
     // In every case where a node display is changed, ensure it is synced too
@@ -92,7 +93,6 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       } else {
         syncNodeUpdate(node.node, SERVER_URL);
       }
-      updateViewState(node);
     } else {
       setViewState(IOState.ofType(IOStateType.String));
       syncNodeUpdate(node.node, SERVER_URL);
@@ -151,7 +151,7 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     } catch (error) {
       console.error('Error fetching nodes for project:', error);
     }
-  }, [project]);
+  }, [project, updateViewState]);
 
   const fetchConnectionsForProject = useCallback(async () => {
     console.debug('Fetching connections for project:', project.projectId);
@@ -298,15 +298,15 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   const runNode = useCallback(async (node: VisualNode, shouldSync: boolean = true) => {
     const inputValues = await runPriorDAG(node, shouldSync);
     await _runNodeOnInput(inputValues, node, shouldSync);
-  }, [runPriorDAG, _runNodeOnInput]);
+    if (node.node.display) {
+      updateViewState(node);
+    }
+  }, [runPriorDAG, _runNodeOnInput, updateViewState]);
 
   const selectNode = useCallback(async (node: VisualNode) => {
     setSelectedNode(node);
     if (node.node.runType === NodeRunType.Auto) {
       await runNode(node);
-      if (node.node.display) {
-        updateViewState(node)
-      }
     }
   }, [runNode]);
 
@@ -368,10 +368,6 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
     } else if (shouldSync) {
       // If the node is not being run, sync it if needed, e.g. on coordinate updates
       await syncNodeUpdate(node.node, SERVER_URL);
-    }
-
-    if (propertyChanged && node.node.display) {
-      updateViewState(node);
     }
   }, [runNode]);
 
