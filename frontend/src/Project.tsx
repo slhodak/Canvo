@@ -89,9 +89,10 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
       });
       setNodes(newNodes);
       if (node.node.runType === NodeRunType.Auto) {
-        await runNode(node); // runNode will sync the node after it is run
+        await runNode(node);
       } else {
         syncNodeUpdate(node.node, SERVER_URL);
+        updateViewState(node);
       }
     } else {
       setViewState(IOState.ofType(IOStateType.String));
