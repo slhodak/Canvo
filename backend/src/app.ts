@@ -876,6 +876,10 @@ tokenRouter.post('/add', async (req: Request, res: Response) => {
     }
 
     await db.addTokens(user.userId, amount);
+    const tokenBalance = await db.getUserTokenBalance(user.userId);
+    if (tokenBalance !== null) {
+      broadcastBalanceUpdate(user.userId, tokenBalance);
+    }
     await db.logTokenTransaction(user.userId, amount, TransactionType.Purchase);
     return res.json({ status: "success" });
   } catch (error) {
