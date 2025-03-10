@@ -1,0 +1,20 @@
+[Unit]
+Description=Express Web Server
+After=network.target
+
+[Service]
+Type=simple
+User=ec2-user
+Group=ec2-user
+WorkingDirectory=/home/ec2-user/canvo/backend
+ExecStart=/usr/bin/node /home/ec2-user/canvo/backend/dist/app.js
+Restart=on-failure
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=canvo-server
+Environment=NODE_ENV=production
+Environment=FRONTEND_PATH=/home/ec2-user/canvo/frontend/dist
+
+[Install]
+WantedBy=multi-user.target
