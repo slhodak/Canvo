@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import './NetworkEditor.css';
 import { VisualNode, VisualConnection, DragState, WireState } from './NetworkTypes';
 import { Node } from './Node';
-import { NodeUtils as nu, ConnectionUtils as cu, NetworkEditorUtils as neu } from './Utils';
+import { NodeUtils as nu, ConnectionUtils as cu, NetworkEditorUtils as neu, DAG } from './Utils';
 import { Coordinates, NodeType, NodeGroups, IOState, Connection, ProjectModel, UserModel } from 'wc-shared';
 
 interface NetworkEditorProps {
@@ -20,7 +20,6 @@ interface NetworkEditorProps {
   connections: VisualConnection[];
   updateConnections: (connections: VisualConnection[]) => void;
   runNode: (node: VisualNode) => void;
-  runPriorDAG: (node: VisualNode, shouldSync?: boolean) => Promise<IOState[]>;
 }
 
 const NetworkEditor = ({
@@ -38,7 +37,6 @@ const NetworkEditor = ({
   connections,
   updateConnections,
   runNode,
-  runPriorDAG,
 }: NetworkEditorProps) => {
   const [mousePosition, setMousePosition] = useState<Coordinates>({ x: 0, y: 0 });
   const [isHoveringEditor, setIsHoveringEditor] = useState(false);
@@ -329,16 +327,18 @@ const NetworkEditor = ({
     };
     newConnections.push(newConnection);
     enableIndexSelection(fromNodeId, fromOutput, toNodeId, inputIndex);
-    updateConnections(newConnections);
+    updateConnections(newConnections); // this updates the connections async, so running the prior dag is not guaranteed to see the new connection
+    // I could have an option to run the prior dag with the new set of connections here. there may also be cases where I want to give it an updated set of nodes
+
     const node = nodes[toNodeId];
     if (node?.node.runOnInput()) {
-      const priorInputValues = await runPriorDAG(node);
+      const priorInputValues = await DAG.runPriorDAG(newConnections, nodes, node, true);
       node.node.onInputConnection(priorInputValues, inputIndex);
       runNode(node);
       // update it but do not run it again
       updateNode(node, false, true);
     }
-  }, [nodes, connections, updateNode, updateConnections, enableIndexSelection, project.projectId, user.userId, runPriorDAG, runNode]);
+  }, [nodes, connections, updateNode, updateConnections, enableIndexSelection, project.projectId, user.userId, runNode]);
 
   //////////////////////////////
   // React Hooks

@@ -1,5 +1,49 @@
-import { VisualNode } from "./NetworkTypes";
-import { BaseNode, NodeType, Coordinates } from "wc-shared";
+import { VisualNode, VisualConnection } from "./NetworkTypes";
+import { BaseNode, NodeType, Coordinates, BaseSyncNode, BaseAsyncNode, IOState, IOStateType, NodeRunType, NodeCacheType } from "wc-shared";
+import { syncNodeUpdate } from 'wc-shared';
+import { SERVER_URL } from './constants';
+
+export const DAG = {
+  // For each input connection to this node, get or calculate the input from that connection
+  // If this node is a Run node, run it once you've gathered all the input values
+  runPriorDAG: async (connections: VisualConnection[], nodes: Record<string, VisualNode>, node: VisualNode, shouldSync: boolean = true): Promise<IOState[]> => {
+    const inputConnections = connections.filter(conn => conn.connection.toNode === node.node.nodeId);
+    const inputValues: IOState[] = [];
+    for (const conn of inputConnections) {
+      const inputNode = nodes[conn.connection.fromNode];
+      if (!inputNode) {
+        console.warn("Input node not found for connection:", conn.connection.connectionId);
+        inputValues.push(IOState.ofType(IOStateType.Empty));
+        continue;
+      };
+
+      const outputState = inputNode.node.outputState[conn.connection.fromOutput];
+      if (outputState === null) {
+        console.warn("Output state not found for connection:", conn.connection.connectionId);
+        inputValues.push(IOState.ofType(IOStateType.Empty));
+        continue;
+      }
+
+      // If node caches its output, do not run it
+      if (inputNode.node.cacheType === NodeCacheType.Cache) {
+        inputValues.push(outputState);
+        continue;
+      }
+
+      if (inputNode.node.runType === NodeRunType.Auto) {
+        const priorInputValues = await DAG.runPriorDAG(connections, nodes, inputNode, shouldSync);
+        const calculatedIOState = await NodeUtils.runNodeOnInput(priorInputValues, inputNode, shouldSync);
+        inputValues.push(...calculatedIOState);
+        continue;
+      }
+
+      // Have to push something for each input value just in case the run method will fail with an incorrect-length input
+      // But it shouldn't... and there shouldn't even be any nodes that are neither cached nor auto-run
+      inputValues.push(IOState.ofType(IOStateType.Empty));
+    }
+    return inputValues;
+  },
+}
 
 export const NetworkEditorUtils = {
   NODE_WIDTH: 100,
@@ -19,6 +63,21 @@ export const NetworkEditorUtils = {
 
 // I do not like that we have two of the same switch statement here, but for now... c'est la vie
 export const NodeUtils = {
+  runNodeOnInput: async (inputValues: IOState[], node: VisualNode, shouldSync: boolean = true): Promise<IOState[]> => {
+    let outputValues: IOState[] = [];
+    if (node.node instanceof BaseSyncNode) {
+      outputValues = node.node.run(inputValues);
+    } else if (node.node instanceof BaseAsyncNode) {
+      outputValues = await node.node.run(inputValues);
+    }
+
+    if (shouldSync) {
+      await syncNodeUpdate(node.node, SERVER_URL);
+    }
+
+    return outputValues;
+  },
+
   async newNode(type: NodeType, authorId: string, projectId: string, coordinates: Coordinates): Promise<BaseNode | null> {
     const nodeId = crypto.randomUUID();
     switch (type) {

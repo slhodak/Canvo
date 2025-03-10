@@ -12,9 +12,6 @@ import {
   NodeRunType,
   IOState,
   IOStateType,
-  BaseAsyncNode,
-  BaseSyncNode,
-  NodeCacheType,
   ProjectModel,
   Connection,
   UserModel,
@@ -22,7 +19,7 @@ import {
 import { VisualNode, VisualConnection } from './NetworkTypes';
 
 // Utils & Constants
-import { ConnectionUtils as cu, NodeUtils as nu } from './Utils';
+import { ConnectionUtils as cu, DAG, NodeUtils as nu } from './Utils';
 // Don't love this function rename, it's a bit confusing when debugging
 import { syncNodeUpdate } from 'wc-shared';
 import { SERVER_URL } from './constants';
@@ -241,68 +238,13 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
   // Run & Select Nodes
   //////////////////////////////
 
-  const _runNodeOnInput = useCallback(async (inputValues: IOState[], node: VisualNode, shouldSync: boolean = true): Promise<IOState[]> => {
-    let outputValues: IOState[] = [];
-    if (node.node instanceof BaseSyncNode) {
-      outputValues = node.node.run(inputValues);
-    } else if (node.node instanceof BaseAsyncNode) {
-      outputValues = await node.node.run(inputValues);
-    }
-
-    if (shouldSync) {
-      await syncNodeUpdate(node.node, SERVER_URL);
-    }
-
-    return outputValues;
-  }, []);
-
-  // For each input connection to this node, get or calculate the input from that connection
-  // If this node is a Run node, run it once you've gathered all the input values
-  const runPriorDAG = useCallback(async (node: VisualNode, shouldSync: boolean = true): Promise<IOState[]> => {
-    const inputConnections = connections.filter(conn => conn.connection.toNode === node.node.nodeId);
-    const inputValues: IOState[] = [];
-    for (const conn of inputConnections) {
-      const inputNode = nodes[conn.connection.fromNode];
-      if (!inputNode) {
-        console.warn("Input node not found for connection:", conn.connection.connectionId);
-        inputValues.push(IOState.ofType(IOStateType.Empty));
-        continue;
-      };
-
-      const outputState = inputNode.node.outputState[conn.connection.fromOutput];
-      if (outputState === null) {
-        console.warn("Output state not found for connection:", conn.connection.connectionId);
-        inputValues.push(IOState.ofType(IOStateType.Empty));
-        continue;
-      }
-
-      // If node caches its output, do not run it
-      if (inputNode.node.cacheType === NodeCacheType.Cache) {
-        inputValues.push(outputState);
-        continue;
-      }
-
-      if (inputNode.node.runType === NodeRunType.Auto) {
-        const priorInputValues = await runPriorDAG(inputNode, shouldSync);
-        const calculatedIOState = await _runNodeOnInput(priorInputValues, inputNode, shouldSync);
-        inputValues.push(...calculatedIOState);
-        continue;
-      }
-
-      // Have to push something for each input value just in case the run method will fail with an incorrect-length input
-      // But it shouldn't... and there shouldn't even be any nodes that are neither cached nor auto-run
-      inputValues.push(IOState.ofType(IOStateType.Empty));
-    }
-    return inputValues;
-  }, [nodes, connections, _runNodeOnInput]);
-
   const runNode = useCallback(async (node: VisualNode, shouldSync: boolean = true) => {
-    const inputValues = await runPriorDAG(node, shouldSync);
-    await _runNodeOnInput(inputValues, node, shouldSync);
+    const inputValues = await DAG.runPriorDAG(connections, nodes, node, shouldSync);
+    await nu.runNodeOnInput(inputValues, node, shouldSync);
     if (node.node.display) {
       updateViewState(node);
     }
-  }, [runPriorDAG, _runNodeOnInput, updateViewState]);
+  }, [connections, nodes, updateViewState]);
 
   const selectNode = useCallback(async (node: VisualNode) => {
     setSelectedNode(node);
@@ -462,7 +404,6 @@ const Project = ({ user, project, handleProjectTitleChange }: ProjectProps) => {
               connections={connections}
               updateConnections={updateConnections}
               runNode={runNode}
-              runPriorDAG={runPriorDAG}
             />
           </div>
 
