@@ -21,6 +21,7 @@ import {
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 const app: Express = express();
+const websocketClients = new Map<WebSocket, { userId: string }>();
 
 const stytchClient = new stytch.Client({
   project_id: STYTCH_PROJECT_ID,
@@ -719,27 +720,36 @@ aiRouter.use('/', (req: Request, res: Response, next: NextFunction) => {
 });
 
 aiRouter.post('/chat', async (req: Request, res: Response) => {
-  const user = await getUserFromSessionToken(req);
-  if (!user) {
-    return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
-  }
+  try {
+    const user = await getUserFromSessionToken(req);
+    if (!user) {
+      return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
+    }
 
-  const { projectId, nodeId, messages, brevity } = req.body;
-  if (!projectId || !nodeId || !messages || brevity === undefined) {
-    return res.status(400).json({ status: "failed", error: "No projectId or nodeId or messages or brevity provided" });
-  }
+    const { projectId, nodeId, messages, brevity } = req.body;
+    if (!projectId || !nodeId || !messages || brevity === undefined) {
+      return res.status(400).json({ status: "failed", error: "No projectId or nodeId or messages or brevity provided" });
+    }
 
-  // Check token balance
-  const tokenBalance = await db.getUserTokenBalance(user.userId);
-  if (tokenBalance === null || tokenBalance < CHAT_COST) {
-    return res.status(403).json({ status: "failed", error: "Insufficient tokens for this prompt", cost: CHAT_COST, balance: tokenBalance });
-  }
+    // Check token balance
+    const tokenBalance = await db.getUserTokenBalance(user.userId);
+    if (tokenBalance === null || tokenBalance < CHAT_COST) {
+      return res.status(403).json({ status: "failed", error: "Insufficient tokens for this prompt", cost: CHAT_COST, balance: tokenBalance });
+    }
 
-  // TODO: Validate messages payload
-  const result = await runSimpleChat(messages, brevity);
-  await db.deductTokens(user.userId, CHAT_COST);
-  await db.logTokenTransaction(user.userId, CHAT_COST, TransactionType.Spend);
-  return res.json({ status: "success", result });
+    // TODO: Validate messages payload
+    const result = await runSimpleChat(messages, brevity);
+    await db.deductTokens(user.userId, CHAT_COST);
+    broadcastBalanceUpdate(user.userId, tokenBalance - CHAT_COST);
+    await db.logTokenTransaction(user.userId, CHAT_COST, TransactionType.Spend);
+    return res.json({ status: "success", result });
+  } catch (error) {
+    console.error('Error running chat:', error);
+    if (error instanceof Error) {
+      return res.status(500).json({ status: "failed", error: error.message });
+    }
+    return res.status(500).json({ status: "failed", error: "An unknown error occurred" });
+  }
 });
 
 aiRouter.post('/run_prompt', async (req: Request, res: Response) => {
@@ -913,6 +923,61 @@ const job = schedule.scheduleJob(rule, async () => {
   }
 });
 
+
+///////////////////////////////////////
+// WebSocket Server
+///////////////////////////////////////
+import http from 'http';
+import { Server, WebSocket } from 'ws';
+
+const server = http.createServer(app);
+
+const wss = new Server({
+  server,
+  path: '/token/ws'
+});
+
+// Connection Event
+wss.on('connection', (ws) => {
+  console.log('Client connected');
+  // Handle messages from clients
+  ws.on('message', async (message: string) => {
+    // Handle different message types
+    const data = JSON.parse(message);
+    if (data.userId) {
+      websocketClients.set(ws, { userId: data.userId });
+      const balance = await db.getUserTokenBalance(data.userId);
+      if (balance !== null) {
+        ws.send(JSON.stringify({ type: 'CONNECTED', balance }));
+      }
+    }
+
+    if (data.type === 'GET_BALANCE') {
+      const userInfo = websocketClients.get(ws);
+      if (userInfo) {
+        const balance = await db.getUserTokenBalance(userInfo.userId);
+        if (balance !== null) {
+          ws.send(JSON.stringify({ type: 'BALANCE_UPDATE', balance }));
+        }
+      }
+    }
+  })
+
+  // Handle disconnections
+  ws.on('close', () => {
+    websocketClients.delete(ws);
+    console.log('Client disconnected');
+  })
+});
+
+// Broadcast balance updates to specific users
+function broadcastBalanceUpdate(userId: string, balance: number) {
+  for (const [client, info] of websocketClients.entries()) {
+    if (info.userId === userId) {
+      client.send(JSON.stringify({ type: 'BALANCE_UPDATE', balance }));
+    }
+  }
+}
 // Start Server
 // Routes
 app.use('/auth', authRouter);
@@ -921,7 +986,10 @@ app.use('/ai', aiRouter);
 app.use('/token', tokenRouter);
 app.use('/sub', subscriptionRouter);
 
-app.listen(port, '0.0.0.0', () => {
+// app.listen(port, '0.0.0.0', () => {
+//   console.log(`Server is running on port ${port}`);
+// });
+
+server.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on port ${port}`);
 });
-

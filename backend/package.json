@@ -15,6 +15,7 @@
     "@types/humps": "^2.0.6",
     "@types/node": "^22.10.5",
     "@types/node-schedule": "^2.1.7",
+    "@types/ws": "^8.18.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "cross-env": "5.0.5",

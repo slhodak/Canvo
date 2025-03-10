@@ -16,10 +16,56 @@ interface MenuProps {
   fetchAllProjects: () => void;
 }
 
+const useTokenBalance = (user: UserModel) => {
+  const [tokenBalance, setTokenBalance] = useState<number>(0);
+  const [socket, setSocket] = useState<WebSocket | null>(null);
+
+  useEffect(() => {
+    // Create socket connection
+    const ws = new WebSocket(`${SERVER_URL}/token/ws`);
+    // Connection opened
+    ws.onopen = () => {
+      console.log('Connected to token balance server');
+      ws.send(JSON.stringify({ userId: user.userId }));
+    }
+    // Listen for messages
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'BALANCE_UPDATE') {
+        setTokenBalance(data.balance);
+      } else if (data.type === 'CONNECTED') {
+        setTokenBalance(data.balance);
+      }
+    }
+    // Handle errors
+    ws.onerror = (event) => {
+      console.error('Token balance server error:', event);
+    }
+    // Connection closed
+    ws.onclose = () => {
+      console.log('Disconnected from token balance server');
+    }
+    // Store socket in state
+    setSocket(ws);
+    // Cleanup on unmount
+    return () => {
+      ws.close();
+    }
+  }, [user.userId]);
+
+  const requestTokenBalance = () => {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ type: 'GET_BALANCE' }));
+    }
+  }
+
+  return { tokenBalance, requestTokenBalance };
+}
+
 const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuProps) => {
   const [isHowToOpen, setIsHowToOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [tokenBalance, setTokenBalance] = useState(0);
+  const { tokenBalance, requestTokenBalance } = useTokenBalance(user);
 
   const createProject = async () => {
     try {
@@ -55,18 +101,6 @@ const Menu = ({ user, project, setProject, projects, fetchAllProjects }: MenuPro
       console.error('Error deleting project:', error);
     }
   }
-  useEffect(() => {
-    const fetchTokenBalance = async () => {
-      const response = await fetch(`${SERVER_URL}/token/get_balance`, {
-        credentials: 'include',
-      });
-      const data = await response.json();
-      if (data.status == 'success') {
-        setTokenBalance(data.tokenBalance);
-      }
-    }
-    fetchTokenBalance();
-  }, []);
 
   return (
     <div className="menu-container">
