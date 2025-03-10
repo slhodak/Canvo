@@ -16,11 +16,11 @@ interface NodeProps {
   handleMouseDown: (e: React.MouseEvent, nodeId: string) => void;
   startDrawingWire: (nodeId: string, outputIndex: number, startX: number, startY: number) => void;
   endDrawingWire: (toNodeId: string, inputIndex: number) => void;
-  disconnectWire: (connectionId: string) => void;
+  deleteConnection: (connectionId: string) => void;
   runNode: (node: VisualNode, shouldSync?: boolean) => void;
 }
 
-export const Node = ({ node, isSelected, isDisplaying, connections, wireState, updateDisplayedNode, handleMouseDown, startDrawingWire, endDrawingWire, disconnectWire, runNode }: NodeProps) => {
+export const Node = ({ node, isSelected, isDisplaying, connections, wireState, updateDisplayedNode, handleMouseDown, startDrawingWire, endDrawingWire, deleteConnection, runNode }: NodeProps) => {
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [nodeLabel, setNodeLabel] = useState('');
   const labelInputRef = useRef<SVGForeignObjectElement>(null);
@@ -30,11 +30,11 @@ export const Node = ({ node, isSelected, isDisplaying, connections, wireState, u
       // Immediately start a new connection if the clicked port is an output port
       startDrawingWire(nodeId, inputIndex, e.clientX, e.clientY);
     } else {
-      if (connectionId) {
+      if (connectionId) { // An existing connection
         if (wireState.isDrawing) {
           endDrawingWire(nodeId, inputIndex);
         } else {
-          disconnectWire(connectionId);
+          deleteConnection(connectionId);
         }
       } else {
         endDrawingWire(nodeId, inputIndex);

@@ -93,6 +93,7 @@ const NetworkEditor = ({
   }
 
   const deleteConnection = (connectionId: string) => {
+    disableIndexSelection(connectionId);
     updateConnections(connections.filter(conn => conn.connection.connectionId !== connectionId));
   }
 
@@ -255,11 +256,6 @@ const NetworkEditor = ({
         endY: y,
       });
     }
-  };
-
-  const disconnectWire = (connectionId: string) => {
-    disableIndexSelection(connectionId);
-    deleteConnection(connectionId);
   };
 
   const endDrawingWire = (toNodeId: string, inputIndex: number) => {
@@ -467,7 +463,7 @@ const NetworkEditor = ({
                 handleMouseDown={handleMouseDownInNode}
                 startDrawingWire={startDrawingWire}
                 endDrawingWire={endDrawingWire}
-                disconnectWire={disconnectWire}
+                deleteConnection={deleteConnection}
                 runNode={runNode}
               />
             );
