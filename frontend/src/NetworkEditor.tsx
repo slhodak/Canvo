@@ -327,11 +327,11 @@ const NetworkEditor = ({
     };
     newConnections.push(newConnection);
     enableIndexSelection(fromNodeId, fromOutput, toNodeId, inputIndex);
-    updateConnections(newConnections); // this updates the connections async, so running the prior dag is not guaranteed to see the new connection
-    // I could have an option to run the prior dag with the new set of connections here. there may also be cases where I want to give it an updated set of nodes
+    updateConnections(newConnections);
 
     const node = nodes[toNodeId];
     if (node?.node.runOnInput()) {
+      // Provide the new connections because updateConnections above completes asynchronously
       const priorInputValues = await DAG.runPriorDAG(newConnections, nodes, node, true);
       node.node.onInputConnection(priorInputValues, inputIndex);
       runNode(node);
