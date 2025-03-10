@@ -338,10 +338,9 @@ const NetworkEditor = ({
     if (node?.node.runOnInput()) {
       const priorInputValues = await runPriorDAG(node);
       node.node.onInputConnection(priorInputValues, inputIndex);
-      updateNode(node, false, true); // say false here to not redundantly run the node, and also, no property was changed
-      // updateNode will run the node if it is Auto-run,
-      // but runOnInput exists to run nodes that are not Auto-run when they get a new input
       runNode(node);
+      // update it but do not run it again
+      updateNode(node, false, true);
     }
   }, [nodes, connections, updateNode, updateConnections, enableIndexSelection, project.projectId, user.userId, runPriorDAG, runNode]);
 
