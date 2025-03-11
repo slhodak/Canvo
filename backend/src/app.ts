@@ -952,6 +952,14 @@ const wss = new Server({
   path: '/token/ws'
 });
 
+wss.on('error', (error) => {
+  if (error instanceof Error) {
+    console.error('WebSocket server error:', error.message);
+  } else {
+    console.error('WebSocket server error:', error);
+  }
+})
+
 // Connection Event
 wss.on('connection', (ws) => {
   console.log('Client connected');
