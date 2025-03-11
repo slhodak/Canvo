@@ -4,7 +4,7 @@ import PlusIcon from "./assets/PlusIcon";
 import SettingsWindow from './SettingsWindow';
 import HowTo from './HowTo';
 import ProjectListItem from './ProjectListItem';
-import { SERVER_URL } from "./constants";
+import { SOCKET_URL, SERVER_URL } from "./constants";
 import { ProjectModel, UserModel } from "wc-shared";
 import GearIcon from "./assets/GearIcon";
 
@@ -22,7 +22,7 @@ const useTokenBalance = (user: UserModel) => {
 
   useEffect(() => {
     // Create socket connection
-    const ws = new WebSocket(`${SERVER_URL}/token/ws`);
+    const ws = new WebSocket(`${SOCKET_URL}/token/ws`);
     // Connection opened
     ws.onopen = () => {
       console.log('Connected to token balance server');
