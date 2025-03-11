@@ -978,6 +978,14 @@ wss.on('connection', (ws) => {
     }
   })
 
+  ws.on('error', (error) => {
+    if (error instanceof Error) {
+      console.error('WebSocket error:', error.message);
+    } else {
+      console.error('WebSocket error:', error);
+    }
+  })
+
   // Handle disconnections
   ws.on('close', () => {
     websocketClients.delete(ws);
