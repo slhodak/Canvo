@@ -9,8 +9,59 @@ import {
   NodeCacheType,
   BaseNode,
   NodePropertyValue,
-  NodeProperty,
 } from "wc-shared";
+
+// Append node adds a string to the end of an input string
+export class AppendNode extends BaseSyncNode {
+  constructor(
+    id: string,
+    authorId: string,
+    projectId: string,
+    coordinates: Coordinates,
+    label: string = 'append',
+    display: boolean = false,
+    value: string = '',
+    outputState: IOState[] = [],
+    indexSelections: (number | null)[] = [],
+  ) {
+    super(id, authorId, projectId, 'Append', label, display, NodeType.Append, 1, 1, coordinates, NodeRunType.Auto, NodeCacheType.NoCache,
+      {
+        "value": {
+          type: NodePropertyType.String,
+          label: 'String',
+          value: value,
+          editable: true,
+          displayed: true,
+        }
+      }, [IOStateType.String], outputState, indexSelections);
+  }
+
+  public static override fromObject(object: BaseNode): BaseNode {
+    return new AppendNode(
+      object.nodeId,
+      object.authorId,
+      object.projectId,
+      object.coordinates,
+      object.label,
+      object.display,
+      object.properties.value.value as string,
+      object.outputState.map(IOState.fromObject),
+      object.indexSelections
+    );
+  }
+
+  protected override resetOutputState(): void {
+    this.outputState = [IOState.ofType(IOStateType.String)];
+  }
+
+  _run(inputValues: IOState[]): IOState[] {
+    const inputValue = inputValues[0]?.stringValue as string;
+    if (!inputValue) {
+      return [IOState.ofType(IOStateType.String)];
+    }
+    return [new IOState({ stringValue: inputValue + this.properties.value.value as string })];
+  }
+}
 
 export class SplitNode extends BaseSyncNode {
   constructor(

@@ -101,6 +101,10 @@ export const NodeUtils = {
         const { SaveNode } = (await import("./nodes/output"));
         return new SaveNode(nodeId, authorId, projectId, coordinates);
       }
+      case NodeType.Append: {
+        const { AppendNode } = (await import("./nodes/basic"));
+        return new AppendNode(nodeId, authorId, projectId, coordinates);
+      }
       case NodeType.Merge: {
         const { MergeNode } = (await import("./nodes/basic"));
         return new MergeNode(nodeId, authorId, projectId, coordinates);
@@ -175,6 +179,10 @@ export const NodeUtils = {
       case NodeType.Save: {
         const { SaveNode } = (await import("./nodes/output"));
         return SaveNode.fromObject(object);
+      }
+      case NodeType.Append: {
+        const { AppendNode } = (await import("./nodes/basic"));
+        return AppendNode.fromObject(object);
       }
       case NodeType.Merge: {
         const { MergeNode } = (await import("./nodes/basic"));

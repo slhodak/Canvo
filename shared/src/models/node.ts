@@ -6,6 +6,7 @@ export enum NodeType {
   Fetch = 'fetch',
 
   // Basic text processing
+  Append = 'append',
   Merge = 'merge',
   Split = 'split',
   Join = 'join',
@@ -30,7 +31,7 @@ export enum NodeType {
 // Must add the node type here for it to be available in the Add Node Dropdown
 export const NodeGroups = {
   Source: [NodeType.Text, NodeType.File, NodeType.CSV, NodeType.Fetch],
-  Basic: [NodeType.Merge, NodeType.Split, NodeType.Join, NodeType.Replace, NodeType.Edit],
+  Basic: [NodeType.Append, NodeType.Merge, NodeType.Split, NodeType.Join, NodeType.Replace, NodeType.Edit],
   Intelligent: [NodeType.Chat, NodeType.Prompt, NodeType.Embed, NodeType.Search],
   Utility: [NodeType.Cache, NodeType.Pick, NodeType.Stats],
   Output: [NodeType.Save],
