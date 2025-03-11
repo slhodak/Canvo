@@ -46,6 +46,7 @@ export const EMBEDDING_COST = 1;  // Cost per document embedded
 export const SEARCH_COST = 1;    // Cost per search query
 export const PROMPT_COST = 3;   // Cost per prompt run
 export const CHAT_COST = 3;   // Cost per chat message
+export const SUMMARIZE_COST = 2;   // Cost per summarize run
 
 // Stytch Authentication
 export const STYTCH_PROJECT_ID = ((): string => {

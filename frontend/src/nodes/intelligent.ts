@@ -439,3 +439,55 @@ export class ChatNode extends BaseAsyncNode {
     return formatted;
   }
 }
+
+export class SummarizeNode extends BaseAsyncNode {
+  constructor(
+    id: string,
+    authorId: string,
+    projectId: string,
+    coordinates: Coordinates,
+    label: string = 'summarize',
+    display: boolean = false,
+    outputState: IOState[] = [],
+  ) {
+    super(id, authorId, projectId, 'Summarize', label, display, NodeType.Summarize, 1, 1, coordinates, NodeRunType.Manual, NodeCacheType.Cache,
+      {}, [IOStateType.String], outputState);
+  }
+
+  public static override fromObject(object: BaseNode): BaseNode {
+    return new SummarizeNode(
+      object.nodeId,
+      object.authorId,
+      object.projectId,
+      object.coordinates,
+      object.label,
+      object.display,
+      object.outputState.map(IOState.fromObject),
+    );
+  }
+
+  protected override resetOutputState(): void {
+    this.outputState = [IOState.ofType(IOStateType.String)];
+  }
+
+  async _run(inputValues: IOState[]): Promise<IOState[]> {
+    if (!inputValues[0]?.stringValue) return this.outputState;
+
+    const input = inputValues[0].stringValue;
+    const response = await fetch(`${SERVER_URL}/ai/summarize`, {
+      credentials: 'include',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        projectId: this.projectId,
+        nodeId: this.nodeId,
+        input,
+      }),
+    });
+
+    const data: LLMResponse = await response.json();
+    return [new IOState({ stringValue: data.result })];
+  }
+}

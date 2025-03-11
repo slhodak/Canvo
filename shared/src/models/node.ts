@@ -18,6 +18,7 @@ export enum NodeType {
   Prompt = 'prompt',
   Embed = 'embed',
   Search = 'search',
+  Summarize = 'summarize',
 
   // Special
   Cache = 'cache',
@@ -32,7 +33,7 @@ export enum NodeType {
 export const NodeGroups = {
   Source: [NodeType.Text, NodeType.File, NodeType.CSV, NodeType.Fetch],
   Basic: [NodeType.Append, NodeType.Merge, NodeType.Split, NodeType.Join, NodeType.Replace, NodeType.Edit],
-  Intelligent: [NodeType.Chat, NodeType.Prompt, NodeType.Embed, NodeType.Search],
+  Intelligent: [NodeType.Chat, NodeType.Prompt, NodeType.Embed, NodeType.Search, NodeType.Summarize],
   Utility: [NodeType.Cache, NodeType.Pick, NodeType.Stats],
   Output: [NodeType.Save],
 }

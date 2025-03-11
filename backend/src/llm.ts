@@ -3,10 +3,6 @@ import dotenv from "dotenv";
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
-// Costs in Canvo tokens
-const CHAT_BASE_COST = 2;    // Cost per chat message
-const CHAT_MARGINAL_COST = 0.05; // Additional cost per word in chat
-
 const openai = new OpenAI();
 
 const model = process.env.NODE_ENV === 'production' ? 'gpt-4o' : 'gpt-4o-mini';
@@ -55,6 +51,29 @@ export async function runPrompt(prompt: string, input: string): Promise<string> 
   }
 }
 
+export async function summarize(input: string): Promise<string> {
+  const summarizeDeveloperPrompt = `
+    You are a helpful assistant that summarizes text.
+    You will not include any other text in your response.
+
+    You condense and shorten text while preserving the original meaning.
+    You are extremely good at this.
+  `;
+  try {
+    const messages = [
+      { role: 'developer', name: 'developer', content: summarizeDeveloperPrompt },
+      { role: 'user', name: 'user', content: input }
+    ]
+    const response = await callChatCompletion(messages);
+    return response;
+  } catch (error) {
+    if (error instanceof Error) {
+      return error.message;
+    }
+    return "An unknown error occurred";
+  }
+}
+
 export async function runSimpleChat(messages: { role: string, name: string, content: string }[], brevity: boolean): Promise<string> {
   // Can you insert developer messages into the message history? Even if you can -- don't do it twice
   // if (brevity) {
@@ -70,10 +89,4 @@ export async function runSimpleChat(messages: { role: string, name: string, cont
     }
     return "An unknown error occurred";
   }
-}
-
-export async function calculateChatCost(prompt: string): Promise<number> {
-  let cost = CHAT_BASE_COST;
-  cost += prompt.length * CHAT_MARGINAL_COST;
-  return Math.round(cost);
 }

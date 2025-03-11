@@ -129,6 +129,10 @@ export const NodeUtils = {
         const { SearchNode } = (await import("./nodes/intelligent"));
         return new SearchNode(nodeId, authorId, projectId, coordinates);
       }
+      case NodeType.Summarize: {
+        const { SummarizeNode } = (await import("./nodes/intelligent"));
+        return new SummarizeNode(nodeId, authorId, projectId, coordinates);
+      }
       case NodeType.Join: {
         const { JoinNode } = (await import("./nodes/basic"));
         return new JoinNode(nodeId, authorId, projectId, coordinates);
@@ -207,6 +211,10 @@ export const NodeUtils = {
       case NodeType.Search: {
         const { SearchNode } = (await import("./nodes/intelligent"));
         return SearchNode.fromObject(object);
+      }
+      case NodeType.Summarize: {
+        const { SummarizeNode } = (await import("./nodes/intelligent"));
+        return SummarizeNode.fromObject(object);
       }
       case NodeType.Join: {
         const { JoinNode } = (await import("./nodes/basic"));

@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 import path from 'path';
 import { Database as db } from './db';
 import { UserModel } from 'wc-shared';
-import { runPrompt, runSimpleChat } from './llm';
+import { runPrompt, runSimpleChat, summarize } from './llm';
 import stytch from 'stytch';
 import { addUserTokens, createDefaultProject, validateNode } from './util';
 import { LLMResponse } from 'wc-shared';
@@ -15,7 +15,7 @@ import { TransactionType } from 'wc-shared';
 import {
   ALLOWED_ORIGIN, STYTCH_SECRET, STYTCH_PROJECT_ID, sevenDaysInSeconds, SESSION_TOKEN,
   FRONTEND_DOMAIN, AI_SERVICE_URL, EMBEDDING_COST, CHAT_COST, SEARCH_COST,
-  PROMPT_COST, port
+  PROMPT_COST, SUMMARIZE_COST, port
 } from "./constants";
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
@@ -778,6 +778,36 @@ aiRouter.post('/run_prompt', async (req: Request, res: Response) => {
   broadcastBalanceUpdate(user.userId, tokenBalance - PROMPT_COST);
   await db.logTokenTransaction(user.userId, PROMPT_COST, TransactionType.Spend);
   return res.json({ status: "success", result });
+});
+
+// TODO: Refactor this with other fixed-cost AI functions. One endpoint with different commands
+aiRouter.post('/summarize', async (req: Request, res: Response) => {
+  try {
+    const user = await getUserFromSessionToken(req);
+    if (!user) {
+      return res.status(401).json({ status: "failed", error: "Could not find user from session token" });
+    }
+
+    // Check token balance
+    const tokenBalance = await db.getUserTokenBalance(user.userId);
+    if (tokenBalance === null || tokenBalance < PROMPT_COST) {
+      return res.status(403).json({ status: "failed", error: "Insufficient tokens" });
+    }
+
+    const { projectId, nodeId, input } = req.body;
+    if (!projectId || !nodeId || !input) {
+      return res.status(400).json({ status: "failed", error: "No projectId or nodeId or input provided" });
+    }
+
+    const result = await summarize(input);
+    await db.deductTokens(user.userId, SUMMARIZE_COST);
+    broadcastBalanceUpdate(user.userId, tokenBalance - SUMMARIZE_COST);
+    await db.logTokenTransaction(user.userId, SUMMARIZE_COST, TransactionType.Spend);
+    return res.json({ status: "success", result });
+  } catch (error) {
+    console.error('Error summarizing:', error);
+    return res.status(500).json({ status: "failed", error: "AI service error" });
+  }
 });
 
 aiRouter.post('/embed', async (req: Request, res: Response) => {

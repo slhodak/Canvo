@@ -6,6 +6,8 @@
     "shared"
   ],
   "scripts": {
+    "build:backend": "cd backend && yarn build",
+    "build:frontend": "cd frontend && yarn build",
     "build:shared": "cd shared && yarn build"
   },
   "packageManager": "yarn@4.2.2"
