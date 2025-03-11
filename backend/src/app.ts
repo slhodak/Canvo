@@ -962,7 +962,7 @@ wss.on('error', (error) => {
 
 // Connection Event
 wss.on('connection', (ws) => {
-  console.log('Client connected');
+  // console.log('Client connected');
   // Handle messages from clients
   ws.on('message', async (message: string) => {
     // Handle different message types
@@ -997,7 +997,7 @@ wss.on('connection', (ws) => {
   // Handle disconnections
   ws.on('close', () => {
     websocketClients.delete(ws);
-    console.log('Client disconnected');
+    // console.log('Client disconnected');
   })
 });
 
