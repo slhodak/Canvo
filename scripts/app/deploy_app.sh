@@ -31,24 +31,25 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Copy the bundled program to the server
+# Compress all the scripts
+tar -czvf scripts.tar.gz \
+    scripts/app/unpackage.sh \
+    scripts/app/compare_files.sh \
+    scripts/app/poetry_install.sh \
+    scripts/app/provision_app_server.sh \
+    scripts/app/run_migrations.sh \
+    scripts/app/install_app_dependencies.sh \
+
+# Compress the config files
+tar -czvf config_files.tar.gz \
+    scripts/app/configure_nginx.sh \
+    server-config/canvo-ai.service \
+    server-config/canvo-server.service \
+    server-config/nginx/nginx.conf \
+    server-config/nginx/reverse-proxy-http.conf \
+    server-config/nginx/maintenance.html
+
+# Copy bundled scripts and config files to the server
 scp -i "$PEM_PATH" bundle.tar.gz "$SERVER_ADDRESS":~/bundle.tar.gz
-
-# Copy necessary app scripts to the server
-scp -i "$PEM_PATH" scripts/app/unpackage.sh "$SERVER_ADDRESS":~/unpackage.sh
-scp -i "$PEM_PATH" scripts/app/compare_files.sh "$SERVER_ADDRESS":~/compare_files.sh
-scp -i "$PEM_PATH" scripts/app/poetry_install.sh "$SERVER_ADDRESS":~/poetry_install.sh
-scp -i "$PEM_PATH" scripts/app/provision_app_server.sh "$SERVER_ADDRESS":~/provision_app_server.sh
-# The app runs the migrations against the db server
-scp -i "$PEM_PATH" scripts/app/run_migrations.sh "$SERVER_ADDRESS":~/run_migrations.sh
-
-# Copy necessary system scripts to the server
-scp -i "$PEM_PATH" scripts/app/install_app_dependencies.sh "$SERVER_ADDRESS":~/install_app_dependencies.sh
-scp -i "$PEM_PATH" scripts/app/configure_nginx.sh "$SERVER_ADDRESS":~/configure_nginx.sh
-
-# Copy the server-config files to the server
-scp -i "$PEM_PATH" server-config/canvo-ai.service "$SERVER_ADDRESS":~/canvo-ai.service
-scp -i "$PEM_PATH" server-config/canvo-server.service "$SERVER_ADDRESS":~/canvo-server.service
-scp -i "$PEM_PATH" server-config/nginx/nginx.conf "$SERVER_ADDRESS":~/nginx.conf
-scp -i "$PEM_PATH" server-config/nginx/reverse-proxy-http.conf "$SERVER_ADDRESS":~/reverse-proxy-http.conf
-scp -i "$PEM_PATH" server-config/nginx/maintenance.html "$SERVER_ADDRESS":~/maintenance.html
+scp -i "$PEM_PATH" scripts.tar.gz "$SERVER_ADDRESS":~/scripts.tar.gz
+scp -i "$PEM_PATH" config_files.tar.gz "$SERVER_ADDRESS":~/config_files.tar.gz

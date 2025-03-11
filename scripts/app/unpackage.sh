@@ -65,8 +65,13 @@ else
     rm -r ~/canvo/shared
 fi
 
-echo "Unpacking the bundle..."
-# Unpack
+echo "Unpacking scripts..."
+tar --warning=no-unknown-keyword -xzvf scripts.tar.gz
+
+echo "Unpacking config files..."
+tar --warning=no-unknown-keyword -xzvf config_files.tar.gz
+
+echo "Unpacking app bundle..."
 mv ~/bundle.tar.gz ~/canvo/bundle.tar.gz
 cd ~/canvo
 tar --warning=no-unknown-keyword -xzf bundle.tar.gz
