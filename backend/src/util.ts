@@ -2,6 +2,7 @@ import humps from 'humps';
 import { BaseNode, IOState, UserModel, TransactionType } from "wc-shared";
 import { Database as db } from './db';
 import { SUBSCRIPTION_PLANS } from './constants';
+import { WebSocket } from 'ws';
 
 // Check if a value is null or undefined
 export function isNullOrUndefined(value: any): boolean {
@@ -92,5 +93,14 @@ export const addUserTokens = async (user: UserModel) => {
     console.log(`Granting ${addAmount} tokens to user ${user.userId}`);
     await db.addTokens(user.userId, addAmount);
     await db.logTokenTransaction(user.userId, addAmount, TransactionType.AutoAdd);
+  }
+}
+
+// Broadcast balance updates to specific users
+export function broadcastBalanceUpdate(userId: string, balance: number, websocketClients: Map<WebSocket, { userId: string }>  ) {
+  for (const [client, info] of websocketClients.entries()) {
+    if (info.userId === userId) {
+      client.send(JSON.stringify({ type: 'BALANCE_UPDATE', balance }));
+    }
   }
 }
