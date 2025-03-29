@@ -13,3 +13,11 @@ Node-based procedural text manipulation
 `yarn build:backend`  
 `yarn build:frontend`  
 `yarn build:shared`  
+
+### Deploy
+
+```
+./scripts/app/build_and_deploy.sh <green | blue>
+./scripts/connect.sh <green | blue>
+$cloud> ./unpackage.sh
+```
