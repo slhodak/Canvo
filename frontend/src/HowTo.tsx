@@ -35,6 +35,18 @@ const HowTo: React.FC<HowToProps> = ({ isOpen, onClose }) => {
           <button className="modal-close" onClick={onClose}>×</button>
         </div>
 
+        <h3>Demo Video</h3>
+        <ul><li>Summarize, embed, and search the text of an imported file</li></ul>
+        <iframe
+          width="500"
+          height="315"
+          src="https://www.youtube.com/embed/nYXb6dLqz1k"
+          title="Canvo Demo Video"
+          style={{ border: 'none' }}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+
         <section>
           <h2>tl;dr</h2>
           <li>Tab to add, delete to create, right click to pan, scroll to zoom, connect outputs to inputs, display using the little rectangle on the left of the node</li>
