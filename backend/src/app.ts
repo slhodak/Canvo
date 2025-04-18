@@ -31,7 +31,10 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'", 'https://www.canvo.app'],
       connectSrc: ["'self'", 'https://www.canvo.app', 'wss://www.canvo.app', 'https://*.stytch.com'],
-      imgSrc: ["'self'", 'https://www.canvo.app', 'https://*.stytch.com']
+      imgSrc: ["'self'", 'https://www.canvo.app', 'https://*.stytch.com'],
+      frameSrc: ["'self'", 'https://www.youtube.com', 'https://*.youtube.com'],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'"]
     }
   },
   strictTransportSecurity: {
