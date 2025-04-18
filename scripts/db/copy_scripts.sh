@@ -5,13 +5,11 @@
 set -e
 set -o pipefail
 
-# Set the server address based on the server name
-DB_SERVER_ADDRESS="ec2-user@ec2-54-193-31-206.us-west-1.compute.amazonaws.com"
-
-PEM_PATH="~/Documents/Canvo/canvo.pem"
+# Source the environment variables
+source "./scripts/.env"
 
 # Do a health check with ssh
-ssh -o ConnectTimeout=5 -i "$PEM_PATH" "$DB_SERVER_ADDRESS" exit
+ssh -o ConnectTimeout=5 -i "$PEM_PATH" "$DB_SERVER" exit
 if [ $? -ne 0 ]; then
     echo "DB instance is not available, will not deploy"
     exit 1

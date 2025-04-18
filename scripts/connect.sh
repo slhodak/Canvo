@@ -3,6 +3,9 @@
 set -e
 set -o pipefail
 
+# Source the environment variables
+source "./scripts/.env"
+
 SERVER=$1
 
 # Check that SERVER is one of "blue" or "green"
@@ -13,11 +16,11 @@ fi
 
 # Set the server address based on the server name
 if [ "$SERVER" == "blue" ]; then
-    SERVER_ADDRESS="ec2-user@ec2-54-219-18-194.us-west-1.compute.amazonaws.com"
+    SERVER_ADDRESS="$BLUE_SERVER"
 elif [ "$SERVER" == "green" ]; then
-    SERVER_ADDRESS="ec2-user@ec2-54-215-161-176.us-west-1.compute.amazonaws.com"
+    SERVER_ADDRESS="$GREEN_SERVER"
 elif [ "$SERVER" == "db" ]; then
-    SERVER_ADDRESS="ec2-user@ec2-54-193-31-206.us-west-1.compute.amazonaws.com"
+    SERVER_ADDRESS="$DB_SERVER"
 fi
 
 PEM_PATH="~/Documents/Canvo/canvo.pem"
