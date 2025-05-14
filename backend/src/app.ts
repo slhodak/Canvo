@@ -34,7 +34,7 @@ app.use(helmet({
       imgSrc: ["'self'", 'https://www.canvo.app', 'https://*.stytch.com'],
       frameSrc: ["'self'", 'https://www.youtube.com', 'https://*.youtube.com'],
       scriptSrc: ["'self'"],
-      styleSrc: ["'self'"]
+      styleSrc: ["'self'", "'unsafe-inline'"]
     }
   },
   strictTransportSecurity: {
